@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>IA na Prática · SENAI Iracemápolis</title>
+  <meta name="description" content="Apresentação didática e interativa sobre ferramentas de Inteligência Artificial: tradução, assistentes, chatbots, geração de conteúdo, resumos, prompts, agentes e vídeos com Claude Code.">
+  <meta name="theme-color" content="#e6e7fb">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23ffd2a8'/%3E%3Cstop offset='.5' stop-color='%23ff8a3d'/%3E%3Cstop offset='1' stop-color='%23ff5a0a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <!-- Fundo: gradiente, orbes desfocados e linhas finas -->
+  <div class="bg" aria-hidden="true">
+    <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="orb o4"></span>
+    <svg class="lines" viewBox="0 0 1600 1000" preserveAspectRatio="none">
+      <path d="M-50 720 C 300 600, 520 860, 900 700 S 1500 520, 1700 640"/>
+      <path d="M760 -40 C 800 200, 700 420, 880 1040"/>
+      <path d="M1250 -40 C 1350 300, 1500 380, 1660 360"/>
+      <path d="M-40 380 C 200 340, 260 120, 420 -40"/>
+    </svg>
+  </div>
+
+  <div class="shell">
+    <!-- Barra lateral -->
+    <nav class="rail" aria-label="Seções">
+      <button class="rail-btn primary" data-goto="0" title="Início" aria-label="Início">
+        <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="rail-btn" data-goto="3" data-sec="ferr" title="Ferramentas de IA" aria-label="Ferramentas de IA">
+        <svg class="i" viewBox="0 0 24 24"><path d="M4 5h8M8 3v2M5 5c1 4 4 7 7.5 8.5M11 5c-1 4-4 7-7 8.5M13 21l4-9 4 9M14.5 18h5"/></svg>
+      </button>
+      <button class="rail-btn" data-goto="8" data-sec="prompt" title="Elaboração de prompts" aria-label="Elaboração de prompts">
+        <svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8zM19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
+      </button>
+      <button class="rail-btn" data-goto="9" data-sec="agentes" title="Agentes, Claude Code e Codex" aria-label="Agentes">
+        <svg class="i" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 14h.01M15 14h.01"/></svg>
+      </button>
+      <button class="rail-btn" data-goto="12" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos">
+        <svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
+      </button>
+      <button class="rail-btn" data-goto="15" data-sec="fontes" title="Fontes" aria-label="Fontes">
+        <svg class="i" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/></svg>
+      </button>
+      <span class="rail-logo" aria-hidden="true">IA</span>
+    </nav>
+
+    <main class="stage">
+      <header class="topbar">
+        <button class="chip-model" data-goto="1" aria-label="Ir para o roteiro">
+          <svg class="i spin" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+          Assistente IA <b>v2026</b>
+          <svg class="i sm" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="top-title">IA na Prática · <span>SENAI Iracemápolis</span></div>
+        <button class="pill dark" id="btn-fs" aria-label="Tela cheia">
+          <svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          <span>Tela cheia</span>
+        </button>
+      </header>
+
+      <div class="slides" id="slides">
+
+        <!-- 0 · CAPA -->
+        <section class="slide" data-title="Explique como a IA pode ser usada na prática" data-bubble="Oi, turma! 👋 Bora aprender IA?">
+          <div class="wrap cover">
+            <div class="cover-top">
+              <div class="cover-text">
+                <span class="eyebrow" data-anim>Trabalho de Inteligência Artificial · 2026</span>
+                <h1 class="hero" data-anim><span class="soft">Olá, turma.</span><br>Vamos colocar a IA <em class="serif">para trabalhar?</em></h1>
+                <p class="lead" data-anim>Um guia prático, com exemplos animados, das ferramentas de IA que você já pode usar hoje. No fim, mostro como agentes como o Claude Code e o Codex criam apresentações e vídeos de verdade.</p>
+                <div class="row" data-anim>
+                  <button class="pill dark lg" data-goto="1">Começar
+                    <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </button>
+                  <span class="hint">Use <kbd>←</kbd> <kbd>→</kbd> ou deslize o dedo</span>
+                </div>
+              </div>
+              <div class="cover-bot" data-anim>
+                <div class="bubble big">Ei! 👋<br>Eu vou te acompanhar<br>em cada slide.</div>
+                <div class="bot-slot xl"></div>
+              </div>
+            </div>
+            <div class="cards3">
+              <button class="glass card feature" data-goto="3" data-anim>
+                <span class="f-ico f-orange"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5"/></svg></span>
+                <strong>Traduzir, perguntar, conversar, criar e resumir. Tudo com exemplos.</strong>
+                <small>1 · Ferramentas de IA</small>
+              </button>
+              <button class="glass card feature" data-goto="8" data-anim>
+                <span class="f-ico f-lilac"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z"/></svg></span>
+                <strong>A receita de um bom prompt, montada peça por peça.</strong>
+                <small>1.6 · Elaboração de prompts</small>
+              </button>
+              <button class="glass card feature" data-goto="9" data-anim>
+                <span class="f-ico f-dark"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 14h.01M15 14h.01"/></svg></span>
+                <strong>Agentes, skills e vídeos criados com Claude Code.</strong>
+                <small>Extra + Bônus</small>
+              </button>
+            </div>
+            <p class="byline" data-anim>Apresentado por <b>Ciro Arruda</b> · SENAI Iracemápolis</p>
+          </div>
+        </section>
+
+        <!-- 1 · ROTEIRO -->
+        <section class="slide" data-title="Mostre o roteiro da apresentação" data-bubble="Clique em qualquer tema para pular direto 👇">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">Roteiro</span>
+              <h2>O que vamos ver hoje</h2>
+              <p>Cada tema tem um exemplo para você testar ao vivo. Clique em um cartão para ir direto a ele.</p>
+            </header>
+            <div class="agenda">
+              <button class="glass ag" data-goto="3" data-anim><b>1.1</b><span>Tradução automática</span><i>🌐</i></button>
+              <button class="glass ag" data-goto="4" data-anim><b>1.2</b><span>Assistentes virtuais</span><i>🎙️</i></button>
+              <button class="glass ag" data-goto="5" data-anim><b>1.3</b><span>Chatbots</span><i>💬</i></button>
+              <button class="glass ag" data-goto="6" data-anim><b>1.4</b><span>Geração de conteúdo</span><i>🎨</i></button>
+              <button class="glass ag" data-goto="7" data-anim><b>1.5</b><span>Resumo de texto</span><i>📝</i></button>
+              <button class="glass ag" data-goto="8" data-anim><b>1.6</b><span>Elaboração de prompts</span><i>✨</i></button>
+              <button class="glass ag accent" data-goto="9" data-anim><b>Extra</b><span>Agentes, Claude Code, Codex e skills</span><i>🤖</i></button>
+              <button class="glass ag dark" data-goto="12" data-anim><b>Bônus</b><span>Criar e editar vídeos com o Claude Code</span><i>🎬</i></button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2 · O QUE É IA -->
+        <section class="slide" data-title="O que é IA, explicado em 1 minuto" data-bubble="Eu adivinho a próxima palavra. Sério! 🤯">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">Antes de tudo</span>
+              <h2>O que é IA, <em class="serif">em 1 minuto</em></h2>
+              <p>Inteligência Artificial é um sistema que <b>aprende padrões a partir de muitos exemplos</b> e usa esses padrões para fazer tarefas que antes exigiam uma pessoa: traduzir, reconhecer voz, escrever, resumir.</p>
+            </header>
+            <div class="g2">
+              <div class="glass card" data-anim>
+                <div class="card-k">Como um chatbot "pensa"</div>
+                <p class="mt0">Um modelo de linguagem (LLM) lê o texto e calcula <b>qual é a próxima palavra mais provável</b>. Repetindo isso milhares de vezes, ele escreve respostas inteiras.</p>
+                <div class="nt-sentence">O SENAI forma profissionais para a <span class="nt-blank" id="nt-blank">____</span></div>
+                <div class="nt-bars" id="nt-bars">
+                  <div class="nt-row"><span>indústria</span><div class="bar"><i style="--w:62%"></i></div><em>62%</em></div>
+                  <div class="nt-row"><span>vida</span><div class="bar"><i style="--w:21%"></i></div><em>21%</em></div>
+                  <div class="nt-row"><span>empresa</span><div class="bar"><i style="--w:11%"></i></div><em>11%</em></div>
+                  <div class="nt-row"><span>banana</span><div class="bar"><i style="--w:0.4%"></i></div><em>0,4%</em></div>
+                </div>
+                <p class="note">Porcentagens ilustrativas, só para mostrar a ideia.</p>
+              </div>
+              <div class="stack">
+                <div class="glass card stat" data-anim>
+                  <div class="big-num"><span data-count="7">0</span> em 10</div>
+                  <p>alunos do ensino médio com acesso à internet já usam IA generativa em pesquisas escolares.</p>
+                  <a class="src" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener">Fonte: Cetic.br, TIC Educação 2024 (divulgada em set/2025)</a>
+                </div>
+                <div class="glass card" data-anim>
+                  <div class="card-k">Linha do tempo rápida</div>
+                  <ol class="timeline">
+                    <li><b>1966</b> ELIZA, o primeiro chatbot (MIT)</li>
+                    <li><b>2011</b> Siri chega aos celulares</li>
+                    <li><b>2016</b> Google Tradutor passa a usar redes neurais</li>
+                    <li><b>2017</b> Nasce o <i>Transformer</i>, base dos chatbots atuais</li>
+                    <li><b>2022</b> ChatGPT populariza a IA generativa</li>
+                    <li><b>2025</b> Agentes de código: Claude Code e Codex</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3 · 1.1 TRADUÇÃO -->
+        <section class="slide" data-id="translate" data-title="Traduza frases e mostre onde a IA pode errar" data-bubble="Escolha uma frase e veja eu traduzir! 🌐">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.1</span>
+              <h2>Tradução automática</h2>
+              <p>Os tradutores modernos usam <b>redes neurais</b>: em vez de trocar palavra por palavra, leem a frase inteira e entendem o contexto. Em 2024, o Google Tradutor ganhou <b>110 idiomas novos</b> de uma vez, com ajuda do modelo PaLM 2.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Experimente: escolha uma frase</div>
+                <div class="seg" id="tr-phrases" role="tablist">
+                  <button class="on" data-p="0">Bom dia, turma</button>
+                  <button data-p="1">Expressão: "chutar o balde"</button>
+                  <button data-p="2">Texto técnico</button>
+                </div>
+                <div class="tr-src"><span class="lang">PT · Português</span><p id="tr-src"></p></div>
+                <div class="tr-out">
+                  <div class="tr-lang"><span class="lang">EN · Inglês</span><p id="tr-en"></p></div>
+                  <div class="tr-lang"><span class="lang">ES · Espanhol</span><p id="tr-es"></p></div>
+                  <div class="tr-lang"><span class="lang">JA · Japonês</span><p id="tr-ja" lang="ja"></p></div>
+                </div>
+                <div class="tr-note" id="tr-note"></div>
+                <div class="row">
+                  <button class="pill ghost sm" id="tr-back">↩︎ Traduzir de volta (conferir)</button>
+                  <button class="pill ghost sm" id="tr-literal" hidden>⚠️ Ver tradução palavra por palavra</button>
+                </div>
+                <div class="tr-back" id="tr-backout" aria-live="polite"></div>
+              </div>
+              <div class="stack">
+                <div class="glass card" data-anim>
+                  <div class="card-k">Ferramentas</div>
+                  <ul class="tools">
+                    <li><b>Google Tradutor</b> textos, sites, câmera (traduz placas e manuais) e conversa por voz</li>
+                    <li><b>DeepL</b> traduções mais naturais para textos longos</li>
+                    <li><b>Microsoft Translator</b> legendas em tempo real numa conversa em grupo</li>
+                    <li><b>Chatbots (ChatGPT, Claude, Gemini)</b> você pode pedir o tom: formal, técnico, para criança…</li>
+                  </ul>
+                </div>
+                <div class="glass card tips" data-anim>
+                  <div class="card-k">Dicas de quem usa bem</div>
+                  <ol>
+                    <li>Escreva frases curtas e completas.</li>
+                    <li><b>Traduza de volta</b> para o português para conferir o sentido.</li>
+                    <li>Termos técnicos e gírias: revise com alguém da área.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 · 1.2 ASSISTENTES -->
+        <section class="slide" data-id="assistant" data-title="Mostre como um assistente de voz entende um pedido" data-bubble="Fala comigo! Clique em um comando 🎙️">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.2</span>
+              <h2>Assistentes virtuais</h2>
+              <p>Siri (2011), Alexa (2014), Google Assistente/Gemini e Copilot ouvem um pedido, <b>descobrem a intenção</b> e executam uma ação. Por trás de um simples "me lembra de…" existem cinco etapas.</p>
+            </header>
+            <div class="glass card demo" data-anim>
+              <div class="as-cmds" id="as-cmds">
+                <button class="pill ghost" data-c="0">"Me lembra de levar o EPI amanhã às 7h"</button>
+                <button class="pill ghost" data-c="1">"Quanto é 15% de 240?"</button>
+                <button class="pill ghost" data-c="2">"Toca uma música pra estudar"</button>
+                <button class="pill ghost" data-c="3">"Como chego ao SENAI de ônibus?"</button>
+              </div>
+              <div class="as-flow">
+                <div class="as-step" data-s="0"><span>🎙️</span><b>Ouve a voz</b><small>Microfone capta o som</small></div>
+                <div class="as-step" data-s="1"><span>🔤</span><b>Voz → texto</b><small>Reconhecimento de fala</small></div>
+                <div class="as-step" data-s="2"><span>🧠</span><b>Entende</b><small>Descobre a intenção</small></div>
+                <div class="as-step" data-s="3"><span>⚙️</span><b>Age</b><small>Chama o app certo</small></div>
+                <div class="as-step" data-s="4"><span>🔊</span><b>Responde</b><small>Texto → voz</small></div>
+              </div>
+              <div class="as-bottom">
+                <div class="wave" id="as-wave" aria-hidden="true"></div>
+                <pre class="code as-json" id="as-json" aria-live="polite">{ "esperando": "clique em um comando acima" }</pre>
+                <div class="as-reply" id="as-reply"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b>🏠 Casa</b> lembretes, alarmes, luzes e tomadas inteligentes</div>
+              <div class="glass card sm" data-anim><b>♿ Acessibilidade</b> leitura de tela e comandos por voz para quem não enxerga ou não pode usar as mãos</div>
+              <div class="glass card sm" data-anim><b>🏭 Trabalho</b> consultar manuais e registrar ocorrências com as mãos ocupadas</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5 · 1.3 CHATBOTS -->
+        <section class="slide" data-id="chatbot" data-title="Compare um chatbot de regras com um chatbot com IA" data-bubble="Qual bot você prefere? 😄">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.3</span>
+              <h2>Chatbots</h2>
+              <p>Um chatbot é um programa que conversa por texto. Existem dois tipos: o de <b>regras</b> (menu de opções fixas) e o com <b>IA generativa</b>, que entende linguagem natural, mesmo com erros de digitação e gírias.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo chat-card" data-anim>
+                <div class="seg" id="cb-mode">
+                  <button class="on" data-m="rules">🤖 Bot de regras</button>
+                  <button data-m="ai">✨ Bot com IA</button>
+                </div>
+                <div class="chat" id="cb-chat" aria-live="polite"></div>
+                <div class="chat-input">
+                  <span id="cb-q">Oi! Perdi a aula de ontem, o que foi passado? Tem atividade?</span>
+                  <button class="send" id="cb-send" aria-label="Enviar">
+                    <svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="glass card" data-anim>
+                  <div class="card-k">Regras × IA</div>
+                  <table class="cmp">
+                    <tr><th></th><th>Regras</th><th>IA</th></tr>
+                    <tr><td>Entende frases livres</td><td>❌</td><td>✅</td></tr>
+                    <tr><td>Respostas previsíveis</td><td>✅</td><td>⚠️</td></tr>
+                    <tr><td>Pode inventar coisas</td><td>Não</td><td>Pode</td></tr>
+                    <tr><td>Custo para criar</td><td>Baixo</td><td>Médio</td></tr>
+                  </table>
+                </div>
+                <div class="glass card sm" data-anim><b>Onde você encontra:</b> atendimento de bancos e lojas, WhatsApp de empresas, suporte técnico, triagem em clínicas, secretarias de escola.</div>
+                <div class="glass card sm warn" data-anim><b>Atenção:</b> o bot com IA só sabe sobre a sua escola se for <b>conectado aos dados reais</b> dela. Sem isso, ele pode "alucinar", ou seja, inventar uma resposta convincente.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6 · 1.4 GERAÇÃO DE CONTEÚDO -->
+        <section class="slide" data-id="generate" data-title="Gere uma imagem a partir de um texto e explique como funciona" data-bubble="Do ruído à imagem, passo a passo 🎨">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.4</span>
+              <h2>Geração de conteúdo</h2>
+              <p>A IA generativa <b>cria coisas novas</b> a partir de um pedido em texto: redações, imagens, músicas, vozes, vídeos e até programas. Geradores de imagem usam <b>modelos de difusão</b>: começam com ruído puro e, passo a passo, vão removendo o ruído na direção do que você descreveu.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo" data-anim>
+                <div class="gen-prompt">
+                  <span class="lang">Prompt</span>
+                  <p id="gen-prompt">"Esfera laranja sobre pedras brancas, luz suave de estúdio, estilo 3D minimalista"</p>
+                </div>
+                <div class="gen-canvas">
+                  <canvas id="gen-canvas" width="320" height="200" aria-label="Animação de uma imagem sendo gerada a partir de ruído"></canvas>
+                  <div class="gen-meta"><span id="gen-step">passo 0/40</span><span id="gen-label">ruído puro</span></div>
+                  <div class="gen-progress"><i id="gen-bar"></i></div>
+                </div>
+                <div class="row">
+                  <button class="pill dark sm" id="gen-go">▶︎ Gerar</button>
+                  <button class="pill ghost sm" id="gen-swap">Trocar prompt</button>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="gen-types">
+                  <div class="glass card sm" data-anim><b>📝 Texto</b>ChatGPT, Claude, Gemini: redações, e-mails, roteiros</div>
+                  <div class="glass card sm" data-anim><b>🖼️ Imagem</b>Midjourney, Adobe Firefly, Canva: artes e cartazes</div>
+                  <div class="glass card sm" data-anim><b>🎵 Áudio</b>Suno (música), ElevenLabs (voz)</div>
+                  <div class="glass card sm" data-anim><b>🎬 Vídeo</b>Sora, Veo, Runway: cenas a partir de texto</div>
+                  <div class="glass card sm" data-anim><b>💻 Código</b>Claude Code, Codex, GitHub Copilot</div>
+                  <div class="glass card sm" data-anim><b>📊 Slides</b>Gamma, Canva e… esta apresentação!</div>
+                </div>
+                <div class="glass card sm warn" data-anim><b>Regras de ouro:</b> confira os fatos, avise quando usou IA, respeite direitos autorais e <b>nunca</b> crie imagens falsas (deepfakes) de pessoas reais.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7 · 1.5 RESUMO -->
+        <section class="slide" data-id="summary" data-title="Resuma um texto longo de dois jeitos diferentes" data-bubble="Arraste o controle e veja o texto encolher 📝">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.5</span>
+              <h2>Resumo de texto</h2>
+              <p>Existem dois jeitos de resumir. O <b>extrativo</b> escolhe as frases mais importantes e copia do original. O <b>abstrativo</b> (o que os chatbots fazem) reescreve a ideia com palavras novas.</p>
+            </header>
+            <div class="glass card demo" data-anim>
+              <div class="sum-controls">
+                <div class="seg" id="sum-mode">
+                  <button class="on" data-m="ext">Extrativo (marca frases)</button>
+                  <button data-m="abs">Abstrativo (reescreve)</button>
+                </div>
+                <label class="range">
+                  <span>Tamanho: <b id="sum-label">Completo</b></span>
+                  <input type="range" id="sum-range" min="0" max="3" step="1" value="0" aria-label="Tamanho do resumo">
+                </label>
+                <span class="counter" id="sum-count">0 palavras</span>
+              </div>
+              <div class="sum-text" id="sum-text" aria-live="polite"></div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b>Prompt pronto</b><code>Resuma em 5 tópicos para um aluno do 1º ano, com palavras simples.</code></div>
+              <div class="glass card sm" data-anim><b>Para estudar</b><code>Resuma e depois me faça 3 perguntas para eu testar se entendi.</code></div>
+              <div class="glass card sm" data-anim><b>Ferramentas</b>NotebookLM (resume PDFs e gera áudio), ChatGPT/Claude com arquivo anexado, resumo de vídeos do YouTube</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8 · 1.6 PROMPTS -->
+        <section class="slide" data-id="prompt" data-title="Monte um prompt perfeito, peça por peça" data-bubble="Ligue os ingredientes e veja a resposta melhorar ✨">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">1.6</span>
+              <h2>Elaboração de prompts</h2>
+              <p><b>Prompt</b> é o pedido que você faz para a IA. A regra de ouro: escreva como se estivesse explicando para um colega novo e inteligente, que <b>não sabe nada</b> sobre você nem sobre a tarefa.</p>
+            </header>
+            <div class="g2 pb">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Ingredientes (clique para ligar)</div>
+                <div class="pb-toggles" id="pb-toggles">
+                  <button data-k="papel"><i>🎭</i>Papel</button>
+                  <button data-k="contexto"><i>📍</i>Contexto</button>
+                  <button data-k="formato"><i>📐</i>Formato</button>
+                  <button data-k="exemplo"><i>🧪</i>Exemplo</button>
+                  <button data-k="restricoes"><i>🚧</i>Restrições</button>
+                  <button data-k="pensar"><i>🧠</i>Passo a passo</button>
+                </div>
+                <div class="pb-prompt" id="pb-prompt" aria-live="polite"></div>
+                <div class="meter"><div class="meter-bar"><i id="pb-meter"></i></div><span id="pb-score">Vago</span></div>
+              </div>
+              <div class="glass card demo pb-answer-card" data-anim>
+                <div class="card-k">Resposta da IA (simulada)</div>
+                <div class="pb-answer" id="pb-answer" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm pair" data-anim><s>Faz um texto sobre segurança</s><span>Escreva um aviso de 3 linhas para o mural da oficina, lembrando o uso de óculos de proteção. Tom amigável.</span></div>
+              <div class="glass card sm pair" data-anim><s>Traduz isso</s><span>Traduza para o inglês técnico, mantendo os termos de elétrica, este trecho do manual: …</span></div>
+              <div class="glass card sm pair" data-anim><s>Me ajuda na prova</s><span>Me faça 5 perguntas sobre Lei de Ohm, uma por vez, e corrija cada resposta minha.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9 · EXTRA AGENTES -->
+        <section class="slide" data-id="agent" data-title="Explique a diferença entre um chatbot e um agente de IA" data-bubble="Eu não só respondo: eu FAÇO 💪">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag accent">Extra</span>
+              <h2>Agentes de IA: <em class="serif">da conversa à ação</em></h2>
+              <p>Um chatbot <b>responde</b>. Um agente <b>age</b>: recebe um objetivo, usa ferramentas (arquivos, internet, programas), confere o resultado e repete até terminar. Exemplos: <b>Claude Code</b> (Anthropic) e <b>Codex</b> (OpenAI), que trabalham direto no seu computador.</p>
+            </header>
+            <div class="g2">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">O ciclo do agente</div>
+                <div class="loop">
+                  <svg viewBox="0 0 300 300" class="loop-svg" aria-hidden="true">
+                    <circle cx="150" cy="150" r="108" class="loop-track"/>
+                    <circle cx="150" cy="150" r="108" class="loop-prog" id="ag-prog"/>
+                  </svg>
+                  <div class="loop-node n0" data-n="0"><span>🎯</span>Pensar</div>
+                  <div class="loop-node n1" data-n="1"><span>🛠️</span>Agir</div>
+                  <div class="loop-node n2" data-n="2"><span>👀</span>Observar</div>
+                  <div class="loop-node n3" data-n="3"><span>🔁</span>Repetir</div>
+                  <div class="loop-center"><small>Objetivo</small><b>Organizar as fotos do projeto por mês</b></div>
+                </div>
+              </div>
+              <div class="glass card demo" data-anim>
+                <div class="card-k">O que o agente está fazendo</div>
+                <ul class="ag-log" id="ag-log" aria-live="polite"></ul>
+              </div>
+            </div>
+            <div class="g4 mini">
+              <div class="glass card sm" data-anim><b>🛠️ Ferramentas</b>ler e criar arquivos, rodar comandos, pesquisar na web</div>
+              <div class="glass card sm" data-anim><b>🔌 Conectores (MCP)</b>pontes para apps como GitHub, Google Drive, Figma e Canva</div>
+              <div class="glass card sm" data-anim><b>📚 Skills</b>receitas reutilizáveis que ensinam o agente a fazer algo do seu jeito</div>
+              <div class="glass card sm" data-anim><b>👥 Subagentes</b>ajudantes que fazem uma parte do trabalho em paralelo</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10 · CLAUDE CODE E CODEX -->
+        <section class="slide" data-id="terminal" data-title="Mostre o Claude Code criando esta apresentação" data-bubble="Spoiler: esta apresentação foi feita assim 👀">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag accent">Extra</span>
+              <h2>Claude Code e Codex na prática</h2>
+              <p>Você descreve o que quer em português e o agente planeja, escreve os arquivos, testa e publica. <b>Esta apresentação foi criada assim:</b> com um pedido ao Claude Code, publicada no GitHub Pages.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="term" data-anim>
+                <div class="term-bar"><i></i><i></i><i></i><span>claude — SENAI-IA-Apresentacao_</span><button class="term-replay" id="term-replay" aria-label="Repetir animação">↻</button></div>
+                <div class="term-body" id="term-body" aria-live="polite"></div>
+              </div>
+              <div class="stack">
+                <div class="glass card" data-anim>
+                  <div class="card-k">Como começar</div>
+                  <p class="mt0"><b>Claude Code</b> (Anthropic): app para desktop, extensão do VS Code ou terminal:</p>
+                  <pre class="code sm">npm install -g @anthropic-ai/claude-code
+claude</pre>
+                  <p><b>Codex</b> (OpenAI): agente de código aberto para o terminal, lançado em abril de 2025:</p>
+                  <pre class="code sm">npm install -g @openai/codex
+codex</pre>
+                </div>
+                <div class="glass card sm" data-anim><b>Ideias para a turma:</b> criar um site do TCC, montar uma calculadora de resistores, automatizar planilhas, gerar slides interativos como estes.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 11 · SKILLS -->
+        <section class="slide" data-id="skill" data-title="Ensine o agente a fazer algo do seu jeito com uma skill" data-bubble="Uma skill é tipo uma receita de bolo 🍰">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag accent">Extra</span>
+              <h2>Skills: <em class="serif">ensine uma vez, use sempre</em></h2>
+              <p>Uma <b>skill</b> é uma pasta com um arquivo <code>SKILL.md</code>: instruções em texto comum, e opcionalmente modelos e scripts. O agente lê só a descrição e <b>carrega a skill sozinho</b> quando o pedido combina com ela.</p>
+            </header>
+            <div class="g2 wide-right">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Estrutura da pasta</div>
+                <ul class="tree" id="sk-tree">
+                  <li class="d">📁 .claude/skills/</li>
+                  <li class="d l1">📁 slides-senai/</li>
+                  <li class="l2 hl">📄 SKILL.md</li>
+                  <li class="l2">🖼️ modelo.html</li>
+                  <li class="l2">🎨 paleta.css</li>
+                </ul>
+                <div class="card-k mt">Como usar</div>
+                <div class="sk-chat">
+                  <p class="me">Crie 5 slides sobre a NR-10 para a turma.</p>
+                  <p class="bot">✓ Usando a skill <b>slides-senai</b>…</p>
+                </div>
+              </div>
+              <div class="term light" data-anim>
+                <div class="term-bar"><i></i><i></i><i></i><span>SKILL.md</span></div>
+                <pre class="term-body md" id="sk-md"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12 · BÔNUS VÍDEO -->
+        <section class="slide" data-id="video" data-title="Ensine a criar e editar vídeos com o Claude Code" data-bubble="Luz, câmera… prompt! 🎬">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag dark">Bônus</span>
+              <h2>Criando vídeos com o Claude Code</h2>
+              <p>Com o <b>HyperFrames</b>, o vídeo é uma página HTML animada, e o programa "filma" quadro a quadro até virar um MP4. Você pede e ajusta tudo <b>conversando</b>. Teste os botões de edição abaixo.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo editor" data-anim>
+                <div class="ed-preview-wrap">
+                  <div class="ed-preview" id="ed-preview">
+                    <div class="ed-scene s1"><span class="ed-kicker">Venha para o</span><b class="ed-title">SENAI Iracemápolis</b></div>
+                    <div class="ed-scene s2"><span class="ed-kicker">Cursos</span><ul><li>⚡ Elétrica</li><li>⚙️ Mecânica</li><li>💻 TI</li></ul></div>
+                    <div class="ed-scene s3"><b class="ed-title">Matricule-se!</b><span class="ed-kicker">sp.senai.br</span></div>
+                    <span class="ed-sphere" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <div class="ed-time"><span id="ed-tc">00:00</span><span>/ 00:20</span></div>
+                <div class="ed-tracks" id="ed-tracks">
+                  <div class="trk"><label>Cenas</label><div class="lane"><i class="clip c1" style="left:0;width:25%">Título</i><i class="clip c2" style="left:25%;width:35%">Cursos</i><i class="clip c3" style="left:60%;width:40%">Chamada</i></div></div>
+                  <div class="trk"><label>Texto</label><div class="lane"><i class="clip ct" style="left:3%;width:20%">T</i><i class="clip ct" style="left:28%;width:30%">T</i><i class="clip ct" style="left:63%;width:34%">T</i></div></div>
+                  <div class="trk"><label>Música</label><div class="lane"><i class="clip cm" style="left:0;width:100%"><span class="mini-wave"></span></i></div></div>
+                  <span class="playhead" id="ed-playhead"></span>
+                </div>
+                <div class="ed-edits">
+                  <span class="lang">Edite conversando:</span>
+                  <button class="pill ghost sm" data-e="color">"Deixa o título laranja"</button>
+                  <button class="pill ghost sm" data-e="vertical">"Formato vertical 9:16"</button>
+                  <button class="pill ghost sm" data-e="speed">"Mais rápido"</button>
+                </div>
+              </div>
+              <div class="glass card" data-anim>
+                <div class="card-k">Passo a passo</div>
+                <ol class="steps">
+                  <li><b>Peça em português</b><span>"Crie um vídeo de 20 s divulgando os cursos do SENAI, com música."</span></li>
+                  <li><b>Cria o projeto</b><code>npx hyperframes init meu-video</code></li>
+                  <li><b>Claude escreve as cenas</b><span>Cada cena é um arquivo HTML animado em <code>compositions/</code></span></li>
+                  <li><b>Pré-visualize e ajuste</b><code>npx hyperframes preview</code><span>Assista e peça mudanças no chat</span></li>
+                  <li><b>Revise</b><code>npx hyperframes check</code></li>
+                  <li><b>Exporte o MP4</b><code>npx hyperframes render</code></li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 13 · ÉTICA -->
+        <section class="slide" data-id="ethics" data-title="Mostre como usar a IA com responsabilidade" data-bubble="Eu posso errar. Confere comigo? 🙏">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">Cuidados</span>
+              <h2>Usando IA com responsabilidade</h2>
+              <p>A IA é uma ótima ajudante, mas <b>a responsabilidade pelo trabalho continua sendo sua</b>.</p>
+            </header>
+            <div class="g2 wide-right">
+              <div class="g2x2">
+                <div class="glass card sm" data-anim><b>🌀 Alucinação</b>A IA pode inventar fatos, datas e fontes com total confiança. Confira sempre.</div>
+                <div class="glass card sm" data-anim><b>🔒 Privacidade</b>Não cole dados pessoais (CPF, telefone, notas). A LGPD (Lei 13.709/2018) protege esses dados.</div>
+                <div class="glass card sm" data-anim><b>⚖️ Viés</b>A IA aprende com textos humanos e pode repetir preconceitos. Leia com olhar crítico.</div>
+                <div class="glass card sm" data-anim><b>✍️ Autoria</b>Diga quando usou IA. A UNESCO (2023) recomenda regras claras e idade mínima de 13 anos para uso em sala.</div>
+              </div>
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Checklist antes de entregar</div>
+                <div class="check-wrap">
+                  <div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" class="ring-bg"/><circle cx="60" cy="60" r="50" class="ring-fg" id="eth-ring"/></svg><b id="eth-num">0/5</b></div>
+                  <ul class="checks" id="eth-checks">
+                    <li><label><input type="checkbox"><span>Conferi os fatos em uma fonte confiável</span></label></li>
+                    <li><label><input type="checkbox"><span>Tirei dados pessoais antes de colar o texto</span></label></li>
+                    <li><label><input type="checkbox"><span>Revisei se não há preconceito ou estereótipo</span></label></li>
+                    <li><label><input type="checkbox"><span>Avisei que usei IA no trabalho</span></label></li>
+                    <li><label><input type="checkbox"><span>Consigo explicar a resposta sem a IA</span></label></li>
+                  </ul>
+                </div>
+                <p class="eth-ok" id="eth-ok">Pronto para entregar! ✅</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 14 · QUIZ -->
+        <section class="slide" data-id="quiz" data-title="Teste o que a turma aprendeu com um quiz" data-bubble="Hora do quiz! Valendo nada, mas valendo 😎">
+          <div class="wrap narrow">
+            <header class="s-head center" data-anim>
+              <span class="tag">Quiz</span>
+              <h2>Vamos ver se ficou claro?</h2>
+            </header>
+            <div class="glass card demo quiz" data-anim>
+              <div class="quiz-top"><span id="qz-n">Pergunta 1 de 5</span><span id="qz-score">0 acertos</span></div>
+              <div class="quiz-bar"><i id="qz-bar"></i></div>
+              <h3 id="qz-q"></h3>
+              <div class="quiz-opts" id="qz-opts"></div>
+              <p class="quiz-exp" id="qz-exp" aria-live="polite"></p>
+              <div class="row end"><button class="pill dark" id="qz-next" disabled>Próxima →</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 15 · FONTES -->
+        <section class="slide" data-title="Liste as fontes usadas na pesquisa" data-bubble="Tudo com fonte, como deve ser 📚">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag">Fontes</span>
+              <h2>Referências</h2>
+              <p>Fontes oficiais, artigos científicos e pesquisas usadas nesta apresentação.</p>
+            </header>
+            <div class="refs" data-anim>
+              <a class="glass ref" href="https://blog.google/products/translate/google-translate-new-languages-2024/" target="_blank" rel="noopener"><b>Google (2024)</b>110 new languages are coming to Google Translate</a>
+              <a class="glass ref" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener"><b>Cetic.br · TIC Educação 2024</b>Sete em cada dez alunos do ensino médio usam IA generativa (cobertura Teletime)</a>
+              <a class="glass ref" href="https://cetic.br/pt/pesquisa/educacao/" target="_blank" rel="noopener"><b>Cetic.br</b>Pesquisa TIC Educação: página oficial</a>
+              <a class="glass ref" href="https://news.un.org/en/node/1140477" target="_blank" rel="noopener"><b>UNESCO / ONU News (2023)</b>Guidance for generative AI in education and research</a>
+              <a class="glass ref" href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener"><b>Anthropic</b>Prompt engineering overview: documentação oficial</a>
+              <a class="glass ref" href="https://code.claude.com/docs" target="_blank" rel="noopener"><b>Anthropic</b>Documentação do Claude Code: skills, subagentes e MCP</a>
+              <a class="glass ref" href="https://github.com/openai/codex" target="_blank" rel="noopener"><b>OpenAI</b>Codex CLI: repositório oficial</a>
+              <a class="glass ref" href="https://techcrunch.com/2025/04/16/openai-debuts-codex-cli-an-open-source-coding-tool-for-terminals" target="_blank" rel="noopener"><b>TechCrunch (2025)</b>OpenAI debuts Codex CLI</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener"><b>Vaswani et al. (2017)</b>Attention Is All You Need: o Transformer</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener"><b>Wu et al. (2016)</b>Google's Neural Machine Translation System</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener"><b>Ho, Jain e Abbeel (2020)</b>Denoising Diffusion Probabilistic Models</a>
+              <a class="glass ref" href="https://doi.org/10.1145/365153.365168" target="_blank" rel="noopener"><b>Weizenbaum (1966)</b>ELIZA: o primeiro chatbot</a>
+              <a class="glass ref" href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm" target="_blank" rel="noopener"><b>Brasil (2018)</b>Lei Geral de Proteção de Dados: Lei 13.709</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- 16 · OBRIGADO -->
+        <section class="slide" data-title="Agradeça e abra para perguntas" data-bubble="Valeu, turma! 💛">
+          <div class="wrap center end-slide">
+            <span class="sphere xl" aria-hidden="true" data-anim></span>
+            <h2 class="hero" data-anim><span class="soft">Obrigado!</span><br>Perguntas?</h2>
+            <p class="lead" data-anim>A IA não substitui o seu raciocínio, ela <em class="serif">amplia</em> o que você consegue fazer. Use com curiosidade e senso crítico.</p>
+            <div class="row center" data-anim>
+              <button class="pill dark lg" data-goto="0">↺ Voltar ao início</button>
+              <a class="pill ghost lg" href="https://github.com/Cir0Arruda/SENAI-IA-Apresentacao_" target="_blank" rel="noopener">Ver o código no GitHub</a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Barra inferior estilo "campo de prompt" -->
+      <footer class="dock">
+        <div class="progress"><i id="progress"></i></div>
+        <div class="dock-bar glass">
+          <div class="mascot" id="mascot" aria-live="polite">
+            <div class="bubble" id="mascot-bubble"></div>
+            <div class="bot-slot"></div>
+          </div>
+          <div class="dock-prompt"><span class="dock-label" id="dock-label">Slide 1 de 17</span><span id="dock-title"></span><span class="caret"></span></div>
+          <div class="dock-chips">
+            <button class="pill dark sm" data-goto="3">🌐 Ferramentas</button>
+            <button class="pill dark sm" data-goto="8">✨ Prompts</button>
+            <button class="pill dark sm" data-goto="9">🤖 Agentes</button>
+            <button class="pill dark sm" data-goto="12">🎬 Vídeo</button>
+            <button class="pill dark sm" data-goto="14">🧠 Quiz</button>
+          </div>
+          <button class="circle ghost" id="btn-prev" aria-label="Slide anterior">
+            <svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          </button>
+          <button class="circle dark" id="btn-next" aria-label="Próximo slide">
+            <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
