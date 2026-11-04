@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>IA na Prática · SENAI Iracemápolis</title>
-  <meta name="description" content="Apresentação didática e interativa sobre ferramentas de Inteligência Artificial: tradução, assistentes, chatbots, geração de conteúdo, resumos, prompts, agentes e vídeos com Claude Code.">
+  <meta name="description" content="Apresentação didática e interativa sobre Inteligência Artificial: como funciona, a matemática, o treinamento e as ferramentas na prática, com Gemini ao vivo.">
   <meta name="theme-color" content="#e6e7fb">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23ffd2a8'/%3E%3Cstop offset='.5' stop-color='%23ff8a3d'/%3E%3Cstop offset='1' stop-color='%23ff5a0a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='28' fill='url(%23g)'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +13,96 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-  <!-- Fundo: gradiente, orbes desfocados e linhas finas -->
+
+  <!-- ============ Ícones (traço fino, mesmo estilo do site) ============ -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-languages" viewBox="0 0 24 24"><path d="M4 5h8M8 3v2M5 5c1 4 4 7 7.5 8.5M11 5c-1 4-4 7-7 8.5M13 21l4-9 4 9M14.5 18h5"/></symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8zM19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+      <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 14h.01M15 14h.01"/></symbol>
+      <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/></symbol>
+      <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+      <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></symbol>
+      <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 3a3 3 0 0 0-3 3 3 3 0 0 0-2.5 4.5A3 3 0 0 0 4 15a3 3 0 0 0 2 3.5A3 3 0 0 0 9 21a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3zM15 3a3 3 0 0 1 3 3 3 3 0 0 1 2.5 4.5A3 3 0 0 1 20 15a3 3 0 0 1-2 3.5A3 3 0 0 1 15 21a3 3 0 0 1-3-3"/><path d="M8 9h1.5M14.5 9H16M8 14h2M14 14h2"/></symbol>
+      <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/></symbol>
+      <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+      <symbol id="i-access" viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.6"/><path d="M5 8l7 1.5L19 8M12 9.5V14m0 0-3 7m3-7 3 7"/></symbol>
+      <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 21V10l6 4v-4l6 4V5h6v16zM7 17h2M12 17h2M17 17h2"/></symbol>
+      <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></symbol>
+      <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+      <symbol id="i-video" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-4v12l-6-4z"/></symbol>
+      <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></symbol>
+      <symbol id="i-slides" viewBox="0 0 24 24"><path d="M3 4h18M5 4v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4M12 16v4M8 21h8"/></symbol>
+      <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.8-.7-.7-2.8z"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></symbol>
+      <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0zM12 17v5"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-5-6.7"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+      <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+      <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+      <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+      <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
+      <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+      <symbol id="i-network" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6.8l3.2 3.8M7 17.2l3.2-3.8M13.8 10.6 17 6.8M13.8 13.4 17 17.2"/></symbol>
+      <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+      <symbol id="i-grad" viewBox="0 0 24 24"><path d="M22 9 12 4 2 9l10 5zM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></symbol>
+      <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2M17 6l3 3M14 9l2 2"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8"/></symbol>
+      <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></symbol>
+      <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.8.7-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-7.8-9-7.8z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16.5" cy="10.5" r="1"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+      <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18M8 17v-6M13 17V7M18 17v-4"/></symbol>
+      <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 7l6 6 4-4 8 8M21 11v6h-6"/></symbol>
+      <symbol id="i-gem" viewBox="0 0 24 24"><path d="M12 2c.6 5.2 4.8 9.4 10 10-5.2.6-9.4 4.8-10 10-.6-5.2-4.8-9.4-10-10 5.2-.6 9.4-4.8 10-10z"/></symbol>
+      <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 4H6l6 8-6 8h12"/></symbol>
+      <symbol id="i-function" viewBox="0 0 24 24"><path d="M9 21c2 0 3-1 3.5-4l1.5-10C14.5 4 15.5 3 17.5 3M7 10h10"/></symbol>
+      <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7.5L21 10z"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7v.5M12 17h.01"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></symbol>
+      <symbol id="i-umbrella" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10H2A10 10 0 0 1 12 2zM12 12v7a2 2 0 0 1-4 0"/></symbol>
+      <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M17.5 19H7a5 5 0 1 1 1.7-9.7A6 6 0 0 1 20 11.5a3.75 3.75 0 0 1-2.5 7.5z"/></symbol>
+      <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.7 5.6 9.2a9 9 0 1 0 12.8 0z"/></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+      <symbol id="i-spiral" viewBox="0 0 24 24"><path d="M12 12a1 1 0 1 1 1-1 3 3 0 0 1-3 3 5 5 0 0 1-5-5 7 7 0 0 1 7-7 9 9 0 0 1 9 9 11 11 0 0 1-11 11"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8M7 21v-7h10v7"/></symbol>
+      <symbol id="i-sort" viewBox="0 0 24 24"><path d="M3 6h13M3 12h9M3 18h5M18 6v14M15 17l3 3 3-3"/></symbol>
+      <symbol id="i-loader" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+      <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4L2.4 16a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- Fundo -->
   <div class="bg" aria-hidden="true">
     <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="orb o4"></span>
     <svg class="lines" viewBox="0 0 1600 1000" preserveAspectRatio="none">
@@ -25,79 +114,67 @@
   </div>
 
   <div class="shell">
-    <!-- Barra lateral -->
     <nav class="rail" aria-label="Seções">
-      <button class="rail-btn primary" data-goto="0" title="Início" aria-label="Início">
-        <svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-      <button class="rail-btn" data-goto="3" data-sec="ferr" title="Ferramentas de IA" aria-label="Ferramentas de IA">
-        <svg class="i" viewBox="0 0 24 24"><path d="M4 5h8M8 3v2M5 5c1 4 4 7 7.5 8.5M11 5c-1 4-4 7-7 8.5M13 21l4-9 4 9M14.5 18h5"/></svg>
-      </button>
-      <button class="rail-btn" data-goto="8" data-sec="prompt" title="Elaboração de prompts" aria-label="Elaboração de prompts">
-        <svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8zM19 15l.8 2.2 2.2.8-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-      </button>
-      <button class="rail-btn" data-goto="9" data-sec="agentes" title="Agentes, Claude Code e Codex" aria-label="Agentes">
-        <svg class="i" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 14h.01M15 14h.01"/></svg>
-      </button>
-      <button class="rail-btn" data-goto="12" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos">
-        <svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>
-      </button>
-      <button class="rail-btn" data-goto="15" data-sec="fontes" title="Fontes" aria-label="Fontes">
-        <svg class="i" viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/></svg>
-      </button>
+      <button class="rail-btn primary" data-goto="0" title="Início" aria-label="Início"><svg class="i"><use href="#i-plus"/></svg></button>
+      <button class="rail-btn" data-goto="2" data-sec="fund" title="Fundamentos da IA" aria-label="Fundamentos da IA"><svg class="i"><use href="#i-brain"/></svg></button>
+      <button class="rail-btn" data-goto="6" data-sec="ferr" title="Ferramentas de IA" aria-label="Ferramentas de IA"><svg class="i"><use href="#i-languages"/></svg></button>
+      <button class="rail-btn" data-goto="11" data-sec="prompt" title="Elaboração de prompts" aria-label="Elaboração de prompts"><svg class="i"><use href="#i-sparkles"/></svg></button>
+      <button class="rail-btn" data-goto="12" data-sec="agentes" title="Agentes e automação" aria-label="Agentes e automação"><svg class="i"><use href="#i-bot"/></svg></button>
+      <button class="rail-btn" data-goto="16" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos"><svg class="i"><use href="#i-film"/></svg></button>
+      <button class="rail-btn" data-goto="19" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
       <span class="rail-logo" aria-hidden="true">IA</span>
     </nav>
 
     <main class="stage">
       <header class="topbar">
         <button class="chip-model" data-goto="1" aria-label="Ir para o roteiro">
-          <svg class="i spin" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+          <svg class="i spin"><use href="#i-sun"/></svg>
           Assistente IA <b>v2026</b>
-          <svg class="i sm" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          <svg class="i sm"><use href="#i-chevron"/></svg>
         </button>
         <div class="top-title">IA na Prática · <span>SENAI Iracemápolis</span></div>
-        <button class="pill dark" id="btn-fs" aria-label="Tela cheia">
-          <svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-          <span>Tela cheia</span>
-        </button>
+        <div class="top-actions">
+          <button class="pill ghost gm-btn" id="gm-open" aria-label="Configurar Gemini">
+            <svg class="i gm-ico"><use href="#i-gem"/></svg><span>Gemini</span><i class="gm-dot" id="gm-dot"></i>
+          </button>
+          <button class="pill dark" id="btn-fs" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg><span>Tela cheia</span></button>
+        </div>
       </header>
 
       <div class="slides" id="slides">
 
         <!-- 0 · CAPA -->
-        <section class="slide" data-title="Explique como a IA pode ser usada na prática" data-bubble="Oi, turma! 👋 Bora aprender IA?">
+        <section class="slide" data-title="Explique como a IA funciona e como usar na prática" data-bubble="Oi, turma! Bora aprender IA?">
           <div class="wrap cover">
             <div class="cover-top">
               <div class="cover-text">
                 <span class="eyebrow" data-anim>Trabalho de Inteligência Artificial · 2026</span>
                 <h1 class="hero" data-anim><span class="soft">Olá, turma.</span><br>Vamos colocar a IA <em class="serif">para trabalhar?</em></h1>
-                <p class="lead" data-anim>Um guia prático, com exemplos animados, das ferramentas de IA que você já pode usar hoje. No fim, mostro como agentes como o Claude Code e o Codex criam apresentações e vídeos de verdade.</p>
+                <p class="lead" data-anim>Primeiro entendemos o que é a IA, a matemática por trás dela e como ela é treinada. Depois, colocamos as ferramentas em prática, com exemplos animados e o Gemini respondendo ao vivo.</p>
                 <div class="row" data-anim>
-                  <button class="pill dark lg" data-goto="1">Começar
-                    <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                  </button>
+                  <button class="pill dark lg" data-goto="1">Começar <svg class="i"><use href="#i-arrow-right"/></svg></button>
                   <span class="hint">Use <kbd>←</kbd> <kbd>→</kbd> ou deslize o dedo</span>
                 </div>
               </div>
               <div class="cover-bot" data-anim>
-                <div class="bubble big">Ei! 👋<br>Eu vou te acompanhar<br>em cada slide.</div>
+                <div class="bubble big">Ei! Eu vou te acompanhar em cada slide.</div>
                 <div class="bot-slot xl"></div>
               </div>
             </div>
             <div class="cards3">
-              <button class="glass card feature" data-goto="3" data-anim>
-                <span class="f-ico f-orange"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5"/></svg></span>
-                <strong>Traduzir, perguntar, conversar, criar e resumir. Tudo com exemplos.</strong>
+              <button class="glass card feature" data-goto="2" data-anim>
+                <span class="f-ico f-lilac"><svg><use href="#i-brain"/></svg></span>
+                <strong>O que é IA, como funciona, a matemática e o treinamento.</strong>
+                <small>Fundamentos</small>
+              </button>
+              <button class="glass card feature" data-goto="6" data-anim>
+                <span class="f-ico f-orange"><svg><use href="#i-layers"/></svg></span>
+                <strong>Traduzir, perguntar, conversar, criar, resumir e escrever prompts.</strong>
                 <small>1 · Ferramentas de IA</small>
               </button>
-              <button class="glass card feature" data-goto="8" data-anim>
-                <span class="f-ico f-lilac"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z"/></svg></span>
-                <strong>A receita de um bom prompt, montada peça por peça.</strong>
-                <small>1.6 · Elaboração de prompts</small>
-              </button>
-              <button class="glass card feature" data-goto="9" data-anim>
-                <span class="f-ico f-dark"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="4"/><path d="M12 4v4M9 14h.01M15 14h.01"/></svg></span>
-                <strong>Agentes, skills e vídeos criados com Claude Code.</strong>
+              <button class="glass card feature" data-goto="12" data-anim>
+                <span class="f-ico f-dark"><svg><use href="#i-bot"/></svg></span>
+                <strong>Agentes automatizando o Excel, skills e vídeos com o Claude Code.</strong>
                 <small>Extra + Bônus</small>
               </button>
             </div>
@@ -106,123 +183,316 @@
         </section>
 
         <!-- 1 · ROTEIRO -->
-        <section class="slide" data-title="Mostre o roteiro da apresentação" data-bubble="Clique em qualquer tema para pular direto 👇">
+        <section class="slide" data-title="Mostre o roteiro da apresentação" data-bubble="Clique em qualquer tema para pular direto">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">Roteiro</span>
               <h2>O que vamos ver hoje</h2>
-              <p>Cada tema tem um exemplo para você testar ao vivo. Clique em um cartão para ir direto a ele.</p>
+              <p>Começamos pelos fundamentos e depois partimos para a prática. Clique em um cartão para ir direto a ele.</p>
             </header>
             <div class="agenda">
-              <button class="glass ag" data-goto="3" data-anim><b>1.1</b><span>Tradução automática</span><i>🌐</i></button>
-              <button class="glass ag" data-goto="4" data-anim><b>1.2</b><span>Assistentes virtuais</span><i>🎙️</i></button>
-              <button class="glass ag" data-goto="5" data-anim><b>1.3</b><span>Chatbots</span><i>💬</i></button>
-              <button class="glass ag" data-goto="6" data-anim><b>1.4</b><span>Geração de conteúdo</span><i>🎨</i></button>
-              <button class="glass ag" data-goto="7" data-anim><b>1.5</b><span>Resumo de texto</span><i>📝</i></button>
-              <button class="glass ag" data-goto="8" data-anim><b>1.6</b><span>Elaboração de prompts</span><i>✨</i></button>
-              <button class="glass ag accent" data-goto="9" data-anim><b>Extra</b><span>Agentes, Claude Code, Codex e skills</span><i>🤖</i></button>
-              <button class="glass ag dark" data-goto="12" data-anim><b>Bônus</b><span>Criar e editar vídeos com o Claude Code</span><i>🎬</i></button>
+              <button class="glass ag lilac" data-goto="2" data-anim><b>Base</b><span>O que é IA</span><svg class="i ag-i"><use href="#i-bulb"/></svg></button>
+              <button class="glass ag lilac" data-goto="3" data-anim><b>Base</b><span>Como funciona hoje</span><svg class="i ag-i"><use href="#i-network"/></svg></button>
+              <button class="glass ag lilac" data-goto="4" data-anim><b>Base</b><span>A matemática por trás</span><svg class="i ag-i"><use href="#i-sigma"/></svg></button>
+              <button class="glass ag lilac" data-goto="5" data-anim><b>Base</b><span>Como a IA é treinada</span><svg class="i ag-i"><use href="#i-trend"/></svg></button>
+              <button class="glass ag" data-goto="6" data-anim><b>1.1</b><span>Tradução automática</span><svg class="i ag-i"><use href="#i-languages"/></svg></button>
+              <button class="glass ag" data-goto="7" data-anim><b>1.2</b><span>Assistentes virtuais</span><svg class="i ag-i"><use href="#i-mic"/></svg></button>
+              <button class="glass ag" data-goto="8" data-anim><b>1.3</b><span>Chatbots</span><svg class="i ag-i"><use href="#i-message"/></svg></button>
+              <button class="glass ag" data-goto="9" data-anim><b>1.4</b><span>Geração de conteúdo</span><svg class="i ag-i"><use href="#i-palette"/></svg></button>
+              <button class="glass ag" data-goto="10" data-anim><b>1.5</b><span>Resumo de texto</span><svg class="i ag-i"><use href="#i-file-text"/></svg></button>
+              <button class="glass ag" data-goto="11" data-anim><b>1.6</b><span>Elaboração de prompts</span><svg class="i ag-i"><use href="#i-sparkles"/></svg></button>
+              <button class="glass ag accent" data-goto="12" data-anim><b>Extra</b><span>Agentes e automação no Excel</span><svg class="i ag-i"><use href="#i-table"/></svg></button>
+              <button class="glass ag dark" data-goto="16" data-anim><b>Bônus</b><span>Criar e editar vídeos com o Claude Code</span><svg class="i ag-i"><use href="#i-film"/></svg></button>
             </div>
           </div>
         </section>
 
         <!-- 2 · O QUE É IA -->
-        <section class="slide" data-title="O que é IA, explicado em 1 minuto" data-bubble="Eu adivinho a próxima palavra. Sério! 🤯">
+        <section class="slide" data-id="whatis" data-title="Explique o que é Inteligência Artificial" data-bubble="IA é aprender com exemplos, não com regras">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">Antes de tudo</span>
-              <h2>O que é IA, <em class="serif">em 1 minuto</em></h2>
-              <p>Inteligência Artificial é um sistema que <b>aprende padrões a partir de muitos exemplos</b> e usa esses padrões para fazer tarefas que antes exigiam uma pessoa: traduzir, reconhecer voz, escrever, resumir.</p>
+              <span class="tag lilac">Fundamentos · 1 de 4</span>
+              <h2>O que é <em class="serif">Inteligência Artificial?</em></h2>
+              <p>É a área da computação que cria sistemas capazes de fazer tarefas que normalmente exigem inteligência humana: entender linguagem, reconhecer imagens, tomar decisões. A IA moderna não segue regras escritas à mão: ela <b>aprende padrões a partir de exemplos</b>.</p>
             </header>
             <div class="g2">
-              <div class="glass card" data-anim>
-                <div class="card-k">Como um chatbot "pensa"</div>
-                <p class="mt0">Um modelo de linguagem (LLM) lê o texto e calcula <b>qual é a próxima palavra mais provável</b>. Repetindo isso milhares de vezes, ele escreve respostas inteiras.</p>
-                <div class="nt-sentence">O SENAI forma profissionais para a <span class="nt-blank" id="nt-blank">____</span></div>
-                <div class="nt-bars" id="nt-bars">
-                  <div class="nt-row"><span>indústria</span><div class="bar"><i style="--w:62%"></i></div><em>62%</em></div>
-                  <div class="nt-row"><span>vida</span><div class="bar"><i style="--w:21%"></i></div><em>21%</em></div>
-                  <div class="nt-row"><span>empresa</span><div class="bar"><i style="--w:11%"></i></div><em>11%</em></div>
-                  <div class="nt-row"><span>banana</span><div class="bar"><i style="--w:0.4%"></i></div><em>0,4%</em></div>
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Uma dentro da outra (clique em cada camada)</div>
+                <div class="nest-wrap">
+                  <div class="nest" id="nest">
+                    <button class="ring r1" data-k="0"><span>Inteligência Artificial</span></button>
+                    <button class="ring r2" data-k="1"><span>Aprendizado de máquina</span></button>
+                    <button class="ring r3" data-k="2"><span>Deep learning</span></button>
+                    <button class="ring r4" data-k="3"><span>IA generativa</span></button>
+                  </div>
+                  <div class="nest-desc" id="nest-desc" aria-live="polite"></div>
                 </div>
-                <p class="note">Porcentagens ilustrativas, só para mostrar a ideia.</p>
               </div>
               <div class="stack">
+                <div class="glass card" data-anim>
+                  <div class="card-k">Programar × ensinar</div>
+                  <div class="flow-row" id="flow-trad">
+                    <span class="fl-lbl">Programação tradicional</span>
+                    <span class="fl-box">Regras</span><i>+</i><span class="fl-box">Dados</span><i><svg class="i sm"><use href="#i-arrow-right"/></svg></i><span class="fl-box out">Respostas</span>
+                  </div>
+                  <div class="flow-row hl" id="flow-ml">
+                    <span class="fl-lbl">Aprendizado de máquina</span>
+                    <span class="fl-box">Dados</span><i>+</i><span class="fl-box">Respostas</span><i><svg class="i sm"><use href="#i-arrow-right"/></svg></i><span class="fl-box out">Regras</span>
+                  </div>
+                  <p class="note">Exemplo: para detectar spam, em vez de escrever mil regras, mostramos milhares de e-mails já marcados como "spam" ou "normal". O modelo descobre o padrão sozinho.</p>
+                </div>
                 <div class="glass card stat" data-anim>
                   <div class="big-num"><span data-count="7">0</span> em 10</div>
                   <p>alunos do ensino médio com acesso à internet já usam IA generativa em pesquisas escolares.</p>
                   <a class="src" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener">Fonte: Cetic.br, TIC Educação 2024 (divulgada em set/2025)</a>
                 </div>
-                <div class="glass card" data-anim>
-                  <div class="card-k">Linha do tempo rápida</div>
-                  <ol class="timeline">
-                    <li><b>1966</b> ELIZA, o primeiro chatbot (MIT)</li>
-                    <li><b>2011</b> Siri chega aos celulares</li>
-                    <li><b>2016</b> Google Tradutor passa a usar redes neurais</li>
-                    <li><b>2017</b> Nasce o <i>Transformer</i>, base dos chatbots atuais</li>
-                    <li><b>2022</b> ChatGPT populariza a IA generativa</li>
-                    <li><b>2025</b> Agentes de código: Claude Code e Codex</li>
-                  </ol>
+              </div>
+            </div>
+            <ol class="htl" data-anim>
+              <li><b>1943</b>Primeiro modelo matemático de neurônio</li>
+              <li><b>1958</b>Perceptron: o neurônio que aprende</li>
+              <li><b>1966</b>ELIZA, o primeiro chatbot</li>
+              <li><b>1986</b>Backpropagation: redes com várias camadas</li>
+              <li><b>2012</b>Deep learning vence em imagens</li>
+              <li><b>2017</b>Transformer, base dos chatbots</li>
+              <li><b>2022</b>ChatGPT populariza a IA generativa</li>
+              <li><b>2025</b>Agentes: Claude Code e Codex</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- 3 · COMO FUNCIONA HOJE -->
+        <section class="slide" data-id="pipeline" data-title="Mostre como um modelo de linguagem gera texto" data-bubble="Eu adivinho a próxima palavra. Sério!">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag lilac">Fundamentos · 2 de 4</span>
+              <h2>Como a IA funciona <em class="serif">hoje</em></h2>
+              <p>Os chatbots atuais são <b>modelos de linguagem (LLMs)</b> baseados no <b>Transformer</b>. Por dentro, eles fazem uma única coisa, muito bem: <b>calcular qual é o próximo pedaço de texto mais provável</b>. Repetindo isso milhares de vezes, escrevem respostas inteiras.</p>
+            </header>
+            <div class="glass card demo pipe" data-anim>
+              <div class="pp-steps" id="pp-steps">
+                <button data-s="0"><i>1</i>Tokens</button>
+                <button data-s="1"><i>2</i>Vetores</button>
+                <button data-s="2"><i>3</i>Atenção</button>
+                <button data-s="3"><i>4</i>Probabilidades</button>
+                <button data-s="4"><i>5</i>Escolhe e repete</button>
+              </div>
+              <div class="pp-stage" id="pp-stage">
+                <svg class="pp-att" id="pp-att" aria-hidden="true"></svg>
+                <div class="pp-tokens" id="pp-tokens"></div>
+                <div class="pp-probs" id="pp-probs">
+                  <div class="nt-row"><span>indústria</span><div class="bar"><i style="--w:62%"></i></div><em>62%</em></div>
+                  <div class="nt-row"><span>vida</span><div class="bar"><i style="--w:21%"></i></div><em>21%</em></div>
+                  <div class="nt-row"><span>empresa</span><div class="bar"><i style="--w:11%"></i></div><em>11%</em></div>
+                  <div class="nt-row"><span>banana</span><div class="bar"><i style="--w:0.4%"></i></div><em>0,4%</em></div>
                 </div>
               </div>
+              <div class="pp-foot">
+                <p class="pp-exp" id="pp-exp" aria-live="polite"></p>
+                <div class="row nomt">
+                  <button class="circle ghost" id="pp-prev" aria-label="Etapa anterior"><svg class="i"><use href="#i-arrow-left"/></svg></button>
+                  <button class="circle dark" id="pp-next" aria-label="Próxima etapa"><svg class="i"><use href="#i-arrow-right"/></svg></button>
+                  <button class="pill ghost sm gm-only" data-ask="Explique a etapa atual do funcionamento de um LLM mostrada neste slide, com um exemplo do dia a dia de um aluno de curso técnico."><svg class="i sm"><use href="#i-gem"/></svg>Explicar com Gemini</button>
+                </div>
+              </div>
+              <p class="note">Números de tokens, vetores e porcentagens são ilustrativos, só para mostrar a ideia.</p>
             </div>
           </div>
         </section>
 
-        <!-- 3 · 1.1 TRADUÇÃO -->
-        <section class="slide" data-id="translate" data-title="Traduza frases e mostre onde a IA pode errar" data-bubble="Escolha uma frase e veja eu traduzir! 🌐">
+        <!-- 4 · MATEMÁTICA -->
+        <section class="slide" data-id="neuron" data-title="Mostre a matemática de um neurônio artificial" data-bubble="Mexa nos controles e veja o neurônio decidir">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag lilac">Fundamentos · 3 de 4</span>
+              <h2>A matemática <em class="serif">por trás</em></h2>
+              <p>Toda rede neural é feita de <b>neurônios artificiais</b>. Cada um faz uma conta simples: multiplica cada entrada por um <b>peso</b>, soma tudo e passa o resultado por uma <b>função de ativação</b>. Um modelo grande junta bilhões dessas contas.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Experimente: um neurônio decide se vai chover</div>
+                <svg class="nn-svg" id="nn-svg" viewBox="0 0 520 230" aria-hidden="true">
+                  <g id="nn-lines"></g>
+                  <g class="nn-in">
+                    <circle cx="70" cy="45" r="24"/><circle cx="70" cy="115" r="24"/><circle cx="70" cy="185" r="24"/>
+                  </g>
+                  <text x="70" y="50" class="nn-v" id="nn-v0">0,8</text>
+                  <text x="70" y="120" class="nn-v" id="nn-v1">0,6</text>
+                  <text x="70" y="190" class="nn-v" id="nn-v2">0,5</text>
+                  <text x="185" y="60" class="nn-w">× 2,0</text>
+                  <text x="185" y="108" class="nn-w">× 1,5</text>
+                  <text x="185" y="172" class="nn-w">× 3,0</text>
+                  <circle cx="300" cy="115" r="34" class="nn-sum"/>
+                  <text x="300" y="112" class="nn-sym">Σ + b</text>
+                  <text x="300" y="132" class="nn-z" id="nn-z">z = 1,0</text>
+                  <path d="M334 115h52" class="nn-link" id="nn-link"/>
+                  <circle cx="430" cy="115" r="40" class="nn-out" id="nn-out"/>
+                  <text x="430" y="112" class="nn-sym">σ(z)</text>
+                  <text x="430" y="134" class="nn-z" id="nn-y">73%</text>
+                </svg>
+                <div class="nn-ctrl">
+                  <label><svg class="i sm"><use href="#i-cloud"/></svg><span>x₁ Nuvens no céu</span><input type="range" min="0" max="1" step="0.05" value="0.8" data-x="0"><b id="nn-l0">0,8</b></label>
+                  <label><svg class="i sm"><use href="#i-drop"/></svg><span>x₂ Umidade do ar</span><input type="range" min="0" max="1" step="0.05" value="0.6" data-x="1"><b id="nn-l1">0,6</b></label>
+                  <label><svg class="i sm"><use href="#i-phone"/></svg><span>x₃ Previsão do app</span><input type="range" min="0" max="1" step="0.05" value="0.5" data-x="2"><b id="nn-l2">0,5</b></label>
+                </div>
+                <div class="nn-verdict" id="nn-verdict"><svg class="i"><use href="#i-umbrella"/></svg><span>Leve o guarda-chuva</span></div>
+              </div>
+              <div class="stack">
+                <div class="glass card formula" data-anim>
+                  <div class="card-k">1 · Soma ponderada</div>
+                  <div class="math">z = w₁·x₁ + w₂·x₂ + w₃·x₃ + b</div>
+                  <div class="math live" id="nn-calc"></div>
+                  <p class="note">O bias <b>b = −3,0</b> funciona como uma "exigência mínima" antes de o neurônio disparar.</p>
+                </div>
+                <div class="glass card formula" data-anim>
+                  <div class="card-k">2 · Função de ativação (sigmoide)</div>
+                  <div class="math">σ(z) = 1 / (1 + e<sup>−z</sup>)</div>
+                  <svg class="sig" viewBox="0 0 240 90" aria-hidden="true">
+                    <path d="M10 80H230M120 10V80" class="sig-ax"/>
+                    <path id="sig-path" class="sig-curve"/>
+                    <circle id="sig-dot" r="5" class="sig-dot"/>
+                  </svg>
+                  <p class="note">Transforma qualquer número em um valor entre 0 e 1, como uma probabilidade.</p>
+                </div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-network"/></svg>Camadas</b>Neurônios ligados em camadas: a saída de uma vira a entrada da próxima. Isso é o "deep" de <i>deep learning</i>.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-chart"/></svg>Softmax</b>Transforma as pontuações de todas as palavras possíveis em probabilidades que somam 100%.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-eye"/></svg>Atenção</b><code>Atenção(Q, K, V) = softmax(Q·Kᵀ / √d) · V</code>Cada palavra "olha" para as outras e decide quais importam mais.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5 · TREINAMENTO -->
+        <section class="slide" data-id="train" data-title="Mostre como uma IA é treinada" data-bubble="Treinar é errar, medir o erro e ajustar">
+          <div class="wrap">
+            <header class="s-head" data-anim>
+              <span class="tag lilac">Fundamentos · 4 de 4</span>
+              <h2>Como a IA é <em class="serif">treinada</em></h2>
+              <p>Treinar é ajustar os pesos até o modelo errar pouco. O modelo faz uma previsão, mede o tamanho do erro e corrige cada peso um pouquinho na direção que diminui esse erro. Isso se chama <b>descida do gradiente</b>, e se repete bilhões de vezes.</p>
+            </header>
+            <div class="g2 wide-left">
+              <div class="glass card demo" data-anim>
+                <div class="card-k">Experimente: escolha a taxa de aprendizado e treine</div>
+                <svg class="gd-svg" id="gd-svg" viewBox="0 0 520 220" aria-hidden="true">
+                  <path d="M40 10V200H510" class="gd-ax"/>
+                  <text x="14" y="20" class="gd-lbl">erro</text>
+                  <text x="440" y="216" class="gd-lbl">valor do peso</text>
+                  <path id="gd-curve" class="gd-curve"/>
+                  <g id="gd-trail"></g>
+                  <circle id="gd-ball" r="9" class="gd-ball"/>
+                </svg>
+                <div class="gd-ctrl">
+                  <div class="seg" id="gd-lr">
+                    <button data-lr="0.15">Baixa</button>
+                    <button class="on" data-lr="1">Ideal</button>
+                    <button data-lr="3">Alta demais</button>
+                  </div>
+                  <button class="pill dark sm" id="gd-go"><svg class="i sm"><use href="#i-play"/></svg>Treinar</button>
+                </div>
+                <div class="gd-stats">
+                  <span>Época <b id="gd-ep">0</b></span>
+                  <span>Erro <b id="gd-err">5,1</b></span>
+                  <span class="gd-pred">"O céu é <b id="gd-guess">banana</b>"</span>
+                </div>
+                <p class="note" id="gd-note">Taxa ideal: o erro cai rápido e o modelo acerta.</p>
+              </div>
+              <div class="glass card" data-anim>
+                <div class="card-k">As etapas do treinamento de um chatbot</div>
+                <ol class="tsteps">
+                  <li><svg class="i"><use href="#i-database"/></svg><div><b>Coletar dados</b><span>Livros, sites, artigos e códigos. O Llama 3, da Meta, foi pré-treinado com mais de 15 trilhões de tokens.</span></div></li>
+                  <li><svg class="i"><use href="#i-cpu"/></svg><div><b>Pré-treinamento</b><span>Prever a próxima palavra, de novo e de novo, ajustando os pesos com <i>backpropagation</i>. Leva semanas em milhares de GPUs.</span></div></li>
+                  <li><svg class="i"><use href="#i-grad"/></svg><div><b>Ajuste fino</b><span>Exemplos de perguntas com boas respostas ensinam o modelo a seguir instruções.</span></div></li>
+                  <li><svg class="i"><use href="#i-users"/></svg><div><b>Feedback humano (RLHF)</b><span>Pessoas comparam respostas, e o modelo aprende a preferir as mais úteis e seguras.</span></div></li>
+                  <li><svg class="i"><use href="#i-shield"/></svg><div><b>Testes e segurança</b><span>Avaliação em provas, testes de risco e correções antes do lançamento.</span></div></li>
+                </ol>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-function"/></svg>Regra de atualização</b><code>w ← w − η · ∂Erro/∂w</code>η (eta) é a taxa de aprendizado: o tamanho do passo.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-repeat"/></svg>Backpropagation</b>O erro "volta" pela rede, da saída para a entrada, calculando quanto cada peso contribuiu para ele.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-zap"/></svg>Escala</b>Modelos grandes têm centenas de bilhões de pesos: o Llama 3.1 tem 405 bilhões.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6 · 1.1 TRADUÇÃO -->
+        <section class="slide" data-id="translate" data-title="Traduza frases e mostre o que acontece por dentro" data-bubble="Escolha uma frase e veja eu traduzir">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.1</span>
               <h2>Tradução automática</h2>
-              <p>Os tradutores modernos usam <b>redes neurais</b>: em vez de trocar palavra por palavra, leem a frase inteira e entendem o contexto. Em 2024, o Google Tradutor ganhou <b>110 idiomas novos</b> de uma vez, com ajuda do modelo PaLM 2.</p>
+              <p>O tradutor usa a mesma ideia do Transformer: transforma a frase em tokens e vetores, usa a <b>atenção</b> para descobrir quais palavras se relacionam e gera a tradução token por token. Em 2024, o Google Tradutor ganhou <b>110 idiomas novos</b> com ajuda do modelo PaLM 2.</p>
             </header>
-            <div class="g2 wide-left">
-              <div class="glass card demo" data-anim>
-                <div class="card-k">Experimente: escolha uma frase</div>
-                <div class="seg" id="tr-phrases" role="tablist">
+            <div class="glass card demo tr-app" data-anim>
+              <div class="tr-top">
+                <div class="tr-brand"><span class="tr-logo"><svg class="i"><use href="#i-languages"/></svg></span>Tradutor IA</div>
+                <div class="seg" id="tr-phrases">
                   <button class="on" data-p="0">Bom dia, turma</button>
-                  <button data-p="1">Expressão: "chutar o balde"</button>
+                  <button data-p="1">"Chutar o balde"</button>
                   <button data-p="2">Texto técnico</button>
-                </div>
-                <div class="tr-src"><span class="lang">PT · Português</span><p id="tr-src"></p></div>
-                <div class="tr-out">
-                  <div class="tr-lang"><span class="lang">EN · Inglês</span><p id="tr-en"></p></div>
-                  <div class="tr-lang"><span class="lang">ES · Espanhol</span><p id="tr-es"></p></div>
-                  <div class="tr-lang"><span class="lang">JA · Japonês</span><p id="tr-ja" lang="ja"></p></div>
-                </div>
-                <div class="tr-note" id="tr-note"></div>
-                <div class="row">
-                  <button class="pill ghost sm" id="tr-back">↩︎ Traduzir de volta (conferir)</button>
-                  <button class="pill ghost sm" id="tr-literal" hidden>⚠️ Ver tradução palavra por palavra</button>
-                </div>
-                <div class="tr-back" id="tr-backout" aria-live="polite"></div>
-              </div>
-              <div class="stack">
-                <div class="glass card" data-anim>
-                  <div class="card-k">Ferramentas</div>
-                  <ul class="tools">
-                    <li><b>Google Tradutor</b> textos, sites, câmera (traduz placas e manuais) e conversa por voz</li>
-                    <li><b>DeepL</b> traduções mais naturais para textos longos</li>
-                    <li><b>Microsoft Translator</b> legendas em tempo real numa conversa em grupo</li>
-                    <li><b>Chatbots (ChatGPT, Claude, Gemini)</b> você pode pedir o tom: formal, técnico, para criança…</li>
-                  </ul>
-                </div>
-                <div class="glass card tips" data-anim>
-                  <div class="card-k">Dicas de quem usa bem</div>
-                  <ol>
-                    <li>Escreva frases curtas e completas.</li>
-                    <li><b>Traduza de volta</b> para o português para conferir o sentido.</li>
-                    <li>Termos técnicos e gírias: revise com alguém da área.</li>
-                  </ol>
+                  <button data-p="live" class="gm-tab"><svg class="i sm"><use href="#i-gem"/></svg>Sua frase</button>
                 </div>
               </div>
+              <div class="tr-langbar">
+                <span class="tr-lang-src"><b>Português</b><small id="tr-detect">detectado</small></span>
+                <button class="tr-swap" aria-label="Inverter idiomas"><svg class="i"><use href="#i-swap"/></svg></button>
+                <div class="tr-targets" id="tr-targets">
+                  <button class="on" data-l="en">Inglês</button>
+                  <button data-l="es">Espanhol</button>
+                  <button data-l="ja">Japonês</button>
+                </div>
+              </div>
+              <div class="tr-panes">
+                <div class="tr-pane">
+                  <div class="tr-text" id="tr-src"></div>
+                  <textarea class="tr-input" id="tr-input" rows="3" maxlength="300" placeholder="Digite uma frase em português…" hidden></textarea>
+                  <div class="tr-pfoot">
+                    <span class="tr-ico"><svg class="i sm"><use href="#i-mic"/></svg></span>
+                    <span class="tr-ico"><svg class="i sm"><use href="#i-volume"/></svg></span>
+                    <span class="tr-count" id="tr-count">0 / 300</span>
+                    <button class="pill dark sm" id="tr-live-go" hidden><svg class="i sm"><use href="#i-gem"/></svg>Traduzir com Gemini</button>
+                  </div>
+                </div>
+                <div class="tr-pane out">
+                  <div class="tr-text" id="tr-out" lang="en"></div>
+                  <div class="tr-pfoot">
+                    <span class="tr-ico"><svg class="i sm"><use href="#i-volume"/></svg></span>
+                    <span class="tr-ico"><svg class="i sm"><use href="#i-copy"/></svg></span>
+                    <button class="pill ghost sm" id="tr-back"><svg class="i sm"><use href="#i-refresh"/></svg>Traduzir de volta</button>
+                    <button class="pill ghost sm" id="tr-literal" hidden><svg class="i sm"><use href="#i-alert"/></svg>Palavra por palavra</button>
+                  </div>
+                </div>
+              </div>
+              <div class="tr-inside">
+                <div class="tr-inside-head">
+                  <span class="card-k nomb">Por dentro do tradutor</span>
+                  <div class="tr-stages" id="tr-stages">
+                    <span data-st="0"><svg class="i sm"><use href="#i-type"/></svg>Tokens</span>
+                    <span data-st="1"><svg class="i sm"><use href="#i-cpu"/></svg>Vetores</span>
+                    <span data-st="2"><svg class="i sm"><use href="#i-eye"/></svg>Atenção</span>
+                    <span data-st="3"><svg class="i sm"><use href="#i-pen"/></svg>Geração</span>
+                  </div>
+                </div>
+                <div class="tr-viz" id="tr-viz">
+                  <div class="tr-row" id="tr-row-src"></div>
+                  <svg class="tr-lines" id="tr-lines" aria-hidden="true"></svg>
+                  <div class="tr-row out" id="tr-row-out"></div>
+                </div>
+                <div class="tr-note" id="tr-note" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-wrench"/></svg>Ferramentas</b>Google Tradutor (texto, câmera e conversa), DeepL (textos longos), Microsoft Translator (legendas ao vivo) e chatbots, que aceitam pedidos de tom.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-refresh"/></svg>Traduza de volta</b>Para conferir o sentido, traduza o resultado de volta para o português.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Cuidado</b>Gírias, expressões e termos técnicos de manuais e avisos de segurança precisam de revisão humana.</div>
             </div>
           </div>
         </section>
 
-        <!-- 4 · 1.2 ASSISTENTES -->
-        <section class="slide" data-id="assistant" data-title="Mostre como um assistente de voz entende um pedido" data-bubble="Fala comigo! Clique em um comando 🎙️">
+        <!-- 7 · 1.2 ASSISTENTES -->
+        <section class="slide" data-id="assistant" data-title="Mostre como um assistente de voz entende um pedido" data-bubble="Fala comigo! Clique em um comando">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.2</span>
@@ -237,11 +507,11 @@
                 <button class="pill ghost" data-c="3">"Como chego ao SENAI de ônibus?"</button>
               </div>
               <div class="as-flow">
-                <div class="as-step" data-s="0"><span>🎙️</span><b>Ouve a voz</b><small>Microfone capta o som</small></div>
-                <div class="as-step" data-s="1"><span>🔤</span><b>Voz → texto</b><small>Reconhecimento de fala</small></div>
-                <div class="as-step" data-s="2"><span>🧠</span><b>Entende</b><small>Descobre a intenção</small></div>
-                <div class="as-step" data-s="3"><span>⚙️</span><b>Age</b><small>Chama o app certo</small></div>
-                <div class="as-step" data-s="4"><span>🔊</span><b>Responde</b><small>Texto → voz</small></div>
+                <div class="as-step"><svg class="i"><use href="#i-mic"/></svg><b>Ouve a voz</b><small>Microfone capta o som</small></div>
+                <div class="as-step"><svg class="i"><use href="#i-type"/></svg><b>Voz → texto</b><small>Reconhecimento de fala</small></div>
+                <div class="as-step"><svg class="i"><use href="#i-brain"/></svg><b>Entende</b><small>Descobre a intenção</small></div>
+                <div class="as-step"><svg class="i"><use href="#i-cog"/></svg><b>Age</b><small>Chama o app certo</small></div>
+                <div class="as-step"><svg class="i"><use href="#i-volume"/></svg><b>Responde</b><small>Texto → voz</small></div>
               </div>
               <div class="as-bottom">
                 <div class="wave" id="as-wave" aria-hidden="true"></div>
@@ -250,66 +520,66 @@
               </div>
             </div>
             <div class="g3 mini">
-              <div class="glass card sm" data-anim><b>🏠 Casa</b> lembretes, alarmes, luzes e tomadas inteligentes</div>
-              <div class="glass card sm" data-anim><b>♿ Acessibilidade</b> leitura de tela e comandos por voz para quem não enxerga ou não pode usar as mãos</div>
-              <div class="glass card sm" data-anim><b>🏭 Trabalho</b> consultar manuais e registrar ocorrências com as mãos ocupadas</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-home"/></svg>Casa</b>Lembretes, alarmes, luzes e tomadas inteligentes</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-access"/></svg>Acessibilidade</b>Leitura de tela e comandos por voz para quem não enxerga ou não pode usar as mãos</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-factory"/></svg>Trabalho</b>Consultar manuais e registrar ocorrências com as mãos ocupadas</div>
             </div>
           </div>
         </section>
 
-        <!-- 5 · 1.3 CHATBOTS -->
-        <section class="slide" data-id="chatbot" data-title="Compare um chatbot de regras com um chatbot com IA" data-bubble="Qual bot você prefere? 😄">
+        <!-- 8 · 1.3 CHATBOTS -->
+        <section class="slide" data-id="chatbot" data-title="Compare chatbots e converse com o Gemini ao vivo" data-bubble="Qual bot você prefere?">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.3</span>
               <h2>Chatbots</h2>
-              <p>Um chatbot é um programa que conversa por texto. Existem dois tipos: o de <b>regras</b> (menu de opções fixas) e o com <b>IA generativa</b>, que entende linguagem natural, mesmo com erros de digitação e gírias.</p>
+              <p>Um chatbot é um programa que conversa por texto. O de <b>regras</b> só entende opções fixas de um menu. O com <b>IA generativa</b> entende linguagem natural, mesmo com erros de digitação e gírias. Na aba Gemini, a conversa é com uma IA de verdade.</p>
             </header>
             <div class="g2 wide-left">
               <div class="glass card demo chat-card" data-anim>
                 <div class="seg" id="cb-mode">
-                  <button class="on" data-m="rules">🤖 Bot de regras</button>
-                  <button data-m="ai">✨ Bot com IA</button>
+                  <button class="on" data-m="rules"><svg class="i sm"><use href="#i-list"/></svg>Bot de regras</button>
+                  <button data-m="ai"><svg class="i sm"><use href="#i-sparkles"/></svg>Bot com IA</button>
+                  <button data-m="live" class="gm-tab"><svg class="i sm"><use href="#i-gem"/></svg>Gemini ao vivo</button>
                 </div>
                 <div class="chat" id="cb-chat" aria-live="polite"></div>
-                <div class="chat-input">
+                <form class="chat-input" id="cb-form">
                   <span id="cb-q">Oi! Perdi a aula de ontem, o que foi passado? Tem atividade?</span>
-                  <button class="send" id="cb-send" aria-label="Enviar">
-                    <svg class="i" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
-                  </button>
-                </div>
+                  <input id="cb-input" type="text" maxlength="400" placeholder="Pergunte qualquer coisa ao Gemini…" hidden autocomplete="off">
+                  <button class="send" id="cb-send" type="submit" aria-label="Enviar"><svg class="i"><use href="#i-send"/></svg></button>
+                </form>
               </div>
               <div class="stack">
                 <div class="glass card" data-anim>
                   <div class="card-k">Regras × IA</div>
                   <table class="cmp">
                     <tr><th></th><th>Regras</th><th>IA</th></tr>
-                    <tr><td>Entende frases livres</td><td>❌</td><td>✅</td></tr>
-                    <tr><td>Respostas previsíveis</td><td>✅</td><td>⚠️</td></tr>
+                    <tr><td>Entende frases livres</td><td><svg class="i sm no"><use href="#i-x"/></svg></td><td><svg class="i sm yes"><use href="#i-check"/></svg></td></tr>
+                    <tr><td>Respostas previsíveis</td><td><svg class="i sm yes"><use href="#i-check"/></svg></td><td><svg class="i sm warn-c"><use href="#i-alert"/></svg></td></tr>
                     <tr><td>Pode inventar coisas</td><td>Não</td><td>Pode</td></tr>
                     <tr><td>Custo para criar</td><td>Baixo</td><td>Médio</td></tr>
                   </table>
                 </div>
-                <div class="glass card sm" data-anim><b>Onde você encontra:</b> atendimento de bancos e lojas, WhatsApp de empresas, suporte técnico, triagem em clínicas, secretarias de escola.</div>
-                <div class="glass card sm warn" data-anim><b>Atenção:</b> o bot com IA só sabe sobre a sua escola se for <b>conectado aos dados reais</b> dela. Sem isso, ele pode "alucinar", ou seja, inventar uma resposta convincente.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-message"/></svg>Onde você encontra</b>Atendimento de bancos e lojas, WhatsApp de empresas, suporte técnico, triagem em clínicas, secretarias de escola.</div>
+                <div class="glass card sm warn" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Atenção</b>O bot com IA só sabe sobre a sua escola se for <b>conectado aos dados reais</b> dela. Sem isso, ele pode "alucinar", ou seja, inventar uma resposta convincente.</div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 6 · 1.4 GERAÇÃO DE CONTEÚDO -->
-        <section class="slide" data-id="generate" data-title="Gere uma imagem a partir de um texto e explique como funciona" data-bubble="Do ruído à imagem, passo a passo 🎨">
+        <!-- 9 · 1.4 GERAÇÃO -->
+        <section class="slide" data-id="generate" data-title="Gere uma imagem a partir de um texto e explique como funciona" data-bubble="Do ruído à imagem, passo a passo">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.4</span>
               <h2>Geração de conteúdo</h2>
-              <p>A IA generativa <b>cria coisas novas</b> a partir de um pedido em texto: redações, imagens, músicas, vozes, vídeos e até programas. Geradores de imagem usam <b>modelos de difusão</b>: começam com ruído puro e, passo a passo, vão removendo o ruído na direção do que você descreveu.</p>
+              <p>A IA generativa <b>cria coisas novas</b> a partir de um pedido em texto: redações, imagens, músicas, vozes, vídeos e até programas. Geradores de imagem usam <b>modelos de difusão</b>: começam com ruído puro e, passo a passo, removem o ruído na direção do que você descreveu.</p>
             </header>
             <div class="g2 wide-left">
               <div class="glass card demo" data-anim>
                 <div class="gen-prompt">
                   <span class="lang">Prompt</span>
-                  <p id="gen-prompt">"Esfera laranja sobre pedras brancas, luz suave de estúdio, estilo 3D minimalista"</p>
+                  <p id="gen-prompt"></p>
                 </div>
                 <div class="gen-canvas">
                   <canvas id="gen-canvas" width="320" height="200" aria-label="Animação de uma imagem sendo gerada a partir de ruído"></canvas>
@@ -317,32 +587,32 @@
                   <div class="gen-progress"><i id="gen-bar"></i></div>
                 </div>
                 <div class="row">
-                  <button class="pill dark sm" id="gen-go">▶︎ Gerar</button>
-                  <button class="pill ghost sm" id="gen-swap">Trocar prompt</button>
+                  <button class="pill dark sm" id="gen-go"><svg class="i sm"><use href="#i-play"/></svg>Gerar</button>
+                  <button class="pill ghost sm" id="gen-swap"><svg class="i sm"><use href="#i-refresh"/></svg>Trocar prompt</button>
                 </div>
               </div>
               <div class="stack">
                 <div class="gen-types">
-                  <div class="glass card sm" data-anim><b>📝 Texto</b>ChatGPT, Claude, Gemini: redações, e-mails, roteiros</div>
-                  <div class="glass card sm" data-anim><b>🖼️ Imagem</b>Midjourney, Adobe Firefly, Canva: artes e cartazes</div>
-                  <div class="glass card sm" data-anim><b>🎵 Áudio</b>Suno (música), ElevenLabs (voz)</div>
-                  <div class="glass card sm" data-anim><b>🎬 Vídeo</b>Sora, Veo, Runway: cenas a partir de texto</div>
-                  <div class="glass card sm" data-anim><b>💻 Código</b>Claude Code, Codex, GitHub Copilot</div>
-                  <div class="glass card sm" data-anim><b>📊 Slides</b>Gamma, Canva e… esta apresentação!</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-file-text"/></svg>Texto</b>ChatGPT, Claude, Gemini: redações, e-mails, roteiros</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-image"/></svg>Imagem</b>Midjourney, Adobe Firefly, Canva: artes e cartazes</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-music"/></svg>Áudio</b>Suno (música), ElevenLabs (voz)</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-video"/></svg>Vídeo</b>Sora, Veo, Runway: cenas a partir de texto</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-code"/></svg>Código</b>Claude Code, Codex, GitHub Copilot</div>
+                  <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-slides"/></svg>Slides</b>Gamma, Canva e… esta apresentação!</div>
                 </div>
-                <div class="glass card sm warn" data-anim><b>Regras de ouro:</b> confira os fatos, avise quando usou IA, respeite direitos autorais e <b>nunca</b> crie imagens falsas (deepfakes) de pessoas reais.</div>
+                <div class="glass card sm warn" data-anim><b><svg class="i"><use href="#i-shield"/></svg>Regras de ouro</b>Confira os fatos, avise quando usou IA, respeite direitos autorais e <b>nunca</b> crie imagens falsas (deepfakes) de pessoas reais.</div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 7 · 1.5 RESUMO -->
-        <section class="slide" data-id="summary" data-title="Resuma um texto longo de dois jeitos diferentes" data-bubble="Arraste o controle e veja o texto encolher 📝">
+        <!-- 10 · 1.5 RESUMO -->
+        <section class="slide" data-id="summary" data-title="Resuma um texto longo de dois jeitos diferentes" data-bubble="Arraste o controle e veja o texto encolher">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.5</span>
               <h2>Resumo de texto</h2>
-              <p>Existem dois jeitos de resumir. O <b>extrativo</b> escolhe as frases mais importantes e copia do original. O <b>abstrativo</b> (o que os chatbots fazem) reescreve a ideia com palavras novas.</p>
+              <p>Existem dois jeitos de resumir. O <b>extrativo</b> escolhe as frases mais importantes e copia do original. O <b>abstrativo</b>, que é o que os chatbots fazem, reescreve a ideia com palavras novas.</p>
             </header>
             <div class="glass card demo" data-anim>
               <div class="sum-controls">
@@ -355,19 +625,20 @@
                   <input type="range" id="sum-range" min="0" max="3" step="1" value="0" aria-label="Tamanho do resumo">
                 </label>
                 <span class="counter" id="sum-count">0 palavras</span>
+                <button class="pill ghost sm gm-only" id="sum-live"><svg class="i sm"><use href="#i-gem"/></svg>Resumir com Gemini</button>
               </div>
               <div class="sum-text" id="sum-text" aria-live="polite"></div>
             </div>
             <div class="g3 mini">
-              <div class="glass card sm" data-anim><b>Prompt pronto</b><code>Resuma em 5 tópicos para um aluno do 1º ano, com palavras simples.</code></div>
-              <div class="glass card sm" data-anim><b>Para estudar</b><code>Resuma e depois me faça 3 perguntas para eu testar se entendi.</code></div>
-              <div class="glass card sm" data-anim><b>Ferramentas</b>NotebookLM (resume PDFs e gera áudio), ChatGPT/Claude com arquivo anexado, resumo de vídeos do YouTube</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-sparkles"/></svg>Prompt pronto</b><code>Resuma em 5 tópicos para um aluno do 1º ano, com palavras simples.</code></div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-grad"/></svg>Para estudar</b><code>Resuma e depois me faça 3 perguntas para eu testar se entendi.</code></div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-wrench"/></svg>Ferramentas</b>NotebookLM (resume PDFs e gera áudio), ChatGPT, Claude e Gemini com arquivo anexado, resumo de vídeos do YouTube.</div>
             </div>
           </div>
         </section>
 
-        <!-- 8 · 1.6 PROMPTS -->
-        <section class="slide" data-id="prompt" data-title="Monte um prompt perfeito, peça por peça" data-bubble="Ligue os ingredientes e veja a resposta melhorar ✨">
+        <!-- 11 · 1.6 PROMPTS -->
+        <section class="slide" data-id="prompt" data-title="Monte um prompt perfeito, peça por peça" data-bubble="Ligue os ingredientes e veja a resposta melhorar">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">1.6</span>
@@ -378,18 +649,21 @@
               <div class="glass card demo" data-anim>
                 <div class="card-k">Ingredientes (clique para ligar)</div>
                 <div class="pb-toggles" id="pb-toggles">
-                  <button data-k="papel"><i>🎭</i>Papel</button>
-                  <button data-k="contexto"><i>📍</i>Contexto</button>
-                  <button data-k="formato"><i>📐</i>Formato</button>
-                  <button data-k="exemplo"><i>🧪</i>Exemplo</button>
-                  <button data-k="restricoes"><i>🚧</i>Restrições</button>
-                  <button data-k="pensar"><i>🧠</i>Passo a passo</button>
+                  <button data-k="papel"><svg class="i sm"><use href="#i-users"/></svg>Papel</button>
+                  <button data-k="contexto"><svg class="i sm"><use href="#i-map"/></svg>Contexto</button>
+                  <button data-k="formato"><svg class="i sm"><use href="#i-table"/></svg>Formato</button>
+                  <button data-k="exemplo"><svg class="i sm"><use href="#i-bulb"/></svg>Exemplo</button>
+                  <button data-k="restricoes"><svg class="i sm"><use href="#i-lock"/></svg>Restrições</button>
+                  <button data-k="pensar"><svg class="i sm"><use href="#i-brain"/></svg>Passo a passo</button>
                 </div>
                 <div class="pb-prompt" id="pb-prompt" aria-live="polite"></div>
                 <div class="meter"><div class="meter-bar"><i id="pb-meter"></i></div><span id="pb-score">Vago</span></div>
               </div>
               <div class="glass card demo pb-answer-card" data-anim>
-                <div class="card-k">Resposta da IA (simulada)</div>
+                <div class="pb-head">
+                  <div class="card-k nomb" id="pb-ans-k">Resposta da IA (simulada)</div>
+                  <button class="pill dark sm gm-only" id="pb-live"><svg class="i sm"><use href="#i-gem"/></svg>Testar no Gemini</button>
+                </div>
                 <div class="pb-answer" id="pb-answer" aria-live="polite"></div>
               </div>
             </div>
@@ -401,8 +675,8 @@
           </div>
         </section>
 
-        <!-- 9 · EXTRA AGENTES -->
-        <section class="slide" data-id="agent" data-title="Explique a diferença entre um chatbot e um agente de IA" data-bubble="Eu não só respondo: eu FAÇO 💪">
+        <!-- 12 · AGENTES -->
+        <section class="slide" data-id="agent" data-title="Explique a diferença entre um chatbot e um agente de IA" data-bubble="Eu não só respondo: eu faço">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag accent">Extra</span>
@@ -417,10 +691,10 @@
                     <circle cx="150" cy="150" r="108" class="loop-track"/>
                     <circle cx="150" cy="150" r="108" class="loop-prog" id="ag-prog"/>
                   </svg>
-                  <div class="loop-node n0" data-n="0"><span>🎯</span>Pensar</div>
-                  <div class="loop-node n1" data-n="1"><span>🛠️</span>Agir</div>
-                  <div class="loop-node n2" data-n="2"><span>👀</span>Observar</div>
-                  <div class="loop-node n3" data-n="3"><span>🔁</span>Repetir</div>
+                  <div class="loop-node n0"><svg class="i"><use href="#i-target"/></svg>Pensar</div>
+                  <div class="loop-node n1"><svg class="i"><use href="#i-wrench"/></svg>Agir</div>
+                  <div class="loop-node n2"><svg class="i"><use href="#i-eye"/></svg>Observar</div>
+                  <div class="loop-node n3"><svg class="i"><use href="#i-repeat"/></svg>Repetir</div>
                   <div class="loop-center"><small>Objetivo</small><b>Organizar as fotos do projeto por mês</b></div>
                 </div>
               </div>
@@ -430,25 +704,69 @@
               </div>
             </div>
             <div class="g4 mini">
-              <div class="glass card sm" data-anim><b>🛠️ Ferramentas</b>ler e criar arquivos, rodar comandos, pesquisar na web</div>
-              <div class="glass card sm" data-anim><b>🔌 Conectores (MCP)</b>pontes para apps como GitHub, Google Drive, Figma e Canva</div>
-              <div class="glass card sm" data-anim><b>📚 Skills</b>receitas reutilizáveis que ensinam o agente a fazer algo do seu jeito</div>
-              <div class="glass card sm" data-anim><b>👥 Subagentes</b>ajudantes que fazem uma parte do trabalho em paralelo</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-wrench"/></svg>Ferramentas</b>Ler e criar arquivos, rodar comandos, pesquisar na web</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-plug"/></svg>Conectores (MCP)</b>Pontes para apps como GitHub, Google Drive, Figma e Canva</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-book"/></svg>Skills</b>Receitas reutilizáveis que ensinam o agente a fazer algo do seu jeito</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-users"/></svg>Subagentes</b>Ajudantes que fazem uma parte do trabalho em paralelo</div>
             </div>
           </div>
         </section>
 
-        <!-- 10 · CLAUDE CODE E CODEX -->
-        <section class="slide" data-id="terminal" data-title="Mostre o Claude Code criando esta apresentação" data-bubble="Spoiler: esta apresentação foi feita assim 👀">
+        <!-- 13 · AUTOMAÇÃO EXCEL -->
+        <section class="slide" data-id="excel" data-title="Mostre o Claude automatizando uma planilha do Excel" data-bubble="Olha eu trabalhando na planilha!">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag accent">Extra · Automação</span>
+              <h2>Claude automatizando o <em class="serif">Excel</em></h2>
+              <p>Você pede em português, e o agente escreve as fórmulas, preenche as colunas, formata e cria o gráfico. Assista ao passo a passo:</p>
+            </header>
+            <div class="xl-grid" data-anim>
+              <div class="xl-win">
+                <div class="xl-title">
+                  <span class="xl-logo"><svg class="i sm"><use href="#i-table"/></svg></span>
+                  <b>notas_turma.xlsx</b>
+                  <span class="xl-status" id="xl-status">Aberto</span>
+                  <div class="xl-ctrl">
+                    <button class="pill ghost sm" id="xl-play"><svg class="i sm"><use href="#i-refresh"/></svg>Repetir</button>
+                    <button class="pill ghost sm" id="xl-sort"><svg class="i sm"><use href="#i-sort"/></svg>"Ordene pela média"</button>
+                  </div>
+                </div>
+                <div class="xl-ribbon"><span class="on">Página Inicial</span><span>Inserir</span><span>Fórmulas</span><span>Dados</span><span>Exibir</span></div>
+                <div class="xl-fbar"><span class="xl-ref" id="xl-ref">A1</span><span class="xl-fx">fx</span><span class="xl-formula" id="xl-formula">Aluno</span></div>
+                <div class="xl-sheet" id="xl-sheet">
+                  <table class="xl-table" id="xl-table"></table>
+                  <div class="xl-sel" id="xl-sel"></div>
+                  <div class="xl-chart" id="xl-chart">
+                    <div class="xl-chart-t">Média por aluno</div>
+                    <div class="xl-bars" id="xl-bars"></div>
+                  </div>
+                  <svg class="xl-cursor" id="xl-cursor" viewBox="0 0 24 24"><use href="#i-cursor"/></svg>
+                </div>
+              </div>
+              <div class="xl-claude">
+                <div class="xl-claude-h"><span class="xl-av"><svg class="i sm"><use href="#i-sparkles"/></svg></span><b>Claude</b><small>agente</small></div>
+                <div class="xl-chat" id="xl-chat" aria-live="polite"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-table"/></svg>Claude no Excel</b>Complemento lançado em 2025 que lê e edita a planilha aberta, explicando cada fórmula que escreve.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-message"/></svg>Claude no chat</b>Envie a planilha, peça a análise e baixe um novo arquivo .xlsx pronto, com fórmulas e gráficos.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-code"/></svg>Claude Code</b>Escreve um script em Python (pandas/openpyxl) que faz o mesmo em 100 planilhas de uma vez.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 14 · CLAUDE CODE E CODEX -->
+        <section class="slide" data-id="terminal" data-title="Mostre o Claude Code criando esta apresentação" data-bubble="Spoiler: esta apresentação foi feita assim">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag accent">Extra</span>
               <h2>Claude Code e Codex na prática</h2>
-              <p>Você descreve o que quer em português e o agente planeja, escreve os arquivos, testa e publica. <b>Esta apresentação foi criada assim:</b> com um pedido ao Claude Code, publicada no GitHub Pages.</p>
+              <p>Você descreve o que quer em português e o agente planeja, escreve os arquivos, testa e publica. <b>Esta apresentação foi criada assim:</b> com pedidos ao Claude Code, publicada no GitHub Pages.</p>
             </header>
             <div class="g2 wide-left">
               <div class="term" data-anim>
-                <div class="term-bar"><i></i><i></i><i></i><span>claude — SENAI-IA-Apresentacao_</span><button class="term-replay" id="term-replay" aria-label="Repetir animação">↻</button></div>
+                <div class="term-bar"><i></i><i></i><i></i><span>claude — SENAI-IA-Apresentacao_</span><button class="term-replay" id="term-replay" aria-label="Repetir animação"><svg class="i sm"><use href="#i-refresh"/></svg></button></div>
                 <div class="term-body" id="term-body" aria-live="polite"></div>
               </div>
               <div class="stack">
@@ -461,14 +779,14 @@ claude</pre>
                   <pre class="code sm">npm install -g @openai/codex
 codex</pre>
                 </div>
-                <div class="glass card sm" data-anim><b>Ideias para a turma:</b> criar um site do TCC, montar uma calculadora de resistores, automatizar planilhas, gerar slides interativos como estes.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-bulb"/></svg>Ideias para a turma</b>Criar um site do TCC, montar uma calculadora de resistores, automatizar planilhas, gerar slides interativos como estes.</div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 11 · SKILLS -->
-        <section class="slide" data-id="skill" data-title="Ensine o agente a fazer algo do seu jeito com uma skill" data-bubble="Uma skill é tipo uma receita de bolo 🍰">
+        <!-- 15 · SKILLS -->
+        <section class="slide" data-id="skill" data-title="Ensine o agente a fazer algo do seu jeito com uma skill" data-bubble="Uma skill é tipo uma receita de bolo">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag accent">Extra</span>
@@ -478,17 +796,17 @@ codex</pre>
             <div class="g2 wide-right">
               <div class="glass card demo" data-anim>
                 <div class="card-k">Estrutura da pasta</div>
-                <ul class="tree" id="sk-tree">
-                  <li class="d">📁 .claude/skills/</li>
-                  <li class="d l1">📁 slides-senai/</li>
-                  <li class="l2 hl">📄 SKILL.md</li>
-                  <li class="l2">🖼️ modelo.html</li>
-                  <li class="l2">🎨 paleta.css</li>
+                <ul class="tree">
+                  <li><svg class="i sm"><use href="#i-folder"/></svg>.claude/skills/</li>
+                  <li class="l1"><svg class="i sm"><use href="#i-folder"/></svg>slides-senai/</li>
+                  <li class="l2 hl"><svg class="i sm"><use href="#i-file-text"/></svg>SKILL.md</li>
+                  <li class="l2"><svg class="i sm"><use href="#i-code"/></svg>modelo.html</li>
+                  <li class="l2"><svg class="i sm"><use href="#i-palette"/></svg>paleta.css</li>
                 </ul>
                 <div class="card-k mt">Como usar</div>
                 <div class="sk-chat">
                   <p class="me">Crie 5 slides sobre a NR-10 para a turma.</p>
-                  <p class="bot">✓ Usando a skill <b>slides-senai</b>…</p>
+                  <p class="bot"><svg class="i sm yes"><use href="#i-check"/></svg>Usando a skill <b>slides-senai</b>…</p>
                 </div>
               </div>
               <div class="term light" data-anim>
@@ -499,8 +817,8 @@ codex</pre>
           </div>
         </section>
 
-        <!-- 12 · BÔNUS VÍDEO -->
-        <section class="slide" data-id="video" data-title="Ensine a criar e editar vídeos com o Claude Code" data-bubble="Luz, câmera… prompt! 🎬">
+        <!-- 16 · BÔNUS VÍDEO -->
+        <section class="slide" data-id="video" data-title="Ensine a criar e editar vídeos com o Claude Code" data-bubble="Luz, câmera… prompt!">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag dark">Bônus</span>
@@ -512,8 +830,8 @@ codex</pre>
                 <div class="ed-preview-wrap">
                   <div class="ed-preview" id="ed-preview">
                     <div class="ed-scene s1"><span class="ed-kicker">Venha para o</span><b class="ed-title">SENAI Iracemápolis</b></div>
-                    <div class="ed-scene s2"><span class="ed-kicker">Cursos</span><ul><li>⚡ Elétrica</li><li>⚙️ Mecânica</li><li>💻 TI</li></ul></div>
-                    <div class="ed-scene s3"><b class="ed-title">Matricule-se!</b><span class="ed-kicker">sp.senai.br</span></div>
+                    <div class="ed-scene s2"><span class="ed-kicker">Cursos</span><ul><li><svg class="i sm"><use href="#i-zap"/></svg>Elétrica</li><li><svg class="i sm"><use href="#i-cog"/></svg>Mecânica</li><li><svg class="i sm"><use href="#i-code"/></svg>TI</li></ul></div>
+                    <div class="ed-scene s3"><b class="ed-title">Matricule-se!</b><span class="ed-kicker">Inscrições abertas</span></div>
                     <span class="ed-sphere" aria-hidden="true"></span>
                   </div>
                 </div>
@@ -546,8 +864,8 @@ codex</pre>
           </div>
         </section>
 
-        <!-- 13 · ÉTICA -->
-        <section class="slide" data-id="ethics" data-title="Mostre como usar a IA com responsabilidade" data-bubble="Eu posso errar. Confere comigo? 🙏">
+        <!-- 17 · ÉTICA -->
+        <section class="slide" data-id="ethics" data-title="Mostre como usar a IA com responsabilidade" data-bubble="Eu posso errar. Confere comigo?">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">Cuidados</span>
@@ -556,10 +874,10 @@ codex</pre>
             </header>
             <div class="g2 wide-right">
               <div class="g2x2">
-                <div class="glass card sm" data-anim><b>🌀 Alucinação</b>A IA pode inventar fatos, datas e fontes com total confiança. Confira sempre.</div>
-                <div class="glass card sm" data-anim><b>🔒 Privacidade</b>Não cole dados pessoais (CPF, telefone, notas). A LGPD (Lei 13.709/2018) protege esses dados.</div>
-                <div class="glass card sm" data-anim><b>⚖️ Viés</b>A IA aprende com textos humanos e pode repetir preconceitos. Leia com olhar crítico.</div>
-                <div class="glass card sm" data-anim><b>✍️ Autoria</b>Diga quando usou IA. A UNESCO (2023) recomenda regras claras e idade mínima de 13 anos para uso em sala.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-spiral"/></svg>Alucinação</b>A IA pode inventar fatos, datas e fontes com total confiança. Confira sempre.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-lock"/></svg>Privacidade</b>Não cole dados pessoais (CPF, telefone, notas). A LGPD (Lei 13.709/2018) protege esses dados.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-scale"/></svg>Viés</b>A IA aprende com textos humanos e pode repetir preconceitos. Leia com olhar crítico.</div>
+                <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-pen"/></svg>Autoria</b>Diga quando usou IA. A UNESCO (2023) recomenda regras claras e idade mínima de 13 anos para uso em sala.</div>
               </div>
               <div class="glass card demo" data-anim>
                 <div class="card-k">Checklist antes de entregar</div>
@@ -573,32 +891,32 @@ codex</pre>
                     <li><label><input type="checkbox"><span>Consigo explicar a resposta sem a IA</span></label></li>
                   </ul>
                 </div>
-                <p class="eth-ok" id="eth-ok">Pronto para entregar! ✅</p>
+                <p class="eth-ok" id="eth-ok"><svg class="i sm"><use href="#i-check-circle"/></svg>Pronto para entregar!</p>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 14 · QUIZ -->
-        <section class="slide" data-id="quiz" data-title="Teste o que a turma aprendeu com um quiz" data-bubble="Hora do quiz! Valendo nada, mas valendo 😎">
+        <!-- 18 · QUIZ -->
+        <section class="slide" data-id="quiz" data-title="Teste o que a turma aprendeu com um quiz" data-bubble="Hora do quiz!">
           <div class="wrap narrow">
             <header class="s-head center" data-anim>
               <span class="tag">Quiz</span>
               <h2>Vamos ver se ficou claro?</h2>
             </header>
             <div class="glass card demo quiz" data-anim>
-              <div class="quiz-top"><span id="qz-n">Pergunta 1 de 5</span><span id="qz-score">0 acertos</span></div>
+              <div class="quiz-top"><span id="qz-n">Pergunta 1</span><span id="qz-score">0 acertos</span></div>
               <div class="quiz-bar"><i id="qz-bar"></i></div>
               <h3 id="qz-q"></h3>
               <div class="quiz-opts" id="qz-opts"></div>
               <p class="quiz-exp" id="qz-exp" aria-live="polite"></p>
-              <div class="row end"><button class="pill dark" id="qz-next" disabled>Próxima →</button></div>
+              <div class="row end"><button class="pill dark" id="qz-next" disabled>Próxima</button></div>
             </div>
           </div>
         </section>
 
-        <!-- 15 · FONTES -->
-        <section class="slide" data-title="Liste as fontes usadas na pesquisa" data-bubble="Tudo com fonte, como deve ser 📚">
+        <!-- 19 · FONTES -->
+        <section class="slide" data-title="Liste as fontes usadas na pesquisa" data-bubble="Tudo com fonte, como deve ser">
           <div class="wrap">
             <header class="s-head" data-anim>
               <span class="tag">Fontes</span>
@@ -606,39 +924,65 @@ codex</pre>
               <p>Fontes oficiais, artigos científicos e pesquisas usadas nesta apresentação.</p>
             </header>
             <div class="refs" data-anim>
-              <a class="glass ref" href="https://blog.google/products/translate/google-translate-new-languages-2024/" target="_blank" rel="noopener"><b>Google (2024)</b>110 new languages are coming to Google Translate</a>
-              <a class="glass ref" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener"><b>Cetic.br · TIC Educação 2024</b>Sete em cada dez alunos do ensino médio usam IA generativa (cobertura Teletime)</a>
-              <a class="glass ref" href="https://cetic.br/pt/pesquisa/educacao/" target="_blank" rel="noopener"><b>Cetic.br</b>Pesquisa TIC Educação: página oficial</a>
-              <a class="glass ref" href="https://news.un.org/en/node/1140477" target="_blank" rel="noopener"><b>UNESCO / ONU News (2023)</b>Guidance for generative AI in education and research</a>
-              <a class="glass ref" href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener"><b>Anthropic</b>Prompt engineering overview: documentação oficial</a>
-              <a class="glass ref" href="https://code.claude.com/docs" target="_blank" rel="noopener"><b>Anthropic</b>Documentação do Claude Code: skills, subagentes e MCP</a>
-              <a class="glass ref" href="https://github.com/openai/codex" target="_blank" rel="noopener"><b>OpenAI</b>Codex CLI: repositório oficial</a>
-              <a class="glass ref" href="https://techcrunch.com/2025/04/16/openai-debuts-codex-cli-an-open-source-coding-tool-for-terminals" target="_blank" rel="noopener"><b>TechCrunch (2025)</b>OpenAI debuts Codex CLI</a>
-              <a class="glass ref" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener"><b>Vaswani et al. (2017)</b>Attention Is All You Need: o Transformer</a>
-              <a class="glass ref" href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener"><b>Wu et al. (2016)</b>Google's Neural Machine Translation System</a>
-              <a class="glass ref" href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener"><b>Ho, Jain e Abbeel (2020)</b>Denoising Diffusion Probabilistic Models</a>
+              <a class="glass ref" href="https://doi.org/10.1007/BF02478259" target="_blank" rel="noopener"><b>McCulloch e Pitts (1943)</b>A logical calculus of the ideas immanent in nervous activity</a>
+              <a class="glass ref" href="https://doi.org/10.1037/h0042519" target="_blank" rel="noopener"><b>Rosenblatt (1958)</b>The perceptron: a probabilistic model for information storage</a>
               <a class="glass ref" href="https://doi.org/10.1145/365153.365168" target="_blank" rel="noopener"><b>Weizenbaum (1966)</b>ELIZA: o primeiro chatbot</a>
+              <a class="glass ref" href="https://doi.org/10.1038/323533a0" target="_blank" rel="noopener"><b>Rumelhart, Hinton e Williams (1986)</b>Learning representations by back-propagating errors</a>
+              <a class="glass ref" href="https://doi.org/10.1145/3065386" target="_blank" rel="noopener"><b>Krizhevsky, Sutskever e Hinton</b>ImageNet classification with deep convolutional neural networks</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener"><b>Vaswani et al. (2017)</b>Attention Is All You Need: o Transformer</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener"><b>Ouyang et al. (2022)</b>Treinando modelos para seguir instruções com feedback humano (RLHF)</a>
+              <a class="glass ref" href="https://ai.meta.com/blog/meta-llama-3/" target="_blank" rel="noopener"><b>Meta (2024)</b>Llama 3: pré-treinado com mais de 15 trilhões de tokens</a>
+              <a class="glass ref" href="https://ai.meta.com/blog/meta-llama-3-1/" target="_blank" rel="noopener"><b>Meta (2024)</b>Llama 3.1 405B</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener"><b>Wu et al. (2016)</b>Google's Neural Machine Translation System</a>
+              <a class="glass ref" href="https://blog.google/products/translate/google-translate-new-languages-2024/" target="_blank" rel="noopener"><b>Google (2024)</b>110 new languages are coming to Google Translate</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener"><b>Ho, Jain e Abbeel (2020)</b>Denoising Diffusion Probabilistic Models</a>
+              <a class="glass ref" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener"><b>Cetic.br · TIC Educação 2024</b>Sete em cada dez alunos do ensino médio usam IA generativa</a>
+              <a class="glass ref" href="https://news.un.org/en/node/1140477" target="_blank" rel="noopener"><b>UNESCO / ONU News (2023)</b>Guidance for generative AI in education and research</a>
+              <a class="glass ref" href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener"><b>Anthropic</b>Prompt engineering overview</a>
+              <a class="glass ref" href="https://code.claude.com/docs" target="_blank" rel="noopener"><b>Anthropic</b>Documentação do Claude Code</a>
+              <a class="glass ref" href="https://the-decoder.com/anthropic-opens-claudes-improved-excel-integration-to-all-pro-subscribers-after-limited-beta/" target="_blank" rel="noopener"><b>The Decoder (2026)</b>Claude no Excel aberto a todos os assinantes Pro</a>
+              <a class="glass ref" href="https://github.com/openai/codex" target="_blank" rel="noopener"><b>OpenAI</b>Codex CLI: repositório oficial</a>
+              <a class="glass ref" href="https://ai.google.dev/gemini-api/docs" target="_blank" rel="noopener"><b>Google</b>Documentação da API do Gemini</a>
               <a class="glass ref" href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm" target="_blank" rel="noopener"><b>Brasil (2018)</b>Lei Geral de Proteção de Dados: Lei 13.709</a>
             </div>
           </div>
         </section>
 
-        <!-- 16 · OBRIGADO -->
-        <section class="slide" data-title="Agradeça e abra para perguntas" data-bubble="Valeu, turma! 💛">
+        <!-- 20 · OBRIGADO -->
+        <section class="slide" data-title="Agradeça e abra para perguntas" data-bubble="Valeu, turma!">
           <div class="wrap center end-slide">
             <span class="sphere xl" aria-hidden="true" data-anim></span>
             <h2 class="hero" data-anim><span class="soft">Obrigado!</span><br>Perguntas?</h2>
             <p class="lead" data-anim>A IA não substitui o seu raciocínio, ela <em class="serif">amplia</em> o que você consegue fazer. Use com curiosidade e senso crítico.</p>
             <div class="row center" data-anim>
-              <button class="pill dark lg" data-goto="0">↺ Voltar ao início</button>
-              <a class="pill ghost lg" href="https://github.com/Cir0Arruda/SENAI-IA-Apresentacao_" target="_blank" rel="noopener">Ver o código no GitHub</a>
+              <button class="pill dark lg" data-goto="0"><svg class="i"><use href="#i-refresh"/></svg>Voltar ao início</button>
+              <a class="pill ghost lg" href="https://github.com/Cir0Arruda/SENAI-IA-Apresentacao_" target="_blank" rel="noopener"><svg class="i"><use href="#i-code"/></svg>Ver o código no GitHub</a>
             </div>
           </div>
         </section>
 
       </div>
 
-      <!-- Barra inferior estilo "campo de prompt" -->
+      <!-- Painel "Pergunte ao Gemini" -->
+      <aside class="ask glass" id="ask" aria-label="Pergunte ao Gemini" hidden>
+        <div class="ask-h">
+          <span class="ask-ico"><svg class="i"><use href="#i-gem"/></svg></span>
+          <div><b>Pergunte ao Gemini</b><small id="ask-ctx">sobre este slide</small></div>
+          <button class="circle ghost sm" id="ask-close" aria-label="Fechar"><svg class="i sm"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="ask-quick" id="ask-quick">
+          <button class="pill ghost sm" data-q="Explique este slide de forma simples, como para um aluno do 1º ano.">Explique de forma simples</button>
+          <button class="pill ghost sm" data-q="Dê mais um exemplo prático, do dia a dia de um aluno de curso técnico, sobre o tema deste slide.">Dê outro exemplo</button>
+          <button class="pill ghost sm" data-q="Crie uma pergunta de prova de múltipla escolha sobre este slide, com a resposta certa no final.">Crie uma pergunta</button>
+        </div>
+        <div class="ask-msgs" id="ask-msgs" aria-live="polite"></div>
+        <form class="chat-input" id="ask-form">
+          <input id="ask-input" type="text" maxlength="400" placeholder="Pergunte sobre este slide…" autocomplete="off">
+          <button class="send" type="submit" aria-label="Enviar"><svg class="i"><use href="#i-send"/></svg></button>
+        </form>
+      </aside>
+
+      <!-- Barra inferior -->
       <footer class="dock">
         <div class="progress"><i id="progress"></i></div>
         <div class="dock-bar glass">
@@ -646,23 +990,49 @@ codex</pre>
             <div class="bubble" id="mascot-bubble"></div>
             <div class="bot-slot"></div>
           </div>
-          <div class="dock-prompt"><span class="dock-label" id="dock-label">Slide 1 de 17</span><span id="dock-title"></span><span class="caret"></span></div>
+          <div class="dock-prompt"><span class="dock-label" id="dock-label">Slide 1</span><span id="dock-title"></span><span class="caret"></span></div>
           <div class="dock-chips">
-            <button class="pill dark sm" data-goto="3">🌐 Ferramentas</button>
-            <button class="pill dark sm" data-goto="8">✨ Prompts</button>
-            <button class="pill dark sm" data-goto="9">🤖 Agentes</button>
-            <button class="pill dark sm" data-goto="12">🎬 Vídeo</button>
-            <button class="pill dark sm" data-goto="14">🧠 Quiz</button>
+            <button class="pill dark sm" data-goto="2"><svg class="i sm"><use href="#i-brain"/></svg>Fundamentos</button>
+            <button class="pill dark sm" data-goto="6"><svg class="i sm"><use href="#i-languages"/></svg>Ferramentas</button>
+            <button class="pill dark sm" data-goto="11"><svg class="i sm"><use href="#i-sparkles"/></svg>Prompts</button>
+            <button class="pill dark sm" data-goto="13"><svg class="i sm"><use href="#i-table"/></svg>Automação</button>
+            <button class="pill dark sm" data-goto="16"><svg class="i sm"><use href="#i-film"/></svg>Vídeo</button>
+            <button class="pill dark sm" data-goto="18"><svg class="i sm"><use href="#i-help"/></svg>Quiz</button>
           </div>
-          <button class="circle ghost" id="btn-prev" aria-label="Slide anterior">
-            <svg class="i" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-          </button>
-          <button class="circle dark" id="btn-next" aria-label="Próximo slide">
-            <svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </button>
+          <button class="circle gem" id="ask-open" aria-label="Pergunte ao Gemini sobre este slide" title="Pergunte ao Gemini"><svg class="i"><use href="#i-gem"/></svg></button>
+          <button class="circle ghost" id="btn-prev" aria-label="Slide anterior"><svg class="i"><use href="#i-arrow-left"/></svg></button>
+          <button class="circle dark" id="btn-next" aria-label="Próximo slide"><svg class="i"><use href="#i-arrow-right"/></svg></button>
         </div>
       </footer>
     </main>
+  </div>
+
+  <!-- Configuração do Gemini -->
+  <div class="modal" id="gm-modal" hidden>
+    <div class="modal-box glass" role="dialog" aria-modal="true" aria-labelledby="gm-title">
+      <div class="modal-h">
+        <span class="ask-ico"><svg class="i"><use href="#i-gem"/></svg></span>
+        <h3 id="gm-title">Conectar o Gemini</h3>
+        <button class="circle ghost sm" id="gm-close" aria-label="Fechar"><svg class="i sm"><use href="#i-x"/></svg></button>
+      </div>
+      <p class="modal-p">Com o Gemini ligado, a tradução, o chatbot, o resumo, o montador de prompts e o botão <svg class="i sm inline"><use href="#i-gem"/></svg> da barra de baixo passam a responder ao vivo.</p>
+      <div class="modal-safe"><svg class="i sm"><use href="#i-lock"/></svg><span>A chave fica salva <b>só neste navegador</b>. Ela não vai para o código do site, que é público no GitHub.</span></div>
+      <label class="field"><span>Chave de API do Gemini</span><input type="password" id="gm-key" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
+      <label class="field"><span>Modelo</span>
+        <select id="gm-model">
+          <option value="gemini-flash-latest">gemini-flash-latest (recomendado)</option>
+          <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+          <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+          <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (mais rápido)</option>
+        </select>
+      </label>
+      <label class="check-line"><input type="checkbox" id="gm-remember" checked><span>Lembrar neste navegador</span></label>
+      <p class="modal-status" id="gm-status" aria-live="polite"></p>
+      <div class="row end">
+        <button class="pill ghost" id="gm-clear">Remover chave</button>
+        <button class="pill dark" id="gm-save"><svg class="i sm"><use href="#i-check"/></svg>Salvar e testar</button>
+      </div>
+    </div>
   </div>
 
   <script src="assets/js/main.js"></script>
