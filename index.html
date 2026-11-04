@@ -11,6 +11,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/galaxy.css">
+  <script>
+    /* A abertura (galáxia) aparece quando o site é aberto sem um slide no endereço */
+    window.__startHash = location.hash;
+    if (!/^#\d+$/.test(location.hash)) document.documentElement.classList.add('intro-on');
+  </script>
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
 </head>
 <body>
 
@@ -98,9 +110,110 @@
       <symbol id="i-loader" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
       <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
       <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+      <symbol id="i-planet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5.5"/><path d="M17.6 9.2c3.3-.9 5 0 4.3 1.6-1.1 2.6-7.4 6-13.4 7.4-4.4 1-7 .3-6.2-1.5.4-.9 1.6-1.9 3.4-2.9"/></symbol>
       <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.4L2.4 16a2 2 0 0 1 2.8-2.8L7 15"/></symbol>
     </defs>
   </svg>
+
+  <!-- ============ ABERTURA · Galáxia criada com IA ============ -->
+  <div class="gx mode-galaxy" id="gx" role="region" aria-label="Abertura: galáxia interativa criada com IA">
+    <canvas class="gx-canvas" id="gx-canvas" tabindex="0" aria-label="Galáxia em 3D. Arraste para girar, use a roda do mouse para aproximar e clique num braço para viajar até o sistema dos temas."></canvas>
+    <div class="gx-vignette" aria-hidden="true"></div>
+    <div class="gx-labels" id="gx-labels"></div>
+
+    <header class="gx-top">
+      <div class="gx-brand gx-glass"><svg class="i spin"><use href="#i-sun"/></svg>Assistente IA <b>v2026</b></div>
+      <div class="gx-top-title">IA na Prática · <span>SENAI Iracemápolis</span></div>
+      <div class="top-actions">
+        <span class="gx-stat gx-glass" id="gx-stat"><svg class="i sm"><use href="#i-sparkles"/></svg><span id="gx-count">gerando estrelas…</span><i></i><span id="gx-fps">– fps</span></span>
+        <button class="pill dark" id="gx-fs" aria-label="Tela cheia"><svg class="i"><use href="#i-expand"/></svg><span>Tela cheia</span></button>
+      </div>
+    </header>
+
+    <section class="gx-panel gx-glass gx-hero" id="gx-hero">
+      <span class="tag accent">Feito com IA · Claude Code</span>
+      <h1>Um universo <em>escrito por IA</em></h1>
+      <p>Cada estrela, nebulosa e planeta, e o buraco negro no centro, foram programados por IA, em JavaScript e shaders que rodam na placa de vídeo. A luz em volta do buraco negro é calculada raio por raio, em tempo real.</p>
+      <ul class="gx-how">
+        <li><svg class="i sm"><use href="#i-hand"/></svg>Arraste para girar</li>
+        <li><svg class="i sm"><use href="#i-spiral"/></svg>Clique num braço da galáxia</li>
+        <li><svg class="i sm"><use href="#i-target"/></svg>Entre no buraco negro</li>
+      </ul>
+      <div class="gx-made" aria-label="Tecnologias"><span>three.js r170</span><span>GLSL</span><span>raytracing</span><span>bloom</span></div>
+    </section>
+
+    <section class="gx-panel gx-glass gx-sys" id="gx-sys" hidden>
+      <div class="gx-card-h">
+        <span class="tag lilac">Sistema dos temas</span>
+        <button class="gx-x" id="gxs-close" aria-label="Voltar à galáxia"><svg class="i sm"><use href="#i-x"/></svg></button>
+      </div>
+      <h3>8 planetas, 8 temas</h3>
+      <p>Você atravessou uma nebulosa e chegou a um sistema num braço da galáxia. Cada planeta guarda um tema da apresentação.</p>
+      <div class="gx-plist" id="gxs-list"></div>
+      <div class="gx-row">
+        <button class="pill dark" id="gxs-back"><svg class="i sm"><use href="#i-arrow-left"/></svg>Voltar à galáxia</button>
+      </div>
+    </section>
+
+    <section class="gx-panel gx-glass gx-card" id="gx-planet" hidden aria-live="polite">
+      <div class="gx-card-h">
+        <span class="gx-ico" id="gxp-ico"><svg class="i"><use href="#i-brain"/></svg></span>
+        <span class="tag lilac" id="gxp-tag">Planeta</span>
+        <button class="gx-x" id="gxp-close" aria-label="Voltar ao sistema"><svg class="i sm"><use href="#i-x"/></svg></button>
+      </div>
+      <h3 id="gxp-title"></h3>
+      <p id="gxp-text"></p>
+      <div class="gx-facts" id="gxp-facts"></div>
+      <div class="gx-row">
+        <button class="pill dark" id="gxp-go">Ir para este tema<svg class="i sm"><use href="#i-arrow-right"/></svg></button>
+        <button class="pill ghost" id="gxp-back">Voltar ao sistema</button>
+      </div>
+    </section>
+
+    <section class="gx-panel gx-glass gx-bh" id="gx-bh" hidden>
+      <div class="gx-card-h">
+        <span class="tag dark">Dentro do buraco negro</span>
+        <button class="gx-x" id="gxb-close" aria-label="Voltar à galáxia"><svg class="i sm"><use href="#i-x"/></svg></button>
+      </div>
+      <h3>O que você está vendo</h3>
+      <p>Cada pixel é um raio de luz calculado de trás para frente, curvado pela gravidade. Clique em uma parte:</p>
+      <div class="gx-parts" id="gxb-parts">
+        <button data-part="1" style="--dot:#14141c"><i></i>Horizonte de eventos</button>
+        <button data-part="2" style="--dot:#ffd29e"><i></i>Esfera de fótons</button>
+        <button data-part="3" style="--dot:#ff6a1f"><i></i>Disco de acreção</button>
+        <button data-part="4" style="--dot:#7b77f0"><i></i>Lente gravitacional</button>
+        <button data-part="5" style="--dot:#4fa3ff"><i></i>Efeito Doppler</button>
+      </div>
+      <p class="gx-part-text" id="gxb-text" aria-live="polite"></p>
+      <div class="gx-toggles">
+        <label>Gravidade curvando a luz<span class="gx-sw"><input type="checkbox" id="gxb-lens" checked><span></span></span></label>
+        <label>Disco de acreção<span class="gx-sw"><input type="checkbox" id="gxb-disk" checked><span></span></span></label>
+        <label>Efeito Doppler<span class="gx-sw"><input type="checkbox" id="gxb-doppler" checked><span></span></span></label>
+      </div>
+      <label class="gx-range"><span>Distância</span><input type="range" id="gxb-dist" min="0" max="1000" value="620" aria-label="Distância até o buraco negro"><b id="gxb-dist-v">20 rs</b></label>
+      <p class="gx-depth calm" id="gxb-depth">Você está a uma distância segura. A luz das estrelas atrás do buraco negro chega até você, só que curvada.</p>
+      <div class="gx-row">
+        <button class="pill ghost" id="gxb-dive"><svg class="i sm"><use href="#i-target"/></svg>Mergulhar</button>
+        <button class="pill dark" id="gxb-exit"><svg class="i sm"><use href="#i-arrow-left"/></svg>Voltar à galáxia</button>
+      </div>
+    </section>
+
+    <footer class="gx-bottom">
+      <div class="gx-guide">
+        <div class="bot-slot"></div>
+        <div class="gx-bubble gx-glass" id="gx-bubble">Oi! <b>Clique em um braço</b> da galáxia para viajar até o sistema dos temas, ou entre no buraco negro do centro.</div>
+      </div>
+      <div class="gx-mid">
+        <div class="gx-hint" id="gx-hint">Arraste para girar · roda do mouse para aproximar</div>
+        <button class="pill gx-enter" id="gx-enter"><span class="gx-bhdot" aria-hidden="true"></span><span>Entrar no buraco negro</span></button>
+      </div>
+      <button class="gx-start" id="gx-start" aria-label="Iniciar a apresentação">
+        <span class="gx-start-t">Iniciar<small>apresentação · Enter</small></span>
+        <span class="circle"><svg class="i"><use href="#i-arrow-right"/></svg></span>
+      </button>
+    </footer>
+    <div class="gx-flash" id="gx-flash"></div>
+  </div>
 
   <!-- Fundo -->
   <div class="bg" aria-hidden="true">
@@ -122,6 +235,7 @@
       <button class="rail-btn" data-goto="12" data-sec="agentes" title="Agentes e automação" aria-label="Agentes e automação"><svg class="i"><use href="#i-bot"/></svg></button>
       <button class="rail-btn" data-goto="16" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos"><svg class="i"><use href="#i-film"/></svg></button>
       <button class="rail-btn" data-goto="19" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
+      <button class="rail-btn gx-rail" id="gx-open" title="Voltar para a galáxia" aria-label="Voltar para a galáxia"><svg class="i"><use href="#i-spiral"/></svg></button>
       <span class="rail-logo" aria-hidden="true">IA</span>
     </nav>
 
@@ -1036,5 +1150,6 @@ codex</pre>
   </div>
 
   <script src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/galaxy.js"></script>
 </body>
 </html>
