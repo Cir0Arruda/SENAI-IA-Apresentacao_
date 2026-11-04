@@ -149,6 +149,15 @@ html.gx-closing .gx {
 .gx-label.off, .gx-reticle.off { opacity: 0; pointer-events: none; }
 .gx.mode-inside .gx-labels, .gx.mode-warp .gx-labels { display: none; }
 
+/* ---------- Legendas da viagem (estilo documentário) ---------- */
+.gx-cap { position: absolute; left: 50%; top: 96px; z-index: 3; width: min(640px, calc(100vw - 32px)); transform: translate(-50%, 10px); text-align: center; color: #fff; pointer-events: none; opacity: 0; filter: blur(4px); transition: opacity .9s var(--ease), transform .9s var(--ease), filter .9s var(--ease); text-shadow: 0 2px 22px rgba(0, 0, 0, .75), 0 0 2px rgba(0, 0, 0, .5); }
+.gx-cap.on { opacity: 1; transform: translate(-50%, 0); filter: none; }
+.gx-cap small { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .3em; text-transform: uppercase; color: rgba(255, 214, 182, .95); }
+.gx-cap small::before, .gx-cap small::after { content: ''; width: 34px; height: 1px; background: rgba(255, 214, 182, .55); }
+.gx-cap b { display: block; margin-top: 10px; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: clamp(26px, 3vw, 42px); line-height: 1.08; letter-spacing: -.01em; }
+.gx-cap span { display: block; margin-top: 8px; font-size: 14.5px; color: rgba(255, 255, 255, .78); }
+.gx.mode-inside .gx-cap, .gx.mode-warp .gx-cap { display: none; }
+
 /* ---------- Rodapé ---------- */
 .gx-bottom { position: absolute; left: 26px; right: 26px; bottom: 22px; z-index: 4; display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; pointer-events: none; }
 .gx-bottom > * { pointer-events: auto; }
@@ -216,6 +225,9 @@ html.gx-closing .gx {
   .gx-plist { margin: 10px 0 12px; }
   .gx-plist button { height: 34px; font-size: 12.5px; }
   .gx-label.pin span:last-child { font-size: 12px; }
+  .gx-cap { top: 64px; }
+  .gx-cap b { font-size: 24px; }
+  .gx-cap span { font-size: 13px; }
   .gx-part-text { min-height: 0; }
   .gx-bottom { left: 12px; right: 12px; bottom: 14px; align-items: center; }
   .gx-guide { max-width: none; }

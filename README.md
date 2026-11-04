@@ -8,8 +8,15 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
 
-- **Galáxia espiral com 150 mil estrelas**: bojo dourado no centro, dois braços em espiral logarítmica, aglomerados de estrelas jovens (azuis), regiões de gás rosadas, faixas de poeira e um disco difuso (three.js + shaders na placa de vídeo). As estrelas fogem do cursor.
-- **Clique num braço da galáxia** (ou no marcador "Sistema dos temas"): a câmera entra na galáxia, atravessa uma nebulosa cheia de estrelas e chega a um **sistema planetário**, com o braço e o centro da galáxia ao fundo.
+- **Galáxia espiral volumétrica**, inspirada nas fotos do Hubble (como a M51): bojo dourado, dois braços azulados, regiões de gás rosadas (HII) e faixas escuras de poeira na borda interna dos braços.
+  - Um mapa da galáxia vista de cima é calculado uma vez na placa de vídeo.
+  - A cada quadro, cada raio de luz atravessa o disco (*raymarching*): soma o brilho do gás e perde luz na poeira.
+  - **150 mil estrelas** são sorteadas a partir do mesmo mapa e ficam mais escuras quando há poeira entre elas e a câmera. As estrelas fogem do cursor.
+- **Clique num braço da galáxia** (ou no marcador "Sistema dos temas"): um único voo de câmera, sem cortes, como nos documentários:
+  1. sobrevoa o braço e mergulha no disco;
+  2. atravessa uma **nebulosa volumétrica** (hidrogênio rosa, oxigênio verde-azulado, poeira e estrelas novas);
+  3. chega a um **sistema planetário**, com a faixa da galáxia e o brilho do centro ao fundo.
+  - Legendas no estilo de documentário explicam cada trecho. A volta faz o caminho inverso até ver a galáxia inteira.
 - **8 planetas**, um por tema da apresentação, girando em volta de um sol, com cinturão de asteroides. Clique num planeta (ou na lista do painel) para ver o resumo e ir direto para o slide dele.
 - **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade). Clique em **Entrar no buraco negro** para ver por dentro:
   - horizonte de eventos, esfera de fótons, disco de acreção, lente gravitacional e efeito Doppler, cada um com destaque e explicação;
@@ -19,7 +26,9 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 - O botão **Iniciar**, no canto inferior direito (ou `Enter`), abre a apresentação. O ícone de espiral no menu lateral volta para a galáxia.
 - Endereços com slide (`…/#5`) pulam a abertura. Em computadores sem WebGL, a apresentação abre normalmente.
 
-**Referências usadas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
+**Referências da galáxia e da nebulosa:** [ondas de densidade (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/), [Gaia Sky: nebulosas volumétricas](https://gaiasky.space/news/2024/2024-03-01-volumetric-nebulae/), [poeira cósmica volumétrica (Godot Shaders)](https://godotshaders.com/shader/volumetric-cosmic-dust/), [Volumetric Rendering (wallisc)](https://github.com/wallisc/VolumetricRendering), fotos da [M51 pelo Hubble (ESA/Hubble)](https://esahubble.org/images/heic0506a/) e as animações de aproximação do [ESO (Órion, Carina)](https://www.eso.org/public/videos/).
+
+**Referências do buraco negro e das estrelas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
 
 ## Conteúdo (21 slides)
 
@@ -70,6 +79,22 @@ Abra o `index.html` no navegador ou use um servidor simples:
 ```bash
 npx http-server . -p 5173
 ```
+
+## Testes automatizados
+
+O teste abre o site num Chrome automático, clica como uma pessoa e confere:
+
+- a imagem: centro brilhante, dois braços, contraste e cores medidos nos pixels;
+- o voo: atravessa a nebulosa, não tem cortes nem saltos de câmera, e chega ao sistema;
+- planetas, buraco negro, botão Iniciar e volta pela barra lateral;
+- a versão de celular e o console sem erros.
+
+```bash
+npm i -D puppeteer
+node tests/galaxy.test.mjs
+```
+
+Com o endereço terminando em `?teste`, o site expõe `IAGalaxy.test` para o teste ler o estado da cena.
 
 ## Publicar no GitHub Pages
 
