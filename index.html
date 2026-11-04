@@ -117,7 +117,7 @@
 
   <!-- ============ ABERTURA · Galáxia criada com IA ============ -->
   <div class="gx mode-galaxy" id="gx" role="region" aria-label="Abertura: galáxia interativa criada com IA">
-    <canvas class="gx-canvas" id="gx-canvas" tabindex="0" aria-label="Galáxia em 3D. Arraste para girar, use a roda do mouse para aproximar e clique nos planetas."></canvas>
+    <canvas class="gx-canvas" id="gx-canvas" tabindex="0" aria-label="Galáxia em 3D. Arraste para girar, use a roda do mouse para aproximar e clique num braço para viajar até o sistema dos temas."></canvas>
     <div class="gx-vignette" aria-hidden="true"></div>
     <div class="gx-labels" id="gx-labels"></div>
 
@@ -133,27 +133,40 @@
     <section class="gx-panel gx-glass gx-hero" id="gx-hero">
       <span class="tag accent">Feito com IA · Claude Code</span>
       <h1>Um universo <em>escrito por IA</em></h1>
-      <p>Cada estrela, planeta e o buraco negro no centro foram programados por IA, em JavaScript e shaders que rodam na placa de vídeo. A luz em volta do buraco negro é calculada raio por raio, em tempo real.</p>
+      <p>Cada estrela, nebulosa e planeta, e o buraco negro no centro, foram programados por IA, em JavaScript e shaders que rodam na placa de vídeo. A luz em volta do buraco negro é calculada raio por raio, em tempo real.</p>
       <ul class="gx-how">
         <li><svg class="i sm"><use href="#i-hand"/></svg>Arraste para girar</li>
-        <li><svg class="i sm"><use href="#i-cursor"/></svg>Passe o mouse nas estrelas</li>
-        <li><svg class="i sm"><use href="#i-planet"/></svg>Clique em um planeta</li>
+        <li><svg class="i sm"><use href="#i-spiral"/></svg>Clique num braço da galáxia</li>
+        <li><svg class="i sm"><use href="#i-target"/></svg>Entre no buraco negro</li>
       </ul>
       <div class="gx-made" aria-label="Tecnologias"><span>three.js r170</span><span>GLSL</span><span>raytracing</span><span>bloom</span></div>
+    </section>
+
+    <section class="gx-panel gx-glass gx-sys" id="gx-sys" hidden>
+      <div class="gx-card-h">
+        <span class="tag lilac">Sistema dos temas</span>
+        <button class="gx-x" id="gxs-close" aria-label="Voltar à galáxia"><svg class="i sm"><use href="#i-x"/></svg></button>
+      </div>
+      <h3>8 planetas, 8 temas</h3>
+      <p>Você atravessou uma nebulosa e chegou a um sistema num braço da galáxia. Cada planeta guarda um tema da apresentação.</p>
+      <div class="gx-plist" id="gxs-list"></div>
+      <div class="gx-row">
+        <button class="pill dark" id="gxs-back"><svg class="i sm"><use href="#i-arrow-left"/></svg>Voltar à galáxia</button>
+      </div>
     </section>
 
     <section class="gx-panel gx-glass gx-card" id="gx-planet" hidden aria-live="polite">
       <div class="gx-card-h">
         <span class="gx-ico" id="gxp-ico"><svg class="i"><use href="#i-brain"/></svg></span>
         <span class="tag lilac" id="gxp-tag">Planeta</span>
-        <button class="gx-x" id="gxp-close" aria-label="Voltar à galáxia"><svg class="i sm"><use href="#i-x"/></svg></button>
+        <button class="gx-x" id="gxp-close" aria-label="Voltar ao sistema"><svg class="i sm"><use href="#i-x"/></svg></button>
       </div>
       <h3 id="gxp-title"></h3>
       <p id="gxp-text"></p>
       <div class="gx-facts" id="gxp-facts"></div>
       <div class="gx-row">
         <button class="pill dark" id="gxp-go">Ir para este tema<svg class="i sm"><use href="#i-arrow-right"/></svg></button>
-        <button class="pill ghost" id="gxp-back">Voltar à galáxia</button>
+        <button class="pill ghost" id="gxp-back">Voltar ao sistema</button>
       </div>
     </section>
 
@@ -188,7 +201,7 @@
     <footer class="gx-bottom">
       <div class="gx-guide">
         <div class="bot-slot"></div>
-        <div class="gx-bubble gx-glass" id="gx-bubble">Oi! <b>Clique em um planeta</b> para ver um tema ou entre no buraco negro do centro.</div>
+        <div class="gx-bubble gx-glass" id="gx-bubble">Oi! <b>Clique em um braço</b> da galáxia para viajar até o sistema dos temas, ou entre no buraco negro do centro.</div>
       </div>
       <div class="gx-mid">
         <div class="gx-hint" id="gx-hint">Arraste para girar · roda do mouse para aproximar</div>

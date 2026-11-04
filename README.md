@@ -8,8 +8,9 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
 
-- **90 mil estrelas** em braços espirais, com rotação diferencial, poeira e nebulosas (three.js + shaders na placa de vídeo). As estrelas fogem do cursor.
-- **8 planetas interativos**, um por tema da apresentação. Clique num planeta para ver o resumo e ir direto para o slide dele.
+- **Galáxia espiral com 150 mil estrelas**: bojo dourado no centro, dois braços em espiral logarítmica, aglomerados de estrelas jovens (azuis), regiões de gás rosadas, faixas de poeira e um disco difuso (three.js + shaders na placa de vídeo). As estrelas fogem do cursor.
+- **Clique num braço da galáxia** (ou no marcador "Sistema dos temas"): a câmera entra na galáxia, atravessa uma nebulosa cheia de estrelas e chega a um **sistema planetário**, com o braço e o centro da galáxia ao fundo.
+- **8 planetas**, um por tema da apresentação, girando em volta de um sol, com cinturão de asteroides. Clique num planeta (ou na lista do painel) para ver o resumo e ir direto para o slide dele.
 - **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade). Clique em **Entrar no buraco negro** para ver por dentro:
   - horizonte de eventos, esfera de fótons, disco de acreção, lente gravitacional e efeito Doppler, cada um com destaque e explicação;
   - controles para ligar ou desligar a curvatura da luz, o disco e o Doppler, e um controle de distância;
