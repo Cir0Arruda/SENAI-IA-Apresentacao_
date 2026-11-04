@@ -4,6 +4,22 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 **Ver online:** https://cir0arruda.github.io/SENAI-IA-Apresentacao_/
 
+## Abertura: a galáxia feita por IA
+
+Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
+
+- **90 mil estrelas** em braços espirais, com rotação diferencial, poeira e nebulosas (three.js + shaders na placa de vídeo). As estrelas fogem do cursor.
+- **8 planetas interativos**, um por tema da apresentação. Clique num planeta para ver o resumo e ir direto para o slide dele.
+- **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade). Clique em **Entrar no buraco negro** para ver por dentro:
+  - horizonte de eventos, esfera de fótons, disco de acreção, lente gravitacional e efeito Doppler, cada um com destaque e explicação;
+  - controles para ligar ou desligar a curvatura da luz, o disco e o Doppler, e um controle de distância;
+  - o botão **Mergulhar** leva a câmera até perto do horizonte.
+- Arraste para girar e use a roda do mouse para aproximar.
+- O botão **Iniciar**, no canto inferior direito (ou `Enter`), abre a apresentação. O ícone de espiral no menu lateral volta para a galáxia.
+- Endereços com slide (`…/#5`) pulam a abertura. Em computadores sem WebGL, a apresentação abre normalmente.
+
+**Referências usadas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
+
 ## Conteúdo (21 slides)
 
 | Tema | Exemplo interativo |
@@ -39,6 +55,7 @@ Com o Gemini ligado, funcionam: a aba "Sua frase" do tradutor, o modo "Gemini ao
 
 ## Como apresentar
 
+- `Enter` na galáxia: começa a apresentação
 - `←` `→`, `Espaço` ou deslizar o dedo: troca de slide
 - `F`: tela cheia
 - `Home` / `End`: primeiro / último slide

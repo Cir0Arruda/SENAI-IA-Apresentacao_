@@ -284,7 +284,8 @@
         bubTimer = setTimeout(() => bub.classList.remove('show'), 4200);
       }, 450);
     }
-    if (location.hash !== `#${i + 1}`) history.replaceState(null, '', `#${i + 1}`);
+    const keepUrl = document.documentElement.classList.contains('intro-on') && !location.hash;
+    if (!keepUrl && location.hash !== `#${i + 1}`) history.replaceState(null, '', `#${i + 1}`);
     fit(s, true);
     demos[s.dataset.id]?.enter?.();
   }
@@ -301,6 +302,11 @@
   });
 
   document.addEventListener('keydown', e => {
+    if (introOn()) {
+      const t = (e.target.tagName || '').toLowerCase();
+      if (e.key === 'Enter' && !['input', 'textarea', 'select', 'button'].includes(t)) { e.preventDefault(); closeIntro(0); }
+      return;
+    }
     if (e.key === 'Escape') { if (!modal.hidden) closeGm(); else if (!ask.hidden) ask.hidden = true; return; }
     if (!modal.hidden) return;
     const tag = (e.target.tagName || '').toLowerCase();
@@ -320,6 +326,42 @@
     const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
     if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) go(cur + (dx < 0 ? 1 : -1));
   }, { passive: true });
+  /* ---------- Abertura: galáxia (o 3D fica em galaxy.js) ---------- */
+  const html = document.documentElement;
+  const gxEl = $('#gx');
+  function introOn() { return html.classList.contains('intro-on'); }
+  let gxBusy = false;
+  async function closeIntro(slide = 0, from = $('#gx-start')) {
+    if (!introOn() || gxBusy) return;
+    gxBusy = true;
+    const r = from && from.getBoundingClientRect();
+    gxEl.style.setProperty('--cx', r && r.width ? `${r.left + r.width / 2}px` : '50%');
+    gxEl.style.setProperty('--cy', r && r.width ? `${r.top + r.height / 2}px` : '50%');
+    gxEl.classList.add('mode-warp');
+    try { await Promise.race([Promise.resolve(window.IAGalaxy?.warp?.()), sleep(1500)]); } catch { /* segue sem o salto */ }
+    if (slide !== cur) go(slide); else demos[slides[cur].dataset.id]?.enter?.();
+    html.classList.add('gx-closing');
+    await sleep(reduce ? 60 : 1000);
+    html.classList.remove('intro-on', 'gx-closing');
+    gxEl.classList.remove('mode-warp');
+    window.IAGalaxy?.setActive?.(false);
+    gxBusy = false;
+  }
+  function openIntro() {
+    if (introOn() || gxBusy) return;
+    epoch++;
+    demos[slides[cur]?.dataset.id]?.leave?.();
+    html.classList.add('intro-on');
+    gxEl.classList.remove('opening'); void gxEl.offsetWidth; gxEl.classList.add('opening');
+    window.IAGalaxy?.setActive?.(true);
+    $('#gx-canvas').focus({ preventScroll: true });
+  }
+  $('#gx-start').addEventListener('click', e => closeIntro(0, e.currentTarget));
+  $('#gx-open').addEventListener('click', openIntro);
+  $('#gx-fs').addEventListener('click', () => $('#btn-fs').click());
+  window.addEventListener('galaxy:goto', e => closeIntro(e.detail?.slide ?? 0, e.detail?.from));
+  setTimeout(() => { if (!window.IAGalaxy) { gxEl.classList.add('nogl'); $('#gx-count').textContent = 'modo simples'; } }, 8000);
+
   window.addEventListener('hashchange', () => {
     const n = parseInt(location.hash.slice(1), 10);
     if (n >= 1 && n <= total) go(n - 1);
