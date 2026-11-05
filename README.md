@@ -8,7 +8,7 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
 
-- **Galáxia espiral volumétrica**, vista quase de frente, inspirada nas fotos do Hubble (como a M51): centro branco-dourado, dois braços azuis com brilho difuso, aglomerados rosados de gás (HII), nuvens de nebulosas coloridas ao longo dos braços e faixas escuras de poeira na borda interna.
+- **Galáxia espiral barrada volumétrica**, vista inclinada, inspirada nas fotos do Hubble (como a NGC 1300): uma barra central alongada e dourada, dois braços azuis finos e abertos que saem das pontas da barra, com contas de estrelas jovens, brilho azul difuso, nós rosados de gás (HII), nebulosas coloridas e faixas escuras de poeira.
   - Um mapa da galáxia vista de cima é calculado uma vez na placa de vídeo.
   - A cada quadro, cada raio de luz atravessa o disco (*raymarching*): soma o brilho do gás e perde luz na poeira.
   - **150 mil estrelas** são sorteadas a partir do mesmo mapa e ficam mais escuras quando há poeira entre elas e a câmera. As estrelas fogem do cursor.
@@ -40,6 +40,7 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | A matemática | Neurônio artificial com controles (pesos, bias e sigmoide) que decide se vai chover |
 | Treinamento | Descida do gradiente animada, com taxa de aprendizado baixa, ideal e alta demais |
 | 1.1 Tradução automática | Interface de tradutor mostrando tokens, vetores e alinhamento; aba "Sua frase" com Gemini |
+| *Saiba mais* (1.1 a 1.6) | Painel com 4 abas animadas em cada tópico: linha do tempo, números com fonte, como funciona por dentro e uso no trabalho |
 | 1.2 Assistentes virtuais | As 5 etapas de um comando de voz, com a intenção em JSON |
 | 1.3 Chatbots | Bot de regras × bot com IA × **Gemini ao vivo** |
 | 1.4 Geração de conteúdo | Imagem "nascendo" do ruído, como num modelo de difusão |
@@ -49,14 +50,14 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | Extra: Claude + Excel | Animação do Claude criando fórmulas, formatação e gráfico numa planilha |
 | Extra: Claude Code e Codex | Terminal animado criando esta apresentação |
 | Extra: skills | Exemplo de `SKILL.md` |
+| Automação de dados · planilha → relatório | Script Python (pandas + openpyxl) limpa a planilha, marca o que falta sem inventar e salva o relatório com gráfico |
+| Automação de dados · workflow | O Agendador do Windows chama o Claude Code (`claude -p`) toda segunda; relatório, resumo e e-mail em rascunho esperam a aprovação de uma pessoa |
 | Estúdio de vídeo · início | Editor de vídeo simulado (HyperFrames) com edição por chat |
 | Estúdio · fluxo completo | Um computador simulado mostra as 6 etapas: pedido no Claude Code, código, prévia, revisão (`check`), render e entrega |
-| Estúdio · 5 níveis | Do simples ao complexo: título animado, legendas, gráfico da planilha, cena 3D e vídeos em lote, cada um com prévia, pedido e código |
+| Estúdio · 5 níveis | Do simples ao complexo: título animado, legendas, gráfico animado, cena 3D e vídeo completo em 4 cenas, cada um com prévia, pedido e código |
 | Estúdio · cena 3D | Planeta em three.js controlado pela linha do tempo: o mesmo instante gera sempre a mesma imagem, como no render |
-| Estúdio · planilha → vídeos | Script Python (openpyxl) lê a planilha e gera um vídeo por linha com `render --batch` |
-| Estúdio · workflow | O Claude Code no modo sem janela (`claude -p`) atualiza, confere e renderiza; uma pessoa revisa antes de publicar |
 | Estúdio · mão na massa | 4 desafios para fazer em aula, com o pedido pronto para copiar |
-| Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 27 referências |
+| Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 41 referências |
 
 ## Ligar o Gemini ao vivo
 
@@ -76,7 +77,8 @@ Com o Gemini ligado, funcionam: a aba "Sua frase" do tradutor, o modo "Gemini ao
 - `←` `→`, `Espaço` ou deslizar o dedo: troca de slide
 - `F`: tela cheia
 - `Home` / `End`: primeiro / último slide
-- `Esc`: fecha o painel do Gemini
+- `S` nos tópicos 1.1 a 1.6: abre o *Saiba mais* (as setas trocam a aba)
+- `Esc`: fecha o *Saiba mais* ou o painel do Gemini
 - Cada slide tem endereço próprio: `…/#5` abre direto no slide 5
 
 ## Rodar no computador
@@ -92,7 +94,7 @@ npx http-server . -p 5173
 Os testes abrem o site num Chrome automático, clicam como uma pessoa e conferem, no computador e no celular:
 
 - `galaxy.test.mjs` (46 verificações): centro brilhante, dois braços, contraste e cores medidos nos pixels; o voo atravessa um tipo diferente de nebulosa a cada viagem, sem cortes; o fundo do sistema mostra o braço sem a faixa estourada; o buraco negro entra com transição suave; planetas, botão Iniciar e volta pela barra lateral;
-- `slides.test.mjs` (41 verificações): os 27 slides pelo teclado, nada saindo da tela, atalhos da barra lateral e da barra de baixo, todas as demos do estúdio de vídeo (etapas, níveis, 3D, planilha, workflow, botões de copiar) e o console sem erros.
+- `slides.test.mjs` (47 verificações): os 27 slides pelo teclado, nada saindo da tela, o *Saiba mais* dos tópicos 1.1 a 1.6 (abas, números, teclado, fechar), atalhos da barra lateral e da barra de baixo, a automação de dados separada do vídeo, todas as demos do estúdio (etapas, níveis, 3D, botões de copiar) e o console sem erros.
 
 ```bash
 npm i -D puppeteer

@@ -114,7 +114,7 @@ async function desktop(browser) {
 
   // clique no braço: só funciona em cima de um braço
   const armHit = await page.evaluate(() => {
-    const t = window.IAGalaxy.test, r = 8, a = 1.9 * Math.log(r / 1.6), b = a + Math.PI / 2;
+    const t = window.IAGalaxy.test, r = 8, a = t.armAngle(r, 0), b = a + Math.PI / 2;
     return { on: t.armAt(Math.cos(a) * r, Math.sin(a) * r), off: t.armAt(Math.cos(b) * r, Math.sin(b) * r), core: t.armAt(0.5, 0.2) };
   });
   check('Detecção de braço: em cima do braço sim, entre braços e no centro não', armHit.on && !armHit.off && !armHit.core, JSON.stringify(armHit));
@@ -224,6 +224,8 @@ async function desktop(browser) {
   s = await state(page);
   check('Entrar no buraco negro', inBH && s.bhPanel);
   // transição suave: a última imagem some aos poucos (sem clarão branco)
+  // a imagem antiga começa a sumir dois quadros depois da troca (no Chrome automático, poucos quadros por segundo)
+  await waitFor(page, () => document.querySelector('.gx-xfade')?.classList.contains('out'), 3000);
   const xf = await page.evaluate(() => { const x = document.querySelector('.gx-xfade'); return { has: !!x, out: x && x.classList.contains('out'), flash: getComputedStyle(document.getElementById('gx-flash')).opacity }; });
   check('Entrada no buraco negro com transição suave (sem clarão)', xf.has && xf.out && +xf.flash < 0.05, JSON.stringify(xf));
   await page.click('#gxb-parts [data-part="2"]');

@@ -1,4 +1,4 @@
-/* IA na Prática · Estúdio de vídeo (slides 17 a 22)
+/* IA na Prática · Automação de dados (slides 17 e 18) e Estúdio de vídeo (19 a 23)
    Cada demo registra enter/leave em window.IADemos; o main.js chama ao trocar de slide.
    As animações são funções do tempo (como no HyperFrames): render(t) desenha o instante t. */
 (() => {
@@ -156,7 +156,7 @@
   const CAPS = [[0, 'Antes'], [0.35, 'de'], [0.55, 'ligar'], [0.9, 'a'], [1.05, 'máquina,'], [1.7, 'confira'], [2.1, 'os'], [2.3, 'seus'], [2.6, 'EPIs:'],
     [3.3, 'luvas,'], [3.8, 'óculos'], [4.2, 'e'], [4.4, 'protetor'], [4.9, 'auricular.']];
   const BARS = [['Elétrica', 312], ['Mecânica', 268], ['TI', 401], ['Logística', 155], ['Química', 112]];
-  const NAMES = ['Ana', 'Bruno', 'Carla', 'Diego', 'Elisa', 'Fábio'];
+  const SCENES = [['Abertura', 'Mecatrônica · SENAI', '#4b3f9e'], ['3 motivos', 'mercado · prática · salário', '#2b6a8f'], ['Depoimento', 'Ana, turma 2025', '#8a3f6b'], ['Chamada', 'inscreva-se no site', '#b4541c']];
   const LV = [
     {
       dur: 5, badges: ['5 s', '15 min de aula', 'Iniciante'], lvl: 1,
@@ -181,13 +181,14 @@
     },
     {
       dur: 6, badges: ['15 s', '40 min de aula', 'Intermediário'], lvl: 3,
-      prompt: 'Leia matriculas.xlsx. Mostre primeiro o total de matrículas contando de 0 até o valor, depois um gráfico de barras por curso que cresce na ordem da planilha, destacando o maior. Coloque a fonte embaixo.',
-      code: `dados.json  ← gerado da planilha (pandas)
-{ "total": 1248, "cursos": [
-  { "nome": "TI", "valor": 401 }, … ] }
+      prompt: 'Crie um vídeo de 15 s: primeiro o total de 1.248 matrículas contando de 0 até o valor; depois um gráfico de barras por curso (TI 401, Elétrica 312, Mecânica 268, Logística 155, Química 112) que cresce uma barra por vez e destaca a maior. Fonte embaixo.',
+      code: `const dados = { total: 1248, cursos: [
+  { nome: "TI", valor: 401 }, … ] };
 tl.to(contador, { valor: dados.total,
-  duration: 1.4, onUpdate: mostrarNumero }, 0.6);`,
-      learn: '<b>Você aprende:</b> dados reais vindos de uma planilha, contagem animada e gráfico em ordem de leitura.'
+  duration: 1.4, onUpdate: mostrarNumero }, 0.6);
+tl.from(".barra", { scaleY: 0, transformOrigin: "bottom",
+  stagger: 0.28, ease: "power2.out" }, 2);`,
+      learn: '<b>Você aprende:</b> número que conta, barras que entram em sequência (stagger) e destaque do maior valor, sempre com a fonte na tela.'
     },
     {
       dur: 6, badges: ['10 s', '60 min de aula', 'Avançado'], lvl: 4,
@@ -201,20 +202,24 @@ tl.to(contador, { valor: dados.total,
       learn: '<b>Você aprende:</b> uma cena 3D desenhada pelo tempo, câmera com mergulho e luz de estúdio.'
     },
     {
-      dur: 6, badges: ['6 vídeos', '60 min de aula', 'Avançado'], lvl: 4,
-      prompt: 'A partir de formandos.csv (nome e curso), gere um vídeo de parabéns para cada aluno, com o nome e o curso como variáveis. Renderize todos em lote na pasta renders/.',
-      code: `linhas.json  ← uma linha por aluno
-{ "rows": [ { "nome": "Ana", "curso": "TI" }, … ] }
-
-npx hyperframes render --batch linhas.json \\
-  --output "renders/{nome}.mp4"`,
-      learn: '<b>Você aprende:</b> variáveis no vídeo e render em lote: um modelo, muitos vídeos diferentes.'
+      dur: 6, badges: ['30 s', '60 min de aula', 'Avançado'], lvl: 4,
+      prompt: 'Monte um vídeo de 30 s do curso de Mecatrônica em 4 cenas: abertura com o nome, 3 motivos para fazer o curso, um depoimento com legenda e a chamada final com o site. Transição de deslize entre as cenas e música de fundo que abaixa quando alguém fala.',
+      code: `index.html  ← junta as 4 cenas na ordem
+<div data-composition-id="abertura"
+     data-composition-src="compositions/abertura.html"
+     data-start="0" data-duration="6"></div>
+<div data-composition-id="motivos" … data-start="6">
+<audio id="trilha" src="assets/trilha.mp3"
+       data-volume="0.35" data-fade-out="2"></audio>`,
+      learn: '<b>Você aprende:</b> um vídeo de verdade é feito de cenas: cada uma num arquivo, montadas em ordem, com transições e trilha sonora.'
     }
   ];
   let lv = 0, lvT = 0;
   const cap = $('#lv-cap'), bars = $('#lv-bars'), batch = $('#lv-batch');
   bars.innerHTML = BARS.map(([n, v]) => `<div class="k3-bar${v === 401 ? ' top' : ''}"><i></i><small>${n}</small><b>${v}</b></div>`).join('');
-  batch.innerHTML = NAMES.map(n => `<div class="k5-card"><b>Parabéns, ${n}!</b><small>Formando 2026</small><i class="k5-prog"><i></i></i><span class="k5-ok"><svg class="i sm"><use href="#i-check"/></svg>${n.toLowerCase()}.mp4</span></div>`).join('');
+  batch.classList.add('scenes');
+  batch.innerHTML = SCENES.map(([n, d, c], i) => `<div class="k5-card k5-scene" style="--bgc:${c}"><span class="k5-n">cena ${i + 1}</span><b>${n}</b><small>${d}</small><i class="k5-prog"><i></i></i></div>`).join('') +
+    '<div class="k5-trans"><span>deslize →</span><span>deslize →</span><span>deslize →</span><span>trilha 35% · abaixa na fala</span></div>';
   const k1 = $$('#lv-stage .k1 > *');
   const cv = $('#lv-3d'), g = cv.getContext('2d');
   function draw3d(t) {
@@ -270,10 +275,12 @@ npx hyperframes render --batch linhas.json \\
     } else if (lv === 3) {
       draw3d(t);
     } else if (lv === 4) {
+      // a agulha passa pelas 4 cenas, uma depois da outra (cada uma 1,4 s nesta prévia)
       $$('.k5-card', batch).forEach((c, i) => {
-        const k = clamp((t - 0.3 - i * 0.8) / 1.1);
+        const k = clamp((t - 0.2 - i * 1.4) / 1.4);
         c.style.setProperty('--p', k.toFixed(3)); c.classList.toggle('done', k >= 1); c.classList.toggle('busy', k > 0 && k < 1);
       });
+      $$('.k5-trans span', batch).forEach((sp, i) => sp.classList.toggle('on', i < 3 ? Math.abs(t - 0.2 - (i + 1) * 1.4) < 0.3 : t > 0.2));
     }
   }
   function lvSet(i) {
@@ -293,72 +300,107 @@ npx hyperframes render --batch linhas.json \\
   demos.vlevels = { enter() { lvT = 0; lvLoop.start(); }, leave() { lvLoop.stop(); } };
 
   /* =========================================================
-     20 · Planilha → vídeos (Python + render em lote)
+     17 · Automação de dados: planilha → relatório (pandas + openpyxl)
      ========================================================= */
-  const SV = [['Sul', 182, 205, 231], ['Sudeste', 340, 362, 398], ['Centro-Oeste', 96, 120, 141], ['Nordeste', 150, 171, 166]];
+  // [região como está na planilha, fevereiro, março]; null = célula vazia
+  const SV = [['Sul', 205, 231], ['Sudeste', 362, 398], ['Sudeste', 362, 398], ['centro-oeste ', 120, null], ['Nordeste', 171, 166], [' norte', 80, 88]];
+  const SV_FIX = { 3: 'Centro-Oeste', 5: 'Norte' }, SV_DUP = 2, SV_GAP = 3;
+  const SV_ABBR = { Sul: 'S', Sudeste: 'SE', 'Centro-Oeste': 'CO', Nordeste: 'NE', Norte: 'N' };
   const SV_CODE = [
+    ['k', 'import pandas as pd'],
     ['k', 'from openpyxl import load_workbook'],
-    ['k', 'import json, subprocess'],
+    ['k', 'from openpyxl.chart import BarChart, Reference'],
     ['', ''],
-    ['c', '# 1. lê a planilha (só os valores, não as fórmulas)'],
-    ['', 'ws = load_workbook("vendas.xlsx", data_only=True).active'],
-    ['', 'linhas = []'],
-    ['', 'for regiao, jan, fev, mar in ws.iter_rows(min_row=2, values_only=True):'],
-    ['', '    linhas.append({"regiao": regiao.lower(), "jan": jan, "fev": fev, "mar": mar})'],
+    ['c', '# 1. lê e limpa'],
+    ['', 'df = pd.read_excel("vendas_marco.xlsx")', 'read'],
+    ['', 'df["Região"] = df["Região"].str.strip().str.title()', 'fix'],
+    ['', 'df = df.drop_duplicates()', 'dup'],
+    ['', 'faltando = df[df["Mar"].isna()]   # não inventa: avisa', 'gap'],
     ['', ''],
-    ['c', '# 2. um vídeo por linha'],
-    ['', 'json.dump({"rows": linhas}, open("linhas.json", "w"))'],
-    ['', 'subprocess.run(["npx", "hyperframes", "render", "--batch", "linhas.json",'],
-    ['', '                "--output", "renders/{regiao}.mp4"], check=True)']
+    ['c', '# 2. calcula a variação'],
+    ['', 'df["Var %"] = (df["Mar"] / df["Fev"] - 1) * 100', 'var'],
+    ['', 'quedas = df[df["Var %"] < 0]'],
+    ['', ''],
+    ['c', '# 3. salva o relatório com gráfico'],
+    ['', 'df.to_excel("relatorio_marco.xlsx", index=False)'],
+    ['', 'wb = load_workbook("relatorio_marco.xlsx"); ws = wb.active'],
+    ['', 'graf = BarChart(); graf.title = "Vendas de março"'],
+    ['', 'graf.add_data(Reference(ws, min_col=3, min_row=1, max_row=ws.max_row),'],
+    ['', '              titles_from_data=True)'],
+    ['', 'ws.add_chart(graf, "F2"); wb.save("relatorio_marco.xlsx")', 'save']
   ];
   const svTable = $('#sv-table'), svOut = $('#sv-out'), svCode = $('#sv-code');
-  svTable.innerHTML = `<tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>1</th><td>Região</td><td>Jan</td><td>Fev</td><td>Mar</td></tr>` +
-    SV.map((r, i) => `<tr data-r="${i}"><th>${i + 2}</th><td>${r[0]}</td>${r.slice(1).map(v => `<td>${v}</td>`).join('')}</tr>`).join('');
-  const svMax = Math.max(...SV.flatMap(r => r.slice(1)));
-  svOut.innerHTML = SV.map((r, i) => `<div class="sv-vid" data-v="${i}"><div class="sv-thumb"><b>Vendas · ${r[0]}</b><div class="sv-mini">${r.slice(1).map(v => `<i style="--h:${(v / svMax).toFixed(3)}"></i>`).join('')}</div></div>
-      <div class="sv-meta"><span>${r[0].toLowerCase()}.mp4</span><small>aguardando</small></div><i class="sv-prog"><i></i></i></div>`).join('');
+  const pct = (a, b) => (b / a - 1) * 100;
+  const pctTxt = v => `${v > 0 ? '+' : '−'}${br(Math.abs(Math.round(v * 10) / 10))}%`;
+  function svReset() {
+    svTable.innerHTML = '<tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>1</th><td>Região</td><td>Fev</td><td>Mar</td><td>Var %</td></tr>' +
+      SV.map((r, i) => `<tr data-r="${i}"><th>${i + 2}</th><td>${esc(r[0])}</td><td>${r[1]}</td><td>${r[2] ?? ''}</td><td></td></tr>`).join('');
+    const ok = SV.filter((r, i) => i !== SV_DUP && r[2] != null), max = Math.max(...ok.map(r => r[2]));
+    svOut.innerHTML = `
+      <div class="sv-art" data-a="0"><b><svg class="i sm"><use href="#i-check-circle"/></svg>Dados limpos</b><p>2 nomes corrigidos · 1 linha duplicada removida · 1 célula vazia marcada</p></div>
+      <div class="sv-art" data-a="1"><b><svg class="i sm"><use href="#i-trend"/></svg>Variação fev → mar</b><ul>${ok.map(r => { const v = pct(r[1], r[2]); return `<li><span>${esc((SV_FIX[SV.indexOf(r)] || r[0]).trim())}</span><span class="${v < 0 ? 'down' : 'up'}">${pctTxt(v)}</span></li>`; }).join('')}</ul></div>
+      <div class="sv-art" data-a="2"><b><svg class="i sm"><use href="#i-chart"/></svg>Gráfico de março</b><div class="sv-chart">${ok.map(r => `<i style="--h:${(r[2] / max).toFixed(3)}"><small>${SV_ABBR[(SV_FIX[SV.indexOf(r)] || r[0]).trim()]}</small></i>`).join('')}</div></div>
+      <div class="sv-art" data-a="3"><b><svg class="i sm"><use href="#i-alert"/></svg>2 alertas</b><ul><li class="down"><span>Nordeste caiu</span><span>${pctTxt(pct(171, 166))}</span></li><li class="warn"><span>Centro-Oeste</span><span>sem março</span></li></ul></div>`;
+  }
+  const svRow = i => $(`tr[data-r="${i}"]`, svTable);
+  const svArt = k => $(`.sv-art[data-a="${k}"]`, svOut).classList.add('done');
   async function runSheet() {
     const alive = run('sv');
-    svCode.innerHTML = '';
-    $$('tr[data-r]', svTable).forEach(r => r.classList.remove('hl'));
-    $$('.sv-vid', svOut).forEach(v => { v.className = 'sv-vid'; $('small', v).textContent = 'aguardando'; v.style.setProperty('--p', 0); });
-    for (const [c, line] of SV_CODE) {
+    svCode.innerHTML = ''; svReset();
+    for (const [c, line, act] of SV_CODE) {
       if (!alive()) return;
       const d = document.createElement('div'); d.className = c === 'k' ? 'kw' : c === 'c' ? 'cmt' : ''; svCode.appendChild(d);
-      if (line) await typeText(d, line, alive, 3); else d.textContent = ' ';
-      if (line.startsWith('for regiao')) {
-        for (const r of $$('tr[data-r]', svTable)) { if (!alive()) return; r.classList.add('hl'); await sleep(200); }
+      if (line) { if (!(await typeText(d, line, alive, 3))) return; } else d.textContent = ' ';
+      if (act === 'read') {
+        for (const r of $$('tr[data-r]', svTable)) { if (!alive()) return; r.classList.add('hl'); await sleep(140); }
+        $$('tr[data-r]', svTable).forEach(r => r.classList.remove('hl'));
+      } else if (act === 'fix') {
+        for (const [i, n] of Object.entries(SV_FIX)) { const td = svRow(i).children[1]; td.textContent = n; td.classList.add('fix'); await sleep(260); }
+      } else if (act === 'dup') {
+        svRow(SV_DUP).classList.add('dup'); await sleep(500); svRow(SV_DUP).classList.add('gone');
+      } else if (act === 'gap') {
+        const td = svRow(SV_GAP).children[3]; td.textContent = '?'; td.classList.add('flag'); await sleep(300);
+        svArt(0);
+      } else if (act === 'var') {
+        for (const [i, r] of SV.entries()) {
+          if (!alive()) return;
+          if (i === SV_DUP || r[2] == null) continue;
+          const v = pct(r[1], r[2]), td = svRow(i).children[4];
+          td.textContent = pctTxt(v); td.className = `new ${v < 0 ? 'down' : 'up'}`;
+          await sleep(180);
+        }
+        svArt(1);
+      } else if (act === 'save') {
+        await sleep(200); svArt(2); await sleep(500); if (alive()) svArt(3);
       }
     }
-    const log = document.createElement('div'); log.className = 'ok'; svCode.appendChild(log);
-    for (let i = 0; i < SV.length; i++) {
-      const v = $(`.sv-vid[data-v="${i}"]`, svOut);
-      v.classList.add('busy'); $('small', v).textContent = 'renderizando';
-      for (let k = 0; k <= 20; k++) { if (!alive()) return; v.style.setProperty('--p', (k / 20).toFixed(2)); await sleep(45); }
-      v.classList.remove('busy'); v.classList.add('done'); $('small', v).textContent = '12 s · 1080p';
-      log.textContent = `✓ ${i + 1}/4 renders/${SV[i][0].toLowerCase()}.mp4`;
-    }
+    if (!alive()) return;
+    const log = document.createElement('div'); log.className = 'ok'; log.textContent = '✓ relatorio_marco.xlsx salvo · 4 regiões · 2 alertas'; svCode.appendChild(log);
   }
+  svReset();
   $('#sv-run').addEventListener('click', runSheet);
-  demos.vsheet = { enter: runSheet, leave() { run('sv'); } };
+  demos.asheet = { enter: runSheet, leave() { run('sv'); } };
 
   /* =========================================================
-     21 · Workflow com agente (modo sem janela)
+     18 · Automação de dados: workflow com agente (modo sem janela)
      ========================================================= */
   const WF_LOG = [
-    [0, 'p', '$ ./atualizar_videos.sh'],
-    [1, 'a', 'claude -p "Atualize os vídeos com a planilha nova e rode o check"'],
+    [0, 'p', '$ relatorio_semanal.bat'],
+    [1, 'a', 'claude -p "Gere o relatório de março, confira os totais e escreva um resumo"'],
     [1, 't', 'Read entrada/vendas_marco.xlsx'],
-    [1, 't', 'Edit dados/linhas.json (4 regiões)'],
-    [2, 't', 'Bash npx hyperframes check → 0 erros'],
-    [2, 't', 'Bash teste: totais iguais aos da planilha ✓'],
-    [3, 't', 'Bash npx hyperframes render --batch linhas.json'],
-    [4, 'a', '4 vídeos em prontos/ · aguardando revisão humana']
+    [1, 't', 'Bash python relatorio.py → relatorio_marco.xlsx'],
+    [2, 't', 'Bash teste: soma do relatório = soma da planilha ✓'],
+    [2, 'w', '2 alertas: Nordeste −2,9% · Centro-Oeste sem março'],
+    [3, 't', 'Write saida/resumo.md (5 linhas)'],
+    [3, 't', 'Write saida/email_rascunho.txt'],
+    [4, 'a', 'Pronto · aguardando aprovação para enviar']
   ];
+  const WF_OUT = { 'relatorio.py': [['relatorio_marco.xlsx', 'i-table', 'Resumo + gráfico'], ['grafico_vendas.png', 'i-chart', '1200×700']],
+    'resumo.md': [['resumo.md', 'i-file-text', '5 linhas · 2 alertas']], 'email_rascunho': [['email_rascunho.txt', 'i-send', 'rascunho · não enviado']] };
   async function runWorkflow() {
     const alive = run('wf');
     const inBox = $('#wf-in'), outBox = $('#wf-out'), logBox = $('#wf-log'), nodes = $$('#wf-nodes li');
-    inBox.innerHTML = '<div class="file"><svg class="i"><use href="#i-table"/></svg><b>vendas_fevereiro.xlsx</b><small>processada</small></div>';
+    inBox.innerHTML = '<div class="file"><svg class="i"><use href="#i-table"/></svg><b>vendas_fevereiro.xlsx</b><small>relatório enviado em 03/03</small></div>';
     outBox.innerHTML = ''; logBox.innerHTML = '';
     $('#wf-toast').classList.remove('show');
     nodes.forEach(n => n.classList.remove('on', 'done'));
@@ -376,11 +418,12 @@ npx hyperframes render --batch linhas.json \\
       if (c === 'p') await typeText(d, t, alive, 22); else { d.textContent = t; d.style.animation = 'rise .4s both'; }
       logBox.scrollTop = logBox.scrollHeight;
       await sleep(c === 't' ? 520 : 760);
-      if (k === 3 && t.includes('render')) {
-        for (const r of ['sul', 'sudeste', 'centro-oeste', 'nordeste']) {
+      const made = Object.keys(WF_OUT).find(key => t.includes(key));
+      if (made) {
+        for (const [name, icon, info] of WF_OUT[made]) {
           if (!alive()) return;
           const o = document.createElement('div'); o.className = 'file new';
-          o.innerHTML = `<svg class="i"><use href="#i-video"/></svg><b>${r}.mp4</b><small>12 s · 1080p</small>`;
+          o.innerHTML = `<svg class="i"><use href="#${icon}"/></svg><b>${name}</b><small>${info}</small>`;
           outBox.appendChild(o); await sleep(380);
         }
       }
@@ -390,5 +433,5 @@ npx hyperframes render --batch linhas.json \\
     $('#wf-toast').classList.add('show');
   }
   $('#wf-run').addEventListener('click', runWorkflow);
-  demos.vauto = { enter: runWorkflow, leave() { run('wf'); } };
+  demos.aflow = { enter: runWorkflow, leave() { run('wf'); } };
 })();

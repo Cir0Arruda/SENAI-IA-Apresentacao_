@@ -122,13 +122,43 @@ async function desktop(browser) {
   const { page, errors } = await openPage(browser, { width: 1440, height: 900 });
   await tour(page, false);
 
+  // 1.1 a 1.6: painel "Saiba mais" com 4 abas, números que contam e teclado
+  const deepRes = [];
+  for (let i = 6; i <= 11; i++) {
+    await goto(page, i);
+    await tap(page, '.slide.active [data-deep]');
+    const opened = await waitFor(page, () => document.getElementById('deep').classList.contains('show'), 3000);
+    const tabs = await page.$$eval('#deep-tabs button', b => b.length);
+    const tlItems = await page.$$eval('#deep-body .deep-pane:not([hidden]) .tl li', l => l.length);
+    await page.keyboard.press('ArrowRight');
+    const counted = await waitFor(page, () => [...document.querySelectorAll('#deep-body .deep-pane:not([hidden]) [data-to]')]
+      .every(e => e.textContent === (+e.dataset.to).toLocaleString('pt-BR', { minimumFractionDigits: +e.dataset.dec || 0, maximumFractionDigits: +e.dataset.dec || 0, useGrouping: false })), 4000);
+    const still = (await active(page)).i === i;
+    await page.keyboard.press('Escape'); await sleep(450);
+    const closed = await page.$eval('#deep', d => d.hidden);
+    deepRes.push({ i, ok: opened && tabs === 4 && tlItems >= 5 && counted && still && closed, tabs, tlItems, counted, still, closed });
+  }
+  const deepBad = deepRes.filter(r => !r.ok);
+  check('1.1–1.6: "Saiba mais" abre 4 abas, a linha do tempo, os números contam e Esc fecha', deepBad.length === 0, JSON.stringify(deepBad).slice(0, 300));
+  await goto(page, 8);
+  await page.keyboard.press('s'); await sleep(300);
+  const sOpen = await page.$eval('#deep', d => !d.hidden);
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await sleep(200);
+  const tabNow = await page.$eval('#deep-tabs .on', b => b.textContent);
+  await page.mouse.click(14, 884); await sleep(450);   // fora do cartão, no fundo escurecido
+  const backClosed = await page.$eval('#deep', d => d.hidden);
+  check('Tecla S abre o painel, as setas trocam a aba (não o slide) e clicar fora fecha', sOpen && /Por dentro/.test(tabNow) && backClosed && (await active(page)).i === 8, `${sOpen} · ${tabNow} · ${backClosed}`);
+  await goto(page, 8); await page.keyboard.press('s'); await sleep(200);
+  await page.evaluate(() => { location.hash = '#11'; }); await sleep(400);
+  check('Trocar de slide fecha o painel', await page.$eval('#deep', d => d.hidden));
+
   // navegação pelos atalhos (barra lateral, chips e botões)
   await goto(page, 0);
   await tap(page, '.rail-btn[data-sec="fontes"]'); await sleep(500);
   let a = await active(page);
   check('Barra lateral → Fontes abre as referências', /Referências/.test(a.h2), a.h2);
   const nRefs = await page.$$eval('.slide.active .ref', r => r.length);
-  check('Fontes com as novas referências do estúdio (27 no total)', nRefs === 27, `${nRefs}`);
+  check('Fontes com as referências dos tópicos 1.1–1.6 e do estúdio (41 no total)', nRefs === 41, `${nRefs}`);
   const refOk = await page.$$eval('.slide.active .ref', r => r.every(x => /^https:\/\//.test(x.href) && x.target === '_blank' && /noopener/.test(x.rel)));
   check('Todas as referências abrem em nova aba com https e noopener', refOk);
   await tap(page, '.dock-chips [data-goto="24"]'); await sleep(500);
@@ -137,12 +167,12 @@ async function desktop(browser) {
   await tap(page, '.rail-btn[data-sec="video"]'); await sleep(500);
   a = await active(page);
   check('Barra lateral → Vídeo abre o início do estúdio', a.id === 'video', a.id);
-  await tap(page, '.slide.active [data-goto="17"]'); await sleep(500);
+  await tap(page, '.slide.active [data-goto="19"]'); await sleep(500);
   a = await active(page);
   const railOn = await page.$eval('.rail-btn[data-sec="video"]', b => b.classList.contains('on'));
-  check('Botão "Ver o fluxo completo" leva ao slide 18 e a seção fica marcada', a.id === 'vflow' && railOn, `${a.id} · seção ${railOn}`);
+  check('Botão "Ver o fluxo completo" leva ao slide 20 e a seção fica marcada', a.id === 'vflow' && railOn, `${a.id} · seção ${railOn}`);
 
-  // 18 · fluxo completo
+  // 20 · fluxo completo
   const autoNext = await waitFor(page, () => document.querySelector('#vf-steps button.on')?.dataset.s === '2', 7000);
   check('Fluxo: as etapas avançam sozinhas', autoNext);
   await tap(page, '#vf-steps [data-s="5"]');
@@ -155,7 +185,7 @@ async function desktop(browser) {
   const checked = await waitFor(page, () => /0 erros/.test(document.getElementById('vf-check').textContent), 5000);
   check('Fluxo: etapa Revisão mostra o check sem erros', checked);
 
-  // 19 · níveis
+  // 21 · níveis
   await page.keyboard.press('ArrowRight'); await sleep(600);
   a = await active(page);
   check('Seta → vai para "5 níveis"', a.id === 'vlevels', a.id);
@@ -174,13 +204,13 @@ async function desktop(browser) {
   check('Nível 4: o planeta é desenhado na prévia', px3d > 30, `brilho ${px3d.toFixed(0)}`);
   await tap(page, '#lv-tabs [data-l="4"]');
   const batchDone = await waitFor(page, () => document.querySelectorAll('#lv-batch .k5-card.done').length >= 4, 8000);
-  check('Nível 5: os vídeos em lote terminam um por um', batchDone);
+  check('Nível 5: as 4 cenas do vídeo completo passam em ordem', batchDone);
   await tap(page, '#lv-copy'); await sleep(300);
   const clip = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
   const lvPrompt = await page.$eval('#lv-prompt', e => e.textContent.trim());
   check('Botão Copiar copia o pedido do nível', clip === lvPrompt, clip ? 'copiado' : 'área de transferência vazia');
 
-  // 20 · 3D
+  // 22 · 3D
   await page.keyboard.press('ArrowRight');
   const has3d = await waitFor(page, () => !!window.IAStudio3D, 8000);
   await sleep(800);
@@ -198,32 +228,42 @@ async function desktop(browser) {
   const shotOn = await page.$eval('#t3-shot .on', b => b.dataset.c);
   check('3D: troca de câmera (mergulho)', shotOn === 'dive');
 
-  // 21 · planilha → vídeos
-  await page.keyboard.press('ArrowRight');
-  const svDone = await waitFor(page, () => document.querySelectorAll('#sv-out .sv-vid.done').length === 4, 30000);
-  const svRows = await page.$$eval('#sv-table tr.hl', r => r.length);
-  check('Planilha → vídeo: lê as 4 linhas e gera os 4 vídeos', svDone && svRows === 4, `${svRows} linhas lidas`);
-
-  // 22 · workflow
-  await page.keyboard.press('ArrowRight');
-  const toast = await waitFor(page, () => document.getElementById('wf-toast').classList.contains('show'), 25000);
-  const outs = await page.$$eval('#wf-out .file', f => f.length);
-  const lastNode = await page.$eval('#wf-nodes li.on', l => l.dataset.n).catch(() => null);
-  check('Workflow: o agente gera 4 vídeos e para na revisão humana', toast && outs === 4 && lastNode === '4', `${outs} vídeos · etapa ${lastNode}`);
-  // trocar de slide no meio da animação não deixa nada rodando
-  await tap(page, '#wf-run'); await sleep(600);
-  await page.keyboard.press('ArrowLeft'); await sleep(1500);
-  const leaked = await page.$$eval('#wf-out .file', f => f.length);
-  check('Sair do slide cancela a animação (sem trabalho escondido)', leaked === 0, `${leaked} arquivos depois de sair`);
-  await page.keyboard.press('ArrowRight'); await sleep(400);
-
-  // 23 · mão na massa
+  // 23 · mão na massa: o estúdio de vídeo termina aqui, sem automação de dados no meio
   await page.keyboard.press('ArrowRight'); await sleep(600);
   a = await active(page);
   const labs = await page.$$eval('.slide.active .lab', l => l.length);
   await tap(page, '.slide.active .lab .copy-btn'); await sleep(300);
   const lab1 = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''));
   check('Mão na massa: 4 desafios e o pedido é copiado', a.id === 'vlab' && labs === 4 && /vinheta|6 segundos/i.test(lab1), `${labs} desafios`);
+  const mixed = await page.evaluate(() => [...document.querySelectorAll('.slide')].slice(18, 23)
+    .filter(s => /planilha|\.xlsx|\.csv|relatório/i.test(s.textContent)).map(s => s.dataset.id));
+  check('Seção de vídeo sem automação de dados misturada', mixed.length === 0, mixed.join(','));
+
+  // 17 · automação de dados: seção própria na barra lateral
+  await tap(page, '.rail-btn[data-sec="auto"]'); await sleep(600);
+  a = await active(page);
+  const autoOn = await page.$eval('.rail-btn[data-sec="auto"]', b => b.classList.contains('on'));
+  check('Barra lateral → Automação de dados abre a seção própria', a.id === 'asheet' && autoOn, `${a.id} · seção ${autoOn}`);
+  const svDone = await waitFor(page, () => document.querySelectorAll('#sv-out .sv-art.done').length === 4, 30000);
+  const sheet = await page.evaluate(() => ({
+    fix: document.querySelectorAll('#sv-table td.fix').length,
+    dup: document.querySelectorAll('#sv-table tr.dup').length,
+    flag: document.querySelectorAll('#sv-table td.flag').length,
+    vars: document.querySelectorAll('#sv-table td.new').length
+  }));
+  check('Planilha → relatório: corrige nomes, tira a duplicada, marca a vazia e calcula a variação', svDone && sheet.fix === 2 && sheet.dup === 1 && sheet.flag === 1 && sheet.vars === 4, JSON.stringify(sheet));
+
+  // 18 · workflow do relatório
+  await page.keyboard.press('ArrowRight');
+  const toast = await waitFor(page, () => document.getElementById('wf-toast').classList.contains('show'), 25000);
+  const outs = await page.$$eval('#wf-out .file b', f => f.map(x => x.textContent));
+  const lastNode = await page.$eval('#wf-nodes li.on', l => l.dataset.n).catch(() => null);
+  check('Workflow: gera relatório, gráfico, resumo e e-mail em rascunho e para na aprovação', toast && outs.length === 4 && !outs.some(n => /\.mp4/.test(n)) && lastNode === '4', `${outs.join(', ')} · etapa ${lastNode}`);
+  // trocar de slide no meio da animação não deixa nada rodando
+  await tap(page, '#wf-run'); await sleep(600);
+  await page.keyboard.press('ArrowLeft'); await sleep(1500);
+  const leaked = await page.$$eval('#wf-out .file', f => f.length);
+  check('Sair do slide cancela a animação (sem trabalho escondido)', leaked === 0, `${leaked} arquivos depois de sair`);
 
   // teclado no slide: Home/End
   await page.keyboard.press('End'); await sleep(400);
@@ -241,10 +281,15 @@ async function mobile(browser) {
   group = 'Celular 375×812'; console.log(`\n${group}`);
   const { page, errors } = await openPage(browser, { width: 375, height: 812, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   await tour(page, true);
-  await goto(page, 17);
+  await goto(page, 7);
+  await tap(page, '.slide.active [data-deep]'); await sleep(900);
+  const dm = await page.evaluate(() => { const c = document.querySelector('.deep-card').getBoundingClientRect(); return { l: c.left, r: c.right, w: innerWidth, sw: document.documentElement.scrollWidth }; });
+  check('Celular: "Saiba mais" cabe na tela, sem rolagem lateral', dm.l >= 0 && dm.r <= dm.w && dm.sw <= dm.w, JSON.stringify(dm));
+  await tap(page, '#deep .deep-x'); await sleep(450);
+  await goto(page, 19);
   const steps = await page.$$eval('#vf-steps button', b => b.filter(x => x.getBoundingClientRect().width > 100).length);
   check('Celular: etapas do fluxo visíveis e clicáveis', steps === 6, `${steps}`);
-  await goto(page, 19);
+  await goto(page, 21);
   const t3 = await page.$eval('.t3-view', v => v.getBoundingClientRect().width);
   check('Celular: cena 3D cabe na largura', t3 > 250 && t3 <= 375, `${Math.round(t3)} px`);
   check('Console sem erros', errors.length === 0, errors.slice(0, 3).join(' | '));

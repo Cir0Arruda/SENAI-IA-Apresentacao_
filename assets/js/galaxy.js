@@ -56,8 +56,8 @@ function init() {
   const bhScene = new THREE.Scene();      // buraco negro (desenhado depois da lente)
   const sysScene = new THREE.Scene();     // sistema planetário
   const nebStarScene = new THREE.Scene(); // estrelas dentro da nebulosa
-  // vista quase de frente (como as fotos de galáxias face-on), levemente inclinada
-  const HOME_BASE = new THREE.Vector3(0, 16.4, 9.4), HOME_POS = HOME_BASE.clone(), ORIGIN = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+  // vista inclinada, como a foto de referência (o disco aparece como uma elipse)
+  const HOME_BASE = new THREE.Vector3(0, 52, 99.5), HOME_POS = HOME_BASE.clone(), ORIGIN = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.004, 2000);
   camera.position.copy(HOME_POS);
@@ -66,7 +66,7 @@ function init() {
   controls.dampingFactor = 0.06;
   controls.enablePan = false;
   controls.minDistance = 3.2;
-  controls.maxDistance = 48;
+  controls.maxDistance = 130;
   controls.rotateSpeed = 0.55;
   controls.zoomSpeed = 0.7;
   controls.autoRotate = !reduce;
@@ -98,17 +98,19 @@ function init() {
     uMouse: { value: new THREE.Vector3(999, 0, 999) },
     uMouseOn: { value: 0 },
     uWarp: { value: 0 },
-    uCube: { value: 0 }
+    uCube: { value: 0 },
+    uFovK: { value: 1 }      // lente fechada: estrelas maiores na tela, como tudo o mais
   };
 
   /* =========================================================
-     Galáxia espiral
-     Os braços seguem uma espiral logarítmica:
-       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1)
+     Galáxia espiral barrada (como a NGC 1300)
+     Uma barra de estrelas velhas atravessa o centro; os dois braços
+     nascem nas pontas da barra e seguem uma espiral logarítmica:
+       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1, R0 = ponta da barra)
      A galáxia gira como um bloco (padrão de onda de densidade),
      então os braços não se enrolam com o tempo.
      ========================================================= */
-  const KS = 1.9, R0 = 1.6, R_MAX = 13;
+  const KS = 2.9, R0 = 3.1, R_MAX = 13;     // R0 = meio comprimento da barra
   const SPAN = 28;                         // o mapa cobre de -14 a 14
   const MAP_RES = lowEnd ? 1024 : 2048;
   const HE = 0.13, HD = 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira
@@ -154,43 +156,44 @@ function init() {
         vec2 p = (vUv - 0.5) * ${SPAN.toFixed(1)};
         float r0 = length(p);
         // distorção suave: braços irregulares, como nas galáxias reais
-        vec2 wv = vec2(fb2(p * 0.42 + 3.1), fb2(p * 0.42 - 8.7)) - 0.5;
-        vec2 q = p + wv * 0.62;
+        vec2 wv = vec2(fb2(p * 0.38 + 3.1), fb2(p * 0.38 - 8.7)) - 0.5;
+        vec2 q = p + wv * 0.55 * smoothstep(2.0, 5.0, r0);
         float r = max(length(q), 0.02), th = atan(q.y, q.x), lr = log(r / R0);
         float phi = th - KS * lr;                       // coordenada da espiral (0 = crista do braço)
         float armC = 0.5 + 0.5 * cos(2.0 * phi);
-        vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);   // ruído que acompanha os braços
-        float flo = fb3(sp + vec3(0.0, 0.0, 1.7), 5);
-        float spur = fb3(vec3(cos(th - KS * 0.45 * lr) * 4.0, sin(th - KS * 0.45 * lr) * 4.0, lr * 5.0), 4);
-        float clump = fb2(p * 2.2 + 5.0), fine = fb2(p * 7.0 - 2.0);
-        float inner = smoothstep(0.7, 2.6, r0), outer = smoothstep(13.9, 7.5, r0);
-        float arm = pow(armC, 2.4) * (0.45 + 1.0 * flo) * (0.75 + 0.5 * spur) * inner * outer;
-        float armN = pow(armC, 12.0) * inner * outer;
-        // disco de estrelas velhas, que também se concentra um pouco nos braços
-        float dw = mix(1.0, 0.32 + 0.9 * armC, smoothstep(1.4, 3.5, r0));
-        float disk = exp(-r0 / 2.9) * (0.9 + 0.25 * clump) * dw + 0.12 * exp(-r0 / 6.0) * (0.5 + 0.9 * flo) * outer * dw;
-        // aglomerados azuis e regiões HII (rosadas) ao longo dos braços
-        float kn = fb2(p * 3.3 + 11.0) * 0.72 + fine * 0.28;
-        float hii = smoothstep(0.56, 0.74, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.16)), 4.0) * inner * outer;
-        float hii2 = smoothstep(0.66, 0.8, fb2(p * 6.1 - 17.0)) * pow(armC, 3.0) * inner * outer;   // nós pequenos
-        float blu = smoothstep(0.54, 0.72, fb2(p * 4.4 - 3.0) * 0.8 + fine * 0.2) * armC * armC * inner * outer;
-        // halo azul largo em volta dos braços (o "brilho" das fotos de longa exposição)
-        float glow = pow(armC, 1.1) * smoothstep(1.2, 3.2, r0) * smoothstep(14.0, 6.0, r0) * (0.6 + 0.6 * flo);
-        vec3 OLD = vec3(1.0, 0.8, 0.58), YOUNG = vec3(0.36, 0.58, 1.0), HII = vec3(1.0, 0.28, 0.55);
-        vec3 E = OLD * disk * 0.5
-               + YOUNG * arm * 0.78 * exp(-r0 / 11.0) * mix(0.45, 1.0, smoothstep(1.5, 4.5, r0))
-               + vec3(0.3, 0.52, 1.0) * glow * 0.3 * exp(-r0 / 12.0)
-               + vec3(0.6, 0.75, 1.0) * blu * 0.8 + vec3(0.86, 0.92, 1.0) * armN * 0.22 * exp(-r0 / 9.0)
-               + HII * (hii * 1.35 + hii2 * 0.7);
-        E *= smoothstep(14.0, 12.2, r0);
-        // poeira: faixas finas na borda interna dos braços e filamentos pelo disco
-        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.4)), 12.0);
+        float inner = smoothstep(R0 * 0.8, R0 * 1.3, r0), outer = smoothstep(13.9, 10.2, r0);
+        float env = inner * outer;
+        // braços finos: uma crista estreita e um corpo um pouco mais largo
+        float ridge = pow(armC, 14.0), body = pow(armC, 5.0), wide = pow(armC, 2.0);
+        // contas de estrelas: aglomerados brilhantes em fila ao longo do braço
+        float bead = smoothstep(0.44, 0.8, fb2(p * 2.4 + 5.0) * 0.75 + fb2(p * 6.5 - 2.0) * 0.25);
+        float fine = fb2(p * 9.0 + 1.3);
+        float br = mix(0.55, 1.0, smoothstep(R0, 5.0, r0)) * exp(-r0 / 14.0);
+        // barra: estrelas velhas, alongada no eixo x (os braços saem das suas pontas)
+        float bar = exp(-(p.x * p.x) / (R0 * R0 * 0.5) - (p.y * p.y) / 0.42);
+        float lens = exp(-r0 * r0 / 2.2);                 // brilho redondo em volta da barra
+        // disco de estrelas velhas: forte no centro e quase nada entre os braços
+        float disk = exp(-r0 / 1.7) * 0.9 + 0.05 * exp(-r0 / 6.0) * (0.4 + 0.6 * wide) * outer;
+        // regiões HII (rosadas): poucas, pequenas, presas às contas do braço
+        float kn = fb2(p * 3.6 + 11.0) * 0.7 + fine * 0.3;
+        float hii = smoothstep(0.57, 0.72, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.1)), 8.0) * env;
+        vec3 OLD = vec3(1.0, 0.86, 0.66), BAR = vec3(1.0, 0.93, 0.78), YOUNG = vec3(0.5, 0.68, 1.0), HII = vec3(1.0, 0.34, 0.62);
+        vec3 E = OLD * disk * 0.3 + BAR * (bar * 0.36 + lens * 0.09)
+               + YOUNG * (ridge * (0.25 + 1.5 * bead) + body * 0.22 * (0.6 + 0.8 * bead)) * env * br
+               + vec3(0.78, 0.86, 1.0) * ridge * bead * fine * 0.5 * env * br      // estrelas azuis mais brilhantes
+               + vec3(0.24, 0.42, 1.0) * wide * 0.3 * env * exp(-r0 / 10.0)       // halo azul difuso
+               + HII * hii * 1.15;
+        E *= smoothstep(14.0, 12.4, r0);
+        // poeira: faixa fina na borda interna dos braços e duas faixas ao longo da barra
+        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.32)), 22.0);
+        vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);
         float laneN = fb3(sp * 1.9 + 4.0, 4);
-        float ridge = pow(1.0 - abs(2.0 * fb2(p * 2.6 + 1.0) - 1.0), 6.0);
-        float ridgeB = pow(1.0 - abs(2.0 * fb3(sp * 2.4 + 7.0, 4) - 1.0), 8.0);
-        float dust = lane * (0.25 + 1.35 * smoothstep(0.32, 0.72, laneN)) * smoothstep(1.0, 2.6, r0) * smoothstep(13.0, 6.5, r0)
-                   + (ridge * 0.45 + ridgeB * 0.5) * smoothstep(1.3, 3.2, r0) * smoothstep(12.5, 3.5, r0)
-                   + 0.05 * exp(-r0 / 4.0);
+        float barLane = exp(-pow((abs(p.y) - 0.42) / 0.09, 2.0)) * smoothstep(R0 * 1.1, R0 * 0.4, abs(p.x)) * smoothstep(0.15, 0.6, abs(p.x));
+        float ridgeD = pow(1.0 - abs(2.0 * fb2(p * 2.6 + 1.0) - 1.0), 8.0);
+        float dust = lane * (0.3 + 1.3 * smoothstep(0.3, 0.7, laneN)) * env
+                   + barLane * 0.7
+                   + ridgeD * 0.22 * wide * env
+                   + 0.04 * exp(-r0 / 4.0);
         if (uLDR > 0.5) gl_FragColor = vec4(E / (1.0 + E), clamp(dust, 0.0, 1.0));
         else gl_FragColor = vec4(E * 0.5, dust);
       }`,
@@ -237,14 +240,14 @@ function init() {
     for (let i = 0; i < N; i++) {
       const u = rand();
       let x, y, z, s, b;
-      if (u < 0.08) {                       // bojo central, levemente achatado
+      if (u < 0.1) {                        // bojo e barra
         let r = 0.42 * Math.pow(-Math.log(1 - rand() * 0.9995), 1.25);
         if (r > 3) r = rand() * 3;
         d3.set(gauss(), gauss(), gauss()).normalize();
-        x = d3.x * r; y = d3.y * r * 0.6; z = d3.z * r;
+        x = d3.x * r * 2.3; y = d3.y * r * 0.55; z = d3.z * r * 0.62;   // alongado como a barra
         c.copy(pick(PAL.bulge));
-        b = 0.45 + 0.3 * Math.min(1, r / 1.5); s = 0.5 + rand() * 0.7;
-      } else if (u < 0.105) {               // halo esparso
+        b = 0.2 + 0.16 * Math.min(1, r / 1.5); s = 0.5 + rand() * 0.7;   // muitas e fracas: de perto não estouram
+      } else if (u < 0.12) {                // halo esparso
         d3.set(gauss(), gauss(), gauss()).normalize();
         const r = 3 + rand() * 13;
         x = d3.x * r; y = d3.y * r * 0.45; z = d3.z * r;
@@ -257,15 +260,16 @@ function init() {
           x = Math.cos(a) * r; z = Math.sin(a) * r;
           k = mapIdx(x, z);
           const l = (0.3 * mapPix[k] + 0.5 * mapPix[k + 1] + 0.2 * mapPix[k + 2]) / maxL;
-          if (rand() < Math.pow(l, 1.35)) break;
+          // a barra é a parte mais brilhante do mapa: sem limite, ela ficaria com quase todas as estrelas
+          if (rand() < Math.pow(Math.min(1, l / 0.32), 1.35) * (r < R0 * 1.1 ? 0.35 : 1)) break;
         }
         const mr = mapPix[k], mg = mapPix[k + 1], mb = mapPix[k + 2], mx = Math.max(mr, mg, mb, 1);
         const blue = mb > mr * 0.95, pink = mr > mg * 1.45 && mb > mg * 0.8;
         y = gauss() * (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r);
         c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
-        b = 0.36 + Math.pow(rand(), 3) * 0.6; s = 0.45 + Math.pow(rand(), 3) * 1.2;
+        b = (0.36 + Math.pow(rand(), 3) * 0.6) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.45 + Math.pow(rand(), 3) * 1.2;
         if (blue && rand() < 0.1) { c.copy(PAL.young); s *= 1.5; b = 1.1; }
-        if (pink && rand() < 0.16) { c.copy(PAL.hii).lerp(PAL.white, rand() * 0.3); b = 1.0; s *= 1.15; }
+        if (pink && rand() < 0.3) { c.copy(PAL.hii).lerp(PAL.white, rand() * 0.3); b = 1.0; s *= 1.15; }
       }
       pos.set([x, y, z], i * 3);
       col.set([c.r * b, c.g * b, c.b * b], i * 3);
@@ -274,7 +278,7 @@ function init() {
     return starGeometry(pos, col, size, seed);
   }
   const STAR_VS = /* glsl */`
-    uniform float uTime, uPR, uMouseOn, uWarp, uCube, uScaleK, uAlpha, uMaxSize, uDustOn;
+    uniform float uTime, uPR, uMouseOn, uWarp, uCube, uScaleK, uAlpha, uMaxSize, uDustOn, uFovK;
     uniform vec2 uNear;
     uniform vec3 uMouse, uCamL;
     uniform sampler2D tMap;
@@ -306,7 +310,7 @@ function init() {
       gl_Position = projectionMatrix * mv;
       float tw = 0.8 + 0.2 * sin(uTime * (1.1 + aSeed * 3.0) + aSeed * 50.0);
       float z = max(-mv.z, 0.001);
-      float s = aSize * uPR * (1.0 + infl * 1.4) * (1.0 + uWarp * 2.5) * mix(1.0, 0.35, uCube) * uScaleK / z;
+      float s = aSize * uPR * (1.0 + infl * 1.4) * (1.0 + uWarp * 2.5) * mix(1.0, 0.35, uCube) * uScaleK * uFovK / z;
       // estrelas menores que 1 pixel: mantém o tamanho e reduz o brilho (sem cintilar)
       float mn = 1.1 * uPR, e = 1.0;
       if (s < mn) { e = (s / mn) * (s / mn); s = mn; }
@@ -336,7 +340,10 @@ function init() {
   stars.frustumCulled = false;
   stars.renderOrder = 1;
   // posição da câmera no espaço da galáxia (serve para qualquer câmera: principal, fundo ou cubo)
-  stars.onBeforeRender = (r, s, cam) => { galaxy.worldToLocal(starMat.uniforms.uCamL.value.setFromMatrixPosition(cam.matrixWorld)); };
+  stars.onBeforeRender = (r, s, cam) => {
+    galaxy.worldToLocal(starMat.uniforms.uCamL.value.setFromMatrixPosition(cam.matrixWorld));
+    U.uFovK.value = cam.fov && cam.fov < 50 ? 0.46631 / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) : 1;
+  };
   galaxy.add(stars);
   // perto (dentro da galáxia) as estrelas ficam menores, para não virarem bolas
   function setStarView(k) {
@@ -497,10 +504,11 @@ function init() {
         }
         if (t1 <= t0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
         // bojo: soma de três gaussianas achatadas, integradas exatamente ao longo do raio (sem ruído)
-        const float Q = 0.6;
-        vec3 o2 = vec3(ro.x, ro.y / Q, ro.z), d2 = vec3(rd.x, rd.y / Q, rd.z);
+        // achatado na vertical e alongado no eixo da barra (x)
+        const vec3 Q = vec3(1.0 / 2.3, 1.0 / 0.55, 1.0 / 0.8);
+        vec3 o2 = ro * Q, d2 = rd * Q;
         float bA = dot(d2, d2), bB = dot(o2, d2), bC = dot(o2, o2) - bB * bB / bA, sA = sqrt(bA), tc = bB / bA;
-        vec3 S = vec3(0.07, 0.24, 1.05), AMP = vec3(4.5, 1.05, 0.3) * uBulge;
+        vec3 S = vec3(0.07, 0.24, 1.05), AMP = vec3(1.6, 0.42, 0.11) * uBulge;
         vec3 K = AMP * S * 0.8862269 / sA * exp(-bC / (S * S));
         vec3 prevE = vec3(erf1(sA * (t0 + tc) / S.x), erf1(sA * (t0 + tc) / S.y), erf1(sA * (t0 + tc) / S.z));
         float L = t1 - t0;
@@ -1261,7 +1269,8 @@ function init() {
   function resize() {
     W = Math.max(1, innerWidth); H = Math.max(1, innerHeight);
     // tela em pé: a câmera inicial fica mais longe para a galáxia caber
-    HOME_POS.copy(HOME_BASE).multiplyScalar(clamp(1.25 / (W / H), 1, 1.9));
+    HOME_POS.copy(HOME_BASE).multiplyScalar(clamp(1.3 / (W / H), 1, 2.6));
+    controls.maxDistance = HOME_POS.length() * 1.3;
     renderer.setPixelRatio(pr);
     renderer.setSize(W, H, false);
     composer.setPixelRatio(pr); composer.setSize(W, H);
@@ -1324,7 +1333,7 @@ function init() {
   // ponto do braço mais próximo (em coordenadas da galáxia), ou null
   function armAt(local) {
     const r = Math.hypot(local.x, local.z);
-    if (r < 2.3 || r > 12.2) return null;
+    if (r < R0 * 0.85 || r > 12.8) return null;
     const th = Math.atan2(local.z, local.x);
     let best = 1e9, bk = 0;
     for (let k = 0; k < 2; k++) {
@@ -1900,6 +1909,10 @@ function init() {
 
     if (mode === 'galaxy' && !reduce) galaxy.rotation.y -= dt * 0.022;
     if (controls.enabled) controls.update();
+    // de longe, lente fechada (sem distorção de perspectiva, como numa foto de telescópio);
+    // de perto, lente aberta (sensação de estar dentro da galáxia)
+    const fovT = 50 - 38.4 * sstep(14, 92, camera.position.length());
+    if (Math.abs(camera.fov - fovT) > 0.02) { camera.fov = fovT; camera.updateProjectionMatrix(); }
     updateHover();
     U.uMouse.value.lerp(mouseTarget.x > 900 ? U.uMouse.value : mouseTarget, Math.min(1, dt * 10));
     U.uMouseOn.value += ((pointerIn && mouseTarget.x < 900 && mode === 'galaxy' ? 1 : 0) - U.uMouseOn.value) * Math.min(1, dt * 5);
@@ -1919,7 +1932,10 @@ function init() {
     lensPass.uniforms.uR.value = tmp.z < 1 ? rE * bhF : 0;
 
     updateGalaxyLabels();
+    // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
+    galMarch.uniforms.uBulge.value = 0.45 + 0.55 * sstep(10, 70, camD);
     composer.render(dt);
+    galMarch.uniforms.uBulge.value = 1;
     afterRender();
   }
 
@@ -1962,6 +1978,7 @@ function init() {
       planetTitle: $('#gxp-title').textContent
     }),
     // ponto de um braço na tela (para o teste clicar como uma pessoa)
+    armAngle,
     armScreen(k, r) {
       const a = armAngle(r, k), w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
       return { x: (w.x + 1) / 2 * W, y: (1 - w.y) / 2 * H, onScreen: Math.abs(w.x) < 1 && Math.abs(w.y) < 1 && w.z < 1 };
