@@ -1,8 +1,8 @@
 {
  "fonte": "Ortomosaico Google Maps 2026 (0,110 m/px) + fotos Bilenge Engenharia/NPC Arquitetura + Street View jul/2025",
  "lean": [
-  -0.365,
-  0.32
+  0.365,
+  -0.32
  ],
  "els": [
   {
@@ -10,10 +10,10 @@
    "id": "senai-oficinas",
    "desc": "Galpão das oficinas (mecânica, soldagem, elétrica, automotiva) com lanternim",
    "r": [
-    -42.7,
-    44.6,
-    -103.48,
-    -79.18
+    -36.5,
+    50.8,
+    -108.92,
+    -84.62
    ],
    "eave": 8.5,
    "ridge": 10.6,
@@ -28,10 +28,10 @@
    "id": "senai-apoio-norte",
    "desc": "Vestiários, sanitários e almoxarifado (atrás das oficinas)",
    "r": [
-    -34.93,
-    25.88,
-    -114.2,
-    -103.6
+    -31.28,
+    29.52,
+    -117.4,
+    -106.8
    ],
    "h": 5.0,
    "roof": "flat",
@@ -43,10 +43,10 @@
    "id": "senai-galeria",
    "desc": "Salas de aula e laboratórios em dois pavimentos, com galeria superior",
    "r": [
-    -36.83,
-    23.17,
-    -81.9,
-    -74.4
+    -31.57,
+    28.43,
+    -86.5,
+    -79.0
    ],
    "h": 7.2
   },
@@ -55,10 +55,10 @@
    "id": "senai-servico-1",
    "desc": "Central de utilidades",
    "r": [
-    26.06,
-    32.76,
-    -110.76,
-    -103.26
+    29.34,
+    36.04,
+    -113.64,
+    -106.14
    ],
    "h": 4.5,
    "roof": "flat",
@@ -70,10 +70,10 @@
    "id": "senai-servico-2",
    "desc": "Casa de máquinas e depósito",
    "r": [
-    32.39,
-    47.09,
-    -109.94,
-    -102.94
+    36.41,
+    51.11,
+    -113.46,
+    -106.46
    ],
    "h": 5.5,
    "roof": "flat",
@@ -85,10 +85,10 @@
    "id": "senai-servico-3",
    "desc": "Reservatório e área técnica",
    "r": [
-    35.15,
-    42.65,
-    -125.56,
-    -113.86
+    40.26,
+    47.76,
+    -130.04,
+    -118.34
    ],
    "h": 7.0,
    "roof": "flat",
@@ -100,10 +100,10 @@
    "id": "senai-servico-4",
    "desc": "Abrigo de gases especiais e GLP",
    "r": [
-    28.54,
-    36.54,
-    -126.72,
-    -118.72
+    31.46,
+    39.46,
+    -129.28,
+    -121.28
    ],
    "h": 4.0,
    "roof": "flat",
@@ -115,10 +115,10 @@
    "id": "senai-deposito",
    "desc": "Depósito e pátio da empilhadeira (toldo azul)",
    "r": [
-    30.59,
-    43.99,
-    -80.24,
-    -74.04
+    34.61,
+    48.01,
+    -83.76,
+    -77.56
    ],
    "h": 5.5,
    "roof": "flat",
@@ -131,10 +131,10 @@
    "id": "senai-bloco-o1",
    "desc": "Bloco de salas e laboratórios (oeste), volume alto revestido de telha azul",
    "r": [
-    -37.08,
-    -14.78,
-    -68.27,
-    -45.57
+    -31.32,
+    -9.02,
+    -73.33,
+    -50.63
    ],
    "h": 7.9,
    "base": 3.7,
@@ -151,10 +151,10 @@
    "id": "senai-administracao",
    "desc": "Administração, recepção e biblioteca (pavilhão envidraçado)",
    "r": [
-    -34.48,
-    -15.58,
-    -46.33,
-    -24.63
+    -31.12,
+    -12.22,
+    -49.27,
+    -27.57
    ],
    "eave": 4.3,
    "ridge": 5.3,
@@ -166,10 +166,10 @@
    "id": "senai-cubo-o",
    "desc": "Sanitários (cubo de pastilha vermelha)",
    "r": [
-    -39.61,
-    -34.41,
-    -46.35,
-    -36.65
+    -36.99,
+    -31.79,
+    -48.65,
+    -38.95
    ],
    "h": 3.6
   },
@@ -178,10 +178,10 @@
    "id": "senai-cubo-a",
    "desc": "Sanitários (cubo de pastilha vermelha)",
    "r": [
-    -20.71,
-    -11.01,
-    -74.95,
-    -70.25
+    -18.09,
+    -8.39,
+    -77.25,
+    -72.55
    ],
    "h": 3.6
   },
@@ -190,10 +190,10 @@
    "id": "senai-cubo-b",
    "desc": "Sanitários e copa (cubo de pastilha vermelha)",
    "r": [
-    -0.51,
-    8.09,
-    -74.45,
-    -69.95
+    2.11,
+    10.71,
+    -76.75,
+    -72.25
    ],
    "h": 3.6
   },
@@ -202,10 +202,10 @@
    "id": "senai-patio-coberto",
    "desc": "Pátio coberto (convivência) e cantina",
    "r": [
-    1.34,
-    21.64,
-    -67.42,
-    -52.22
+    5.86,
+    26.16,
+    -71.38,
+    -56.18
    ],
    "h": 6.2
   },
@@ -214,10 +214,10 @@
    "id": "senai-bloco-l",
    "desc": "Bloco de salas, informática e laboratórios (leste), volume alto revestido de telha azul",
    "r": [
-    -2.08,
-    20.22,
-    -52.47,
-    -29.37
+    3.68,
+    25.98,
+    -57.53,
+    -34.43
    ],
    "h": 7.9,
    "base": 3.7,
@@ -234,10 +234,10 @@
    "id": "senai-refeitorio",
    "desc": "Refeitório (pavilhão com faixa de janelas)",
    "r": [
-    0.22,
-    20.22,
-    -30.23,
-    -16.83
+    3.58,
+    23.58,
+    -33.17,
+    -19.77
    ],
    "eave": 4.3,
    "ridge": 5.3,
@@ -249,16 +249,16 @@
    "id": "senai-portaria",
    "desc": "Portaria de pedestres (pastilha vermelha, marquise branca, nº 765)",
    "canopy": [
-    -32.86,
-    -21.46,
-    -13.52,
-    -7.62
+    -29.94,
+    -18.54,
+    -16.08,
+    -10.18
    ],
    "box": [
-    -31.6,
-    -25.6,
-    -12.6,
-    -8.6
+    -30.14,
+    -24.14,
+    -13.88,
+    -9.88
    ],
    "h": 4.0
   },
@@ -268,25 +268,25 @@
    "desc": "Torre da caixa d'água em concreto de forma deslizante (dois fustes)",
    "shafts": [
     [
-     8.0,
-     13.0,
-     -6.0,
-     -2.8,
+     17.49,
+     22.49,
+     -14.32,
+     -11.12,
      26.0
     ],
     [
-     8.3,
-     12.7,
-     -9.7,
-     -6.5,
+     16.7,
+     21.09,
+     -17.06,
+     -13.86,
      23.0
     ]
    ],
    "link": [
-    9.4,
-    11.6,
-    -6.5,
-    -6.0,
+    17.25,
+    19.45,
+    -13.38,
+    -12.88,
     21.5
    ]
   },
@@ -485,7 +485,7 @@
    "t": "fence",
    "pts": [
     [
-     -25.4,
+     -24.1,
      -14.6
     ],
     [
