@@ -1486,6 +1486,7 @@ function init() {
     $('#gx-sys').hidden = m !== 'system';
     $('#gx-planet').hidden = m !== 'focus';
     $('#gx-bh').hidden = m !== 'inside';
+    try { bhLab.show(m === 'inside'); } catch { /* ainda não criado */ }
     if (BUBBLE[m]) $('#gx-bubble').innerHTML = BUBBLE[m];
     $('#gx-hint').textContent = HINT[m] || '';
   }
@@ -1815,6 +1816,140 @@ function init() {
   const bindToggle = (id, key) => $(id).addEventListener('change', e => { fullMat.uniforms[key].value = e.target.checked ? 1 : 0; bbMat.uniforms[key].value = e.target.checked ? 1 : 0; });
   bindToggle('#gxb-lens', 'uLens'); bindToggle('#gxb-disk', 'uDisk'); bindToggle('#gxb-doppler', 'uDoppler');
 
+  /* ---------- Laboratório do buraco negro ----------
+     Física de Schwarzschild (buraco negro sem rotação), em unidades do raio do horizonte rs:
+     - relógio parado a uma distância r anda mais devagar: fator √(1 − rs/r)
+     - órbita circular: v = c·√(rs / 2(r − rs)); abaixo de 3 rs ela é instável, a 1,5 rs só a luz orbita
+     - velocidade de escape: c·√(rs/r)
+     - maré num corpo de comprimento L: Δa = c²·L·rs / r³  (= 2GM·L / r³)
+     - sonda em queda livre vista de longe: dr/dt = −(1 − rs/r)·√(rs/r)·c e dτ/dt = 1 − rs/r */
+  const bhLab = (() => {
+    const C = 299792.458, G0 = 9.81, CM = 2.998e8;
+    const MASS = {
+      sgr: { rsKm: 1.27e7, name: 'Sagitário A*', t: 'O buraco negro do centro da Via Láctea: 4,3 milhões de vezes a massa do Sol. O horizonte tem 12,7 milhões de km de raio.' },
+      star: { rsKm: 29.5, name: 'estelar', t: 'Um buraco negro que nasceu de uma estrela: 10 vezes a massa do Sol. O horizonte tem só 29,5 km de raio.' }
+    };
+    let mass = 'sgr';
+    const fmt = (x, d = 1) => x.toLocaleString('pt-BR', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+    const big = x => x >= 1e9 ? `${fmt(x / 1e9)} bilhões` : x >= 1e6 ? `${fmt(x / 1e6)} milhões` : x >= 1e4 ? `${fmt(x / 1e3, 0)} mil` : fmt(x, x < 10 ? 2 : 0);
+    const tide = r => CM * CM * 2 / (MASS[mass].rsKm * 1e3 * MASS[mass].rsKm * 1e3) / (r * r * r) / G0;   // em g
+    const MIS = [
+      { id: 'ring', t: 'Ache a esfera de fótons (onde a luz dá voltas)' },
+      { id: 'dop', t: 'Descubra qual lado do disco vem até você' },
+      { id: 'lens', t: 'Desligue a gravidade e compare a imagem' },
+      { id: 'near', t: 'Chegue a menos de 3 rs (a última órbita estável)' },
+      { id: 'probe', t: 'Lance uma sonda e veja o relógio dela congelar' },
+      { id: 'spag', t: 'Espaguetifique uma sonda num buraco negro estelar' }
+    ];
+    let done = {};
+    try { done = JSON.parse(localStorage.getItem('ia-bh-missions') || '{}'); } catch { done = {}; }
+    const list = $('#gxb-missions'), toast = $('#gxb-toast');
+    function drawMissions() {
+      list.innerHTML = MIS.map(m => `<li class="${done[m.id] ? 'ok' : ''}"><i>${done[m.id] ? '✓' : ''}</i>${m.t}</li>`).join('');
+      const n = MIS.filter(m => done[m.id]).length;
+      $('#gxb-xp').textContent = `${n * 100} XP · ${n}/${MIS.length}`;
+      $('#gxb-xpbar').style.transform = `scaleX(${n / MIS.length})`;
+    }
+    let toastT = 0;
+    function win(id) {
+      if (done[id]) return;
+      done[id] = 1;
+      try { localStorage.setItem('ia-bh-missions', JSON.stringify(done)); } catch { /* sem armazenamento */ }
+      drawMissions();
+      const all = MIS.every(m => done[m.id]);
+      toast.innerHTML = all ? '<b>+100 XP</b> Todas as missões! Você é <b>astronauta do SENAI</b> 🚀' : `<b>+100 XP</b> ${MIS.find(m => m.id === id).t}`;
+      toast.classList.remove('on'); void toast.offsetWidth; toast.classList.add('on');
+      clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('on'), 3200);
+    }
+    drawMissions();
+    partsBox.addEventListener('click', () => { const v = fullMat.uniforms.uHighlight.value; if (v === 2) win('ring'); if (v === 5) win('dop'); });
+    $('#gxb-lens').addEventListener('change', e => { if (!e.target.checked) win('lens'); });
+    const massBox = $('#gxb-mass');
+    function setMass(m) { mass = m; [...massBox.children].forEach(b => b.classList.toggle('on', b.dataset.m === m)); $('#gxb-mass-t').textContent = MASS[m].t; }
+    massBox.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (b) setMass(b.dataset.m); });
+    setMass('sgr');
+
+    // rótulos no próprio desenho
+    const labBox = $('#gxb-labels');
+    const LBL = ['shadow', 'ring', 'come', 'go', 'back'].map(k => { const s = document.createElement('span'); s.className = 'gxl-lbl gxl-' + k; labBox.append(s); return s; });
+    const TXT = ['Sombra: nem a luz sai', 'Anel de fótons · 1,5 rs', 'Vem até você: mais claro e azulado', 'Vai embora: mais escuro e avermelhado', 'Parte de trás do disco, curvada pela gravidade'];
+    LBL.forEach((s, k) => (s.textContent = TXT[k]));
+
+    // sonda
+    const pc = $('#gxb-probe'), pg = pc.getContext('2d');
+    let probe = null;
+    $('#gxb-launch').addEventListener('click', () => {
+      probe = { r: Math.min(insideCam.dist * 0.7, 14), t: 0, tau: 0, ang: -0.55 + Math.random() * 0.3, dead: false, frozen: 0, maxTide: 0, mass };
+      $('#gxb-launch').disabled = true;
+      win('probe');
+    });
+    function px(r, H) { return r / insideCam.dist / fullMat.uniforms.uTanFov.value * H / 2; }
+    function frame(dt) {
+      const W = innerWidth, H = innerHeight, r = insideCam.dist, M = MASS[mass];
+      // ---- dados ----
+      $('#gxd-r').textContent = `${fmt(r, 1)} rs · ${big(r * M.rsKm)} km`;
+      const f = Math.sqrt(1 - 1 / r);
+      $('#gxd-time').textContent = `${fmt(1 / f, 2)} h lá longe`;
+      $('#gxd-orb').textContent = r > 1.5 ? `${fmt(Math.sqrt(1 / (2 * (r - 1))) * 100, 0)}% da luz${r < 3 ? ' · instável' : ''}` : 'impossível';
+      $('#gxd-esc').textContent = `${fmt(Math.sqrt(1 / r) * C, 0)} km/s (${fmt(Math.sqrt(1 / r) * 100, 0)}% da luz)`;
+      const td = tide(r);
+      $('#gxd-tide').textContent = td < 0.01 ? `${td.toExponential(1).replace('.', ',')} g: nem sente` : td < 3 ? `${fmt(td, 2)} g: dá para sentir` : `${big(td)} g: espaguetificação!`;
+      $('#gxd-tide-bar').style.transform = `scaleX(${clamp(Math.log10(Math.max(td, 1e-4)) / 8 + 0.5, 0, 1)})`;
+      $('#gxd-tide').parentElement.classList.toggle('danger', td >= 3);
+      if (r < 3) win('near');
+
+      // ---- rótulos ----
+      const sh = fullMat.uniforms.uShift.value;
+      const cx = (sh.x + 1) / 2 * W, cy = (1 - (sh.y + 1) / 2) * H;
+      const sinA = clamp(2.598 / r * f, 0, 0.999), shadowPx = Math.tan(Math.asin(sinA)) / fullMat.uniforms.uTanFov.value * H / 2;
+      const show = r > 2.4 && !fly;
+      const place = (el, x, y, on) => { el.classList.toggle('on', on && show); el.style.transform = `translate(${x}px, ${y}px)`; };
+      place(LBL[0], cx, cy, true);
+      place(LBL[1], cx, cy + shadowPx * 1.12, fullMat.uniforms.uLens.value > 0.5);
+      // qual lado do disco vem até a câmera (o gás gira no sentido anti-horário visto de cima)
+      const c = insideCam, P = new THREE.Vector3(Math.sin(c.az) * Math.cos(c.el), Math.sin(c.el), Math.cos(c.az) * Math.cos(c.el)).multiplyScalar(c.dist);
+      const Q = new THREE.Vector3().crossVectors(P.clone().negate().normalize(), UP).normalize().multiplyScalar(7);
+      const side = new THREE.Vector3(-Q.z, 0, Q.x).dot(P.clone().sub(Q)) > 0 ? -1 : 1;   // -1: o lado da direita vem até você
+      const diskPx = Math.min(px(5.5, H), W * 0.3);
+      const xl = x => clamp(x, 120, W - (W > 1100 ? 470 : 120));
+      const on = fullMat.uniforms.uDisk.value > 0.5;
+      place(LBL[2], xl(cx - diskPx * side), cy + shadowPx * (side < 0 ? 0.6 : -0.4), on);
+      place(LBL[3], xl(cx + diskPx * side), cy + shadowPx * (side < 0 ? -0.4 : 0.6), on);
+      LBL[1].style.marginTop = '14px';
+      place(LBL[4], cx, cy - shadowPx * 1.45, on && fullMat.uniforms.uLens.value > 0.5);
+
+      // ---- sonda ----
+      if (pc.width !== W || pc.height !== H) { pc.width = W; pc.height = H; }
+      pg.clearRect(0, 0, W, H);
+      if (probe) {
+        const p = probe, sub = 8, h = dt * 2.2 / sub;
+        for (let i = 0; i < sub && p.r > 1.0005; i++) { const drdt = (1 - 1 / p.r) * Math.sqrt(1 / p.r); p.r -= drdt * h * 6; p.t += h * 6; p.tau += (1 - 1 / p.r) * h * 6; }
+        const g = Math.sqrt(Math.max(0, 1 - 1 / p.r));               // desvio para o vermelho visto de longe
+        const tdP = CM * CM * 2 / (MASS[p.mass].rsKm * 1e3) ** 2 / p.r ** 3 / G0;
+        p.maxTide = Math.max(p.maxTide, tdP);
+        const d = Math.max(px(p.r, H), shadowPx * (1 + 0.6 * (p.r - 1))), x = cx + Math.cos(p.ang) * d, y = cy + Math.sin(p.ang) * d;
+        const stretch = 1 + Math.min(9, Math.max(0, Math.log10(Math.max(tdP, 1)) * 1.1)), squeeze = 1 / Math.sqrt(stretch);
+        if (p.mass === 'star' && tdP > 1e5) win('spag');
+        pg.save(); pg.translate(x, y); pg.rotate(p.ang);
+        const a = clamp(g * 1.4, 0, 1);
+        pg.globalAlpha = a;
+        const grd = pg.createLinearGradient(-14 * stretch, 0, 14 * stretch, 0);
+        const col = `rgb(255, ${Math.round(80 + 170 * g)}, ${Math.round(60 + 190 * g * g)})`;
+        grd.addColorStop(0, 'rgba(255,255,255,0)'); grd.addColorStop(0.5, col); grd.addColorStop(1, 'rgba(255,255,255,0)');
+        pg.fillStyle = grd; pg.beginPath(); pg.ellipse(0, 0, 9 * stretch, 5 * squeeze, 0, 0, TAU); pg.fill();
+        pg.fillStyle = col; pg.beginPath(); pg.ellipse(0, 0, 3.2 * Math.min(stretch, 3), 2.4 * squeeze, 0, 0, TAU); pg.fill();
+        pg.restore();
+        pg.globalAlpha = 1; pg.font = '600 12px "Inter Tight", sans-serif'; pg.fillStyle = 'rgba(255,255,255,.9)';
+        if (a > 0.08) pg.fillText(`sonda · ${fmt(p.r, 2)} rs`, x + 14, y - 12);
+        const freeze = 1 - g;
+        $('#gxb-probe-t').innerHTML = `Relógio da sonda: <b>${fmt(p.tau, 1)}</b> · de longe: <b>${fmt(p.t, 1)}</b><br>${freeze > 0.85 ? 'De longe, a sonda parece <b>congelar</b> no horizonte e some no vermelho.' : tdP > 1e5 ? `Maré de ${big(tdP)} g: a sonda virou <b>espaguete</b>!` : tdP > 3 ? 'A maré começa a esticar a sonda.' : 'Caindo... e acelerando.'}`;
+        if (a < 0.02) { p.frozen += dt; if (p.frozen > 1.2) { probe = null; $('#gxb-launch').disabled = false; } }
+      }
+    }
+    function show(on) { $('#gxb-lab').hidden = !on; labBox.hidden = pc.hidden = !on; if (!on) { probe = null; $('#gxb-launch').disabled = false; LBL.forEach(l => l.classList.remove('on')); } }
+    return { frame, show, win, state: () => ({ done: Object.keys(done).length, mass, probe: probe ? probe.r : null }) };
+  })();
+
   /* Transição suave: a última imagem de uma cena fica por cima e some aos poucos
      enquanto a câmera continua o mesmo movimento na outra cena (sem clarão, sem corte). */
   const xfade = document.createElement('canvas');
@@ -1834,9 +1969,11 @@ function init() {
     if (mode !== 'galaxy') return;
     setMode('warp');
     hideCaption();
-    const dir = camera.position.clone().sub(controls.target).normalize();
-    if (Math.abs(dir.y) < 0.15) dir.y = 0.15;
-    dir.normalize();
+    // chega já na altura em que a vista de dentro começa (perto do plano do disco),
+    // para a imagem de fora e a de dentro coincidirem na troca
+    const dir = camera.position.clone().sub(controls.target).normalize().applyMatrix3(TILT_INV);
+    const hz = Math.hypot(dir.x, dir.z) || 1, EL = 0.2;
+    dir.set(dir.x / hz * Math.cos(EL), Math.sin(EL), dir.z / hz * Math.cos(EL)).applyMatrix3(TILT);
     const near = dir.clone().multiplyScalar(30 * BH_SCALE);
     flyRig(camera, controls, near, ORIGIN, 2600, () => {
       crossfade(() => composer.render(0));
@@ -2030,6 +2167,7 @@ function init() {
       basis.makeBasis(right, upv, fwd.clone().negate());
       fullMat.uniforms.uBasis.value.setFromMatrix4(basis);
       fullMat.uniforms.uCam.value.copy(pos);
+      bhLab.frame(dt);
       composerIn.render(dt);
       afterRender();
       return;
@@ -2087,13 +2225,13 @@ function init() {
     tmp2.copy(camRight).multiplyScalar(5.2 * BH_SCALE).project(camera);
     const rE = Math.hypot((tmp2.x - tmp.x) / 2 * (W / H), (tmp2.y - tmp.y) / 2);
     // visto de dentro do disco, a poeira esconde o centro: o buraco negro some junto
-    const camD = camera.position.length(), bhF = camD < 4 ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD);
+    const camD = camera.position.length(), bhF = camD < 4 || mode === 'warp' ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD);
     bbMat.uniforms.uFade.value = bhF; bb.visible = bhF > 0.01;
     lensPass.uniforms.uR.value = tmp.z < 1 ? rE * bhF : 0;
 
     updateGalaxyLabels();
     // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
-    galMarch.uniforms.uBulge.value = 0.45 + 0.55 * sstep(10, 70, camD);
+    galMarch.uniforms.uBulge.value = 0.12 + 0.88 * sstep(6, 70, camD);
     composer.render(dt);
     galMarch.uniforms.uBulge.value = 1;
     afterRender();

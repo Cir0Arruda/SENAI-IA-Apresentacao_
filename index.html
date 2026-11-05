@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/studio.css">
   <link rel="stylesheet" href="assets/css/galaxy.css">
+  <link rel="stylesheet" href="assets/css/cosmos.css">
+  <link rel="stylesheet" href="assets/css/labs.css">
   <script>
     /* A abertura (galáxia) aparece quando o site é aberto sem um slide no endereço */
     window.__startHash = location.hash;
@@ -200,6 +202,35 @@
         <button class="pill dark" id="gxb-exit"><svg class="i sm"><use href="#i-arrow-left"/></svg>Voltar à galáxia</button>
       </div>
     </section>
+
+    <!-- Laboratório do buraco negro: dados ao vivo, sonda e missões -->
+    <div class="gx-bhlabels" id="gxb-labels" aria-hidden="true"></div>
+    <canvas class="gx-probe" id="gxb-probe" aria-hidden="true"></canvas>
+    <section class="gx-glass gx-bhlab" id="gxb-lab" hidden>
+      <div class="gxl-h"><span class="tag dark">Painel da nave</span>
+        <div class="seg gxl-mass" id="gxb-mass" role="group" aria-label="Tipo de buraco negro">
+          <button class="on" data-m="sgr">Sagitário A*</button><button data-m="star">Estelar</button>
+        </div>
+      </div>
+      <p class="gxl-mass-t" id="gxb-mass-t"></p>
+      <dl class="gxl-data">
+        <div><dt>Distância</dt><dd id="gxd-r">—</dd></div>
+        <div><dt>1 hora sua =</dt><dd id="gxd-time">—</dd></div>
+        <div><dt>Órbita circular</dt><dd id="gxd-orb">—</dd></div>
+        <div><dt>Velocidade de escape</dt><dd id="gxd-esc">—</dd></div>
+        <div class="wide"><dt>Maré no seu corpo (2 m)</dt><dd id="gxd-tide">—</dd><span class="gxl-meter"><i id="gxd-tide-bar"></i></span></div>
+      </dl>
+      <div class="gxl-probe">
+        <button class="pill dark sm" id="gxb-launch"><svg class="i sm"><use href="#i-target"/></svg>Lançar sonda</button>
+        <span id="gxb-probe-t">Veja o que acontece com algo que cai.</span>
+      </div>
+      <div class="gxl-mis">
+        <div class="gxl-mis-h"><b>Missões</b><span id="gxb-xp">0 XP</span></div>
+        <span class="gxl-xpbar"><i id="gxb-xpbar"></i></span>
+        <ol id="gxb-missions"></ol>
+      </div>
+    </section>
+    <div class="gx-toast" id="gxb-toast" aria-live="polite"></div>
 
     <footer class="gx-bottom">
       <div class="gx-guide">
@@ -1362,6 +1393,38 @@ desenhar(0);</pre>
           </div>
         </section>
 
+        <!-- FINAL · DO BIG BANG AO SENAI -->
+        <section class="slide cos-slide" data-id="cosmos" data-title="Conte a história do universo, do Big Bang até o SENAI Iracemápolis" data-bubble="13,8 bilhões de anos até a nossa escola!">
+          <div class="cos">
+            <div class="cos-view">
+              <canvas id="cos-canvas"></canvas>
+              <div class="cos-fade" aria-hidden="true"></div>
+              <div class="cos-labels" aria-hidden="true"></div>
+              <div class="cos-cap in" aria-live="polite">
+                <span class="cos-kicker" id="cos-kicker">13,8 bilhões de anos atrás</span>
+                <h2 id="cos-title">O Big Bang</h2>
+                <p id="cos-sub"></p>
+              </div>
+              <div class="cos-side">
+                <span class="cos-alt" id="cos-alt"></span>
+                <span class="cos-hud" id="cos-hud"></span>
+                <span class="cos-bar"><i id="cos-hud-bar"></i></span>
+              </div>
+              <div class="cos-info" id="cos-info"></div>
+              <span class="cos-free-tip">Arraste para girar · role para aproximar · clique num prédio</span>
+              <div class="cos-nogl">Seu navegador não liga o WebGL 2. A viagem do Big Bang ao SENAI precisa dele.</div>
+              <button class="circle ghost sm cos-fs" id="cos-fs" aria-label="Tela cheia" title="Tela cheia"><svg class="i sm"><use href="#i-expand"/></svg></button>
+            </div>
+            <div class="cos-ctrl glass">
+              <button class="circle dark sm" id="cos-play" aria-label="Tocar ou pausar"><svg class="i sm"><use href="#i-pause"/></svg></button>
+              <input type="range" id="cos-time" min="0" max="1070" value="0" aria-label="Linha do tempo do universo">
+              <span class="cos-clock" id="cos-clock">0:00</span>
+              <div class="cos-chips" id="cos-chips"></div>
+            </div>
+            <p class="cos-credit">Terra: NASA Blue Marble (texturas do three.js) · América do Sul: NASA GIBS · Iracemápolis: <a href="https://s2maps.eu" target="_blank" rel="noopener">Sentinel-2 cloudless 2023 por EOX</a> (CC BY-NC-SA 4.0, contém dados Copernicus Sentinel modificados) · Ruas: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores do OpenStreetMap</a> · Prédios medidos em imagem de satélite, alturas estimadas.</p>
+          </div>
+        </section>
+
         <!-- 20 · OBRIGADO -->
         <section class="slide" data-title="Agradeça e abra para perguntas" data-bubble="Valeu, turma!">
           <div class="wrap center end-slide">
@@ -1450,8 +1513,10 @@ desenhar(0);</pre>
   </div>
 
   <script src="assets/js/studio.js"></script>
+  <script src="assets/js/labs.js"></script>
   <script src="assets/js/main.js"></script>
   <script type="module" src="assets/js/studio3d.js"></script>
   <script type="module" src="assets/js/galaxy.js"></script>
+  <script type="module" src="assets/js/cosmos.js"></script>
 </body>
 </html>

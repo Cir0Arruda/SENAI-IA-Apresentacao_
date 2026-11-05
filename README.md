@@ -21,7 +21,12 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 - **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade), com disco de acreção em faixas, cor pela temperatura e anel de fótons. Clique em **Entrar no buraco negro**: a câmera se aproxima e a imagem passa para a vista de dentro com uma transição suave, sem clarão:
   - horizonte de eventos, esfera de fótons, disco de acreção, lente gravitacional e efeito Doppler, cada um com destaque e explicação;
   - controles para ligar ou desligar a curvatura da luz, o disco e o Doppler, e um controle de distância;
-  - o botão **Mergulhar** leva a câmera até perto do horizonte.
+  - o botão **Mergulhar** leva a câmera até perto do horizonte;
+  - **rótulos no próprio desenho**: sombra, anel de fótons, parte de trás do disco curvada pela gravidade e qual lado do disco vem até você (calculado pela posição da câmera);
+  - **painel da nave com física de Schwarzschild ao vivo**: distância (em rs e km), quanto vale 1 hora sua lá longe (dilatação do tempo), velocidade de uma órbita circular, velocidade de escape e a maré no seu corpo. Dá para trocar entre Sagitário A* (4,3 milhões de sóis) e um buraco negro estelar (10 sóis);
+  - **sonda em queda livre**: o relógio dela anda cada vez mais devagar visto de longe, ela fica vermelha, "congela" no horizonte e, no buraco negro estelar, vira espaguete;
+  - **6 missões com XP** (ficam salvas no navegador), do anel de fótons à espaguetificação.
+- A entrada no buraco negro desce até a altura do disco durante o voo, então a imagem de fora e a de dentro coincidem na troca, e o brilho do bojo diminui de perto.
 - Arraste para girar e use a roda do mouse para aproximar.
 - O botão **Iniciar**, no canto inferior direito (ou `Enter`), abre a apresentação. O ícone de espiral no menu lateral volta para a galáxia.
 - Endereços com slide (`…/#5`) pulam a abertura. Em computadores sem WebGL, a apresentação abre normalmente.
@@ -33,7 +38,7 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 
 **Referências do buraco negro e das estrelas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
 
-## Conteúdo (27 slides)
+## Conteúdo (28 slides)
 
 | Tema | Exemplo interativo |
 |---|---|
@@ -42,6 +47,7 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | A matemática | Neurônio artificial com controles (pesos, bias e sigmoide) que decide se vai chover |
 | Treinamento | Descida do gradiente animada, com taxa de aprendizado baixa, ideal e alta demais |
 | 1.1 Tradução automática | Interface de tradutor mostrando tokens, vetores e alinhamento; aba "Sua frase" com Gemini |
+| *Laboratórios* (1.1 a 1.6) | Um jogo rápido por tópico, com pontos, sequência de acertos, medalha e recorde: falsos amigos na tradução, adivinhe a intenção do assistente, confiar ou conferir a resposta do chatbot, ache o erro no resumo e qual prompt é melhor. No 1.4, um simulador de **temperatura** mostra as probabilidades da próxima palavra e sorteia 10 vezes |
 | *Saiba mais* (1.1 a 1.6) | Painel com 4 abas animadas em cada tópico: linha do tempo, números com fonte, como funciona por dentro e uso no trabalho |
 | 1.2 Assistentes virtuais | As 5 etapas de um comando de voz, com a intenção em JSON |
 | 1.3 Chatbots | Bot de regras × bot com IA × **Gemini ao vivo** |
@@ -60,6 +66,17 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | Estúdio · cena 3D | Planeta em three.js controlado pela linha do tempo: o mesmo instante gera sempre a mesma imagem, como no render |
 | Estúdio · mão na massa | 4 desafios para fazer em aula, com o pedido pronto para copiar |
 | Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 41 referências |
+| **Final: do Big Bang ao SENAI** | 1min37 de viagem em 10 capítulos (Big Bang, núcleos, primeira luz, primeiras estrelas, teia cósmica, Via Láctea, Sistema Solar, Terra, mergulho até Iracemápolis e a escola em 3D), com linha do tempo, capítulos clicáveis e câmera livre no fim |
+
+## Final: do Big Bang ao SENAI Iracemápolis
+
+Arquivo `assets/js/cosmos.js`. Tudo é three.js, sem vídeo pronto:
+
+- **Universo**: partículas da expansão esfriando (branco → vermelho); prótons e nêutrons formando hélio (75% H / 25% He); o plasma clareando e mostrando o fundo de micro-ondas nas cores do mapa do Planck; estrelas acendendo e supernovas; filamentos da teia cósmica; a Via Láctea com o "você está aqui"; o disco do Sistema Solar abrindo lacunas onde nascem os planetas.
+- **Terra**: começa como oceano de magma e esfria. Textura NASA Blue Marble com luzes das cidades no lado da noite, brilho do Sol nos oceanos, nuvens, atmosfera e Lua.
+- **Mergulho**: a câmera desce de 15 mil km até 550 m em escala real (quilômetros). Por cima do globo entram imagens cada vez mais detalhadas: NASA GIBS (América do Sul) e Sentinel-2 cloudless 2023 da EOX (níveis 9 a 15; a resolução real do Sentinel-2 é de 10 m).
+- **SENAI**: `assets/data/senai-iracemapolis.json` tem 65 ruas do OpenStreetMap e 42 prédios do Distrito Industrial II, medidos sobre imagem de satélite (resolução de ~0,55 m/pixel), com o galpão das oficinas, os dois blocos de salas com o pátio arborizado, a portaria na Rua Camilo Ferrari, o estacionamento, as fileiras de painéis e os ônibus na rua. **As alturas são estimadas** (não existe dado público de altura). No fim, a câmera fica livre: arraste para girar e clique num prédio para ver o que funciona nele.
+- **Sobre o Google Maps**: as imagens e o 3D do Google não podem ser copiados para um site (termos de uso e chave de API), então não foram usados. Tudo aqui vem de fontes abertas, com crédito na tela.
 
 ## Ligar o Gemini ao vivo
 
