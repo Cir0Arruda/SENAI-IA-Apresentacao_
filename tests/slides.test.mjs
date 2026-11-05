@@ -90,7 +90,14 @@ async function tour(page, mobile) {
   await sleep(600);
   const first = await active(page);
   check('Abre direto no slide 1 pelo endereço #1', first.i === 0, `slide ${first.i + 1}`);
-  check('A apresentação tem 27 slides', first.total === 27, `${first.total}`);
+  check('A apresentação tem 28 slides', first.total === 28, `${first.total}`);
+  const labs = await page.evaluate(() => {
+    const l = [...document.querySelectorAll('.lab-head')]; const o = document.querySelector('.slide[data-id="translate"] .lab-o[data-k="0"]');
+    o.click(); return { n: l.length, pts: document.querySelector('.slide[data-id="translate"] .lab-pts').textContent, cos: !!document.querySelector('.slide[data-id="cosmos"] #cos-canvas') };
+  });
+  check('Tópicos 1.1 a 1.6 têm laboratórios (6)', labs.n === 6, `${labs.n}`);
+  check('Acertar no laboratório dá pontos', labs.pts === '100 pts', labs.pts);
+  check('Final do Big Bang ao SENAI existe', labs.cos);
   const bad = [], seen = new Set(), over = [];
   for (let k = 0; k < first.total; k++) {
     const a = await active(page);
@@ -268,7 +275,7 @@ async function desktop(browser) {
   // teclado no slide: Home/End
   await page.keyboard.press('End'); await sleep(400);
   a = await active(page);
-  check('Tecla End vai para o último slide', a.i === 26, `${a.i + 1}`);
+  check('Tecla End vai para o último slide', a.i === 27, `${a.i + 1}`);
   await page.keyboard.press('Home'); await sleep(400);
   a = await active(page);
   check('Tecla Home volta ao primeiro slide', a.i === 0);
