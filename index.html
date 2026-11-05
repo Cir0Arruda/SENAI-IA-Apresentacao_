@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/studio.css">
   <link rel="stylesheet" href="assets/css/galaxy.css">
   <script>
     /* A abertura (galáxia) aparece quando o site é aberto sem um slide no endereço */
@@ -71,6 +72,7 @@
       <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
       <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></symbol>
       <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></symbol>
       <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
       <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
       <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
@@ -233,9 +235,10 @@
       <button class="rail-btn" data-goto="2" data-sec="fund" title="Fundamentos da IA" aria-label="Fundamentos da IA"><svg class="i"><use href="#i-brain"/></svg></button>
       <button class="rail-btn" data-goto="6" data-sec="ferr" title="Ferramentas de IA" aria-label="Ferramentas de IA"><svg class="i"><use href="#i-languages"/></svg></button>
       <button class="rail-btn" data-goto="11" data-sec="prompt" title="Elaboração de prompts" aria-label="Elaboração de prompts"><svg class="i"><use href="#i-sparkles"/></svg></button>
-      <button class="rail-btn" data-goto="12" data-sec="agentes" title="Agentes e automação" aria-label="Agentes e automação"><svg class="i"><use href="#i-bot"/></svg></button>
-      <button class="rail-btn" data-goto="16" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos"><svg class="i"><use href="#i-film"/></svg></button>
-      <button class="rail-btn" data-goto="19" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
+      <button class="rail-btn" data-goto="12" data-sec="agentes" title="Agentes de IA e Claude Code" aria-label="Agentes de IA e Claude Code"><svg class="i"><use href="#i-bot"/></svg></button>
+      <button class="rail-btn" data-goto="16" data-sec="auto" title="Automação de dados" aria-label="Automação de dados"><svg class="i"><use href="#i-chart"/></svg></button>
+      <button class="rail-btn" data-goto="18" data-sec="video" title="Estúdio de vídeo" aria-label="Estúdio de vídeo"><svg class="i"><use href="#i-film"/></svg></button>
+      <button class="rail-btn" data-goto="25" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
       <button class="rail-btn gx-rail" id="gx-open" title="Voltar para a galáxia" aria-label="Voltar para a galáxia"><svg class="i"><use href="#i-spiral"/></svg></button>
       <span class="rail-logo" aria-hidden="true">IA</span>
     </nav>
@@ -316,8 +319,9 @@
               <button class="glass ag" data-goto="9" data-anim><b>1.4</b><span>Geração de conteúdo</span><svg class="i ag-i"><use href="#i-palette"/></svg></button>
               <button class="glass ag" data-goto="10" data-anim><b>1.5</b><span>Resumo de texto</span><svg class="i ag-i"><use href="#i-file-text"/></svg></button>
               <button class="glass ag" data-goto="11" data-anim><b>1.6</b><span>Elaboração de prompts</span><svg class="i ag-i"><use href="#i-sparkles"/></svg></button>
-              <button class="glass ag accent" data-goto="12" data-anim><b>Extra</b><span>Agentes e automação no Excel</span><svg class="i ag-i"><use href="#i-table"/></svg></button>
-              <button class="glass ag dark" data-goto="16" data-anim><b>Bônus</b><span>Criar e editar vídeos com o Claude Code</span><svg class="i ag-i"><use href="#i-film"/></svg></button>
+              <button class="glass ag accent wide" data-goto="12" data-anim><b>Extra</b><span>Agentes de IA, Claude Code e Excel</span><svg class="i ag-i"><use href="#i-bot"/></svg></button>
+              <button class="glass ag accent wide" data-goto="16" data-anim><b>Automação</b><span>Planilhas que viram relatório e workflows que rodam sozinhos</span><svg class="i ag-i"><use href="#i-chart"/></svg></button>
+              <button class="glass ag dark wide" data-goto="18" data-anim><b>Estúdio</b><span>Vídeos com o Claude: do título animado ao 3D</span><svg class="i ag-i"><use href="#i-film"/></svg></button>
             </div>
           </div>
         </section>
@@ -536,7 +540,7 @@
         <section class="slide" data-id="translate" data-title="Traduza frases e mostre o que acontece por dentro" data-bubble="Escolha uma frase e veja eu traduzir">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.1</span>
+              <div class="s-tagrow"><span class="tag">1.1</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Tradução automática</h2>
               <p>O tradutor usa a mesma ideia do Transformer: transforma a frase em tokens e vetores, usa a <b>atenção</b> para descobrir quais palavras se relacionam e gera a tradução token por token. Em 2024, o Google Tradutor ganhou <b>110 idiomas novos</b> com ajuda do modelo PaLM 2.</p>
             </header>
@@ -603,6 +607,7 @@
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-refresh"/></svg>Traduza de volta</b>Para conferir o sentido, traduza o resultado de volta para o português.</div>
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Cuidado</b>Gírias, expressões e termos técnicos de manuais e avisos de segurança precisam de revisão humana.</div>
             </div>
+            <template class="deep-tpl" data-title="Tradução automática por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>1954</b><span>Experimento Georgetown-IBM: um computador traduz mais de 60 frases do russo para o inglês com regras escritas à mão.</span></li><li><b>Anos 1990</b><span>Tradução estatística: o sistema aprende comparando milhões de textos já traduzidos por pessoas.</span></li><li><b>2006</b><span>O Google Tradutor é lançado, ainda com o método estatístico.</span></li><li><b>2016</b><span>O Google troca para a tradução neural (GNMT): em média, 60% menos erros que o sistema anterior.</span></li><li><b>2017</b><span>Nasce o Transformer, criado justamente para tradução. No mesmo ano, é lançado o DeepL.</span></li><li><b>2024</b><span>Com o PaLM 2, o Google Tradutor ganha 110 idiomas de uma vez e chega a 243.</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="243" data-dec="0">243</em></b><span>idiomas no Google Tradutor</span><small>Google, jun/2024</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="110" data-dec="0">110</em></b><span>idiomas novos de uma só vez, a maior expansão da história</span><small>Google, 2024</small><i style="--w:0.45"></i></div><div class="stat"><b><em data-to="614" data-dec="0">614</em> mi</b><span>de pessoas falam essas 110 línguas (cerca de 8% do mundo)</span><small>Google, 2024</small><i style="--w:0.62"></i></div><div class="stat"><b>−<em data-to="60" data-dec="0">60</em>%</b><span>de erros com a tradução neural, em média</span><small>Wu et al., 2016</small><i style="--w:0.6"></i></div></div></section><section data-tab="Por dentro" data-ic="cpu"><ol class="steps"><li><b>Tokens</b><span>A frase vira pedaços: "Bom", " dia", ",", " turma".</span></li><li><b>Codificador</b><span>Cada token vira um vetor que já carrega o contexto da frase inteira.</span></li><li><b>Atenção cruzada</b><span>Para escrever cada palavra em inglês, o modelo "olha" para as palavras certas em português.</span></li><li><b>Decodificador</b><span>Gera a tradução token por token, sempre o mais provável.</span></li><li><b>Busca em feixe</b><span>Testa várias frases candidatas ao mesmo tempo e fica com a melhor.</span></li></ol><div class="ex"><span class="card-k nomb">Por que "chutar o balde" dá errado?</span><p>Palavra por palavra vira <s>"kick the bucket"</s>, que em inglês significa <b>morrer</b>. O tradutor neural olha a frase inteira e tende a acertar: <b>"to give up"</b>.</p></div></section><section data-tab="No trabalho" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-wrench"/></svg>Manutenção</b>Ler o manual de uma máquina importada em inglês ou alemão.</div><div class="use"><b><svg class="i sm"><use href="#i-send"/></svg>Comércio exterior</b>Trocar e-mails com fornecedores de outros países.</div><div class="use"><b><svg class="i sm"><use href="#i-users"/></svg>Atendimento</b>Conversar com um cliente estrangeiro no modo conversa do app.</div><div class="use warn"><b><svg class="i sm"><use href="#i-alert"/></svg>Segurança</b>Placas, avisos e normas traduzidos precisam ser revisados por uma pessoa fluente.</div></div></section><p data-src>Wu et al. (2016), GNMT · Vaswani et al. (2017) · Google (2024), 110 novos idiomas.</p></template>
           </div>
         </section>
 
@@ -610,7 +615,7 @@
         <section class="slide" data-id="assistant" data-title="Mostre como um assistente de voz entende um pedido" data-bubble="Fala comigo! Clique em um comando">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.2</span>
+              <div class="s-tagrow"><span class="tag">1.2</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Assistentes virtuais</h2>
               <p>Siri (2011), Alexa (2014), Google Assistente/Gemini e Copilot ouvem um pedido, <b>descobrem a intenção</b> e executam uma ação. Por trás de um simples "me lembra de…" existem cinco etapas.</p>
             </header>
@@ -639,6 +644,7 @@
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-access"/></svg>Acessibilidade</b>Leitura de tela e comandos por voz para quem não enxerga ou não pode usar as mãos</div>
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-factory"/></svg>Trabalho</b>Consultar manuais e registrar ocorrências com as mãos ocupadas</div>
             </div>
+            <template class="deep-tpl" data-title="Assistentes virtuais por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>1962</b><span>O IBM Shoebox reconhece 16 palavras faladas: os dígitos de 0 a 9 e comandos como "mais" e "menos".</span></li><li><b>2011</b><span>A Siri chega ao iPhone 4S.</span></li><li><b>2014</b><span>A Amazon lança a Alexa com o alto-falante Echo.</span></li><li><b>2016</b><span>Chega o Google Assistente.</span></li><li><b>2017</b><span>O reconhecimento de fala da Microsoft erra 5,1% das palavras, o mesmo que transcritores humanos.</span></li><li><b>2025</b><span>O Gemini passa a substituir o Google Assistente no Android e a Amazon anuncia a Alexa+, com IA generativa.</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="500" data-dec="0">500</em> mi+</b><span>aparelhos com Alexa vendidos</span><small>Amazon, 2023</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="5.1" data-dec="1">5,1</em>%</b><span>de palavras erradas: empate com transcritores humanos</span><small>Xiong et al., 2017</small><i style="--w:0.2"></i></div><div class="stat"><b><em data-to="16" data-dec="0">16</em></b><span>palavras era todo o vocabulário do Shoebox</span><small>IBM, 1962</small><i style="--w:0.1"></i></div><div class="stat"><b><em data-to="5" data-dec="0">5</em></b><span>etapas entre a sua fala e a resposta</span><small>este slide</small><i style="--w:0.5"></i></div></div></section><section data-tab="Por dentro" data-ic="cpu"><ol class="steps"><li><b>Palavra de ativação</b><span>"Alexa" ou "Ok Google" é reconhecida no próprio aparelho, que fica só esperando por ela.</span></li><li><b>Fala → texto</b><span>O áudio vai para a nuvem e vira texto (reconhecimento de fala).</span></li><li><b>Intenção e "slots"</b><span>O sistema descobre o que você quer e preenche os campos: o quê, quando, onde.</span></li><li><b>Ação</b><span>Chama o serviço certo: agenda, calculadora, música, mapa.</span></li><li><b>Texto → voz</b><span>A resposta é lida por uma voz sintética.</span></li></ol><div class="ex"><span class="card-k nomb">Exemplo: "Me lembra de levar o EPI amanhã às 7h"</span><p class="chips"><span class="k">intenção: criar_lembrete</span><span>o quê: levar o EPI</span><span>quando: amanhã, 07:00</span></p></div></section><section data-tab="No trabalho" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-hand"/></svg>Mãos ocupadas</b>Seguir um checklist de manutenção por voz, sem largar a ferramenta.</div><div class="use"><b><svg class="i sm"><use href="#i-access"/></svg>Acessibilidade</b>Leitores de tela como TalkBack e VoiceOver leem o celular em voz alta.</div><div class="use"><b><svg class="i sm"><use href="#i-volume"/></svg>Ruído da oficina</b>Barulho atrapalha o reconhecimento: use fone com microfone.</div><div class="use warn"><b><svg class="i sm"><use href="#i-lock"/></svg>Privacidade</b>O microfone fica atento à palavra de ativação. Desligue em conversas sigilosas.</div></div></section><p data-src>IBM (Shoebox, 1962) · Xiong et al. (2017), Microsoft · Bloomberg (2023), Alexa.</p></template>
           </div>
         </section>
 
@@ -646,7 +652,7 @@
         <section class="slide" data-id="chatbot" data-title="Compare chatbots e converse com o Gemini ao vivo" data-bubble="Qual bot você prefere?">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.3</span>
+              <div class="s-tagrow"><span class="tag">1.3</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Chatbots</h2>
               <p>Um chatbot é um programa que conversa por texto. O de <b>regras</b> só entende opções fixas de um menu. O com <b>IA generativa</b> entende linguagem natural, mesmo com erros de digitação e gírias. Na aba Gemini, a conversa é com uma IA de verdade.</p>
             </header>
@@ -679,6 +685,7 @@
                 <div class="glass card sm warn" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Atenção</b>O bot com IA só sabe sobre a sua escola se for <b>conectado aos dados reais</b> dela. Sem isso, ele pode "alucinar", ou seja, inventar uma resposta convincente.</div>
               </div>
             </div>
+            <template class="deep-tpl" data-title="Chatbots por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>1966</b><span>ELIZA, de Joseph Weizenbaum (MIT), imita uma terapeuta devolvendo as palavras do usuário como perguntas.</span></li><li><b>1995</b><span>A.L.I.C.E. responde com milhares de regras escritas à mão.</span></li><li><b>2016–2018</b><span>Bots de atendimento chegam ao Messenger e ao WhatsApp Business.</span></li><li><b>2022</b><span>Lançado em 30 de novembro, o ChatGPT chega a 100 milhões de usuários em cerca de dois meses.</span></li><li><b>2023</b><span>Chegam o Claude (Anthropic) e o Bard, hoje Gemini (Google).</span></li><li><b>2025</b><span>800 milhões de pessoas usam o ChatGPT toda semana.</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="800" data-dec="0">800</em> mi</b><span>de usuários por semana no ChatGPT</span><small>OpenAI, out/2025</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="100" data-dec="0">100</em> mi</b><span>de usuários em cerca de 2 meses, recorde na época</span><small>UBS via Reuters, 2023</small><i style="--w:0.3"></i></div><div class="stat"><b><em data-to="6" data-dec="0">6</em> bi</b><span>de tokens por minuto na API da OpenAI</span><small>OpenAI, out/2025</small><i style="--w:0.7"></i></div><div class="stat"><b><em data-to="1966" data-dec="0">1966</em></b><span>ano do primeiro chatbot, a ELIZA</span><small>Weizenbaum, 1966</small><i style="--w:0.15"></i></div></div></section><section data-tab="Por dentro" data-ic="cpu"><ol class="steps"><li><b>Pergunta</b><span>"Tem atividade da aula de ontem?"</span></li><li><b>Busca</b><span>O sistema procura nos documentos da escola: calendário, planos de aula, avisos.</span></li><li><b>Contexto</b><span>Os trechos encontrados entram no prompt junto com a pergunta.</span></li><li><b>Resposta</b><span>O modelo responde só com base nesses trechos e mostra de onde tirou.</span></li><li><b>Não achou?</b><span>Diz "não sei" e encaminha para a secretaria, em vez de inventar.</span></li></ol><div class="ex"><span class="card-k nomb">Esse método se chama RAG</span><p>Geração aumentada por busca: a IA <b>consulta</b> antes de responder. É assim que um bot fala do <b>seu</b> SENAI sem alucinar.</p></div></section><section data-tab="No trabalho" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-message"/></svg>Secretaria</b>Horários, matrícula, calendário e documentos, 24 horas por dia.</div><div class="use"><b><svg class="i sm"><use href="#i-cpu"/></svg>Suporte de TI</b>Abre o chamado, faz as perguntas básicas e só depois passa para o técnico.</div><div class="use"><b><svg class="i sm"><use href="#i-users"/></svg>RH</b>Dúvidas sobre ponto, férias e benefícios.</div><div class="use warn"><b><svg class="i sm"><use href="#i-shield"/></svg>Cuidado</b>Nunca digite senhas ou dados pessoais. Um bom bot sempre oferece falar com uma pessoa.</div></div></section><p data-src>Weizenbaum (1966) · Reuters (2023), UBS · OpenAI DevDay (2025), via tech.eu.</p></template>
           </div>
         </section>
 
@@ -686,7 +693,7 @@
         <section class="slide" data-id="generate" data-title="Gere uma imagem a partir de um texto e explique como funciona" data-bubble="Do ruído à imagem, passo a passo">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.4</span>
+              <div class="s-tagrow"><span class="tag">1.4</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Geração de conteúdo</h2>
               <p>A IA generativa <b>cria coisas novas</b> a partir de um pedido em texto: redações, imagens, músicas, vozes, vídeos e até programas. Geradores de imagem usam <b>modelos de difusão</b>: começam com ruído puro e, passo a passo, removem o ruído na direção do que você descreveu.</p>
             </header>
@@ -718,6 +725,7 @@
                 <div class="glass card sm warn" data-anim><b><svg class="i"><use href="#i-shield"/></svg>Regras de ouro</b>Confira os fatos, avise quando usou IA, respeite direitos autorais e <b>nunca</b> crie imagens falsas (deepfakes) de pessoas reais.</div>
               </div>
             </div>
+            <template class="deep-tpl" data-title="Geração de conteúdo por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>2014</b><span>GANs (Ian Goodfellow): duas redes competem, uma cria imagens e a outra tenta descobrir se são falsas.</span></li><li><b>2020</b><span>Os modelos de difusão (DDPM) mostram que remover ruído passo a passo gera imagens de alta qualidade.</span></li><li><b>2021</b><span>O DALL·E cria imagens a partir de um texto.</span></li><li><b>2022</b><span>Midjourney e Stable Diffusion, de código aberto, popularizam a geração de imagens.</span></li><li><b>2024</b><span>Sora (OpenAI) e Veo (Google) geram vídeos a partir de texto.</span></li><li><b>2024</b><span>O TSE proíbe deepfakes na propaganda eleitoral (Resolução 23.732).</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="5.85" data-dec="2">5,85</em> bi</b><span>de pares imagem-texto no LAION-5B, usado para treinar o Stable Diffusion</span><small>Schuhmann et al., 2022</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="8" data-dec="0">8</em>×</b><span>menor: o Stable Diffusion trabalha num "espaço latente" (512 px → 64 px)</span><small>Rombach et al., 2022</small><i style="--w:0.4"></i></div><div class="stat"><b><em data-to="40" data-dec="0">40</em></b><span>passos de remoção de ruído na demo; modelos reais usam de 20 a 50</span><small>este slide</small><i style="--w:0.55"></i></div><div class="stat"><b><em data-to="2014" data-dec="0">2014</em></b><span>ano das GANs, as primeiras imagens realistas geradas por IA</span><small>Goodfellow et al.</small><i style="--w:0.2"></i></div></div></section><section data-tab="Por dentro" data-ic="cpu"><ol class="steps"><li><b>Texto → vetor</b><span>Um codificador de texto transforma o prompt em números.</span></li><li><b>Ruído</b><span>Começa com uma imagem de ruído aleatório, como chiado de TV.</span></li><li><b>Remove um pouco</b><span>A rede prevê o que é ruído e tira uma parte, guiada pelo texto.</span></li><li><b>Repete</b><span>Faz isso dezenas de vezes; a imagem aparece aos poucos.</span></li><li><b>Pixels</b><span>Um decodificador transforma o resultado em imagem de verdade.</span></li></ol><div class="ex"><span class="card-k nomb">Como saber se foi IA?</span><p>Marcas d'água invisíveis (como a <b>SynthID</b>, do Google) e as <b>Credenciais de Conteúdo</b> (padrão C2PA) registram que a imagem foi gerada.</p></div></section><section data-tab="No trabalho" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-palette"/></svg>Divulgação</b>Cartazes e posts de eventos do curso em minutos.</div><div class="use"><b><svg class="i sm"><use href="#i-cog"/></svg>Protótipos</b>Ver ideias de produto e de layout antes de fabricar.</div><div class="use"><b><svg class="i sm"><use href="#i-grad"/></svg>Treinamentos</b>Roteiros, ilustrações e narração para material didático.</div><div class="use warn"><b><svg class="i sm"><use href="#i-scale"/></svg>Direitos</b>Avise quando usou IA e não copie estilo, marca ou rosto de ninguém.</div></div></section><p data-src>Goodfellow et al. (2014) · Ho et al. (2020) · Rombach et al. (2022) · Schuhmann et al. (2022) · TSE (2024).</p></template>
           </div>
         </section>
 
@@ -725,7 +733,7 @@
         <section class="slide" data-id="summary" data-title="Resuma um texto longo de dois jeitos diferentes" data-bubble="Arraste o controle e veja o texto encolher">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.5</span>
+              <div class="s-tagrow"><span class="tag">1.5</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Resumo de texto</h2>
               <p>Existem dois jeitos de resumir. O <b>extrativo</b> escolhe as frases mais importantes e copia do original. O <b>abstrativo</b>, que é o que os chatbots fazem, reescreve a ideia com palavras novas.</p>
             </header>
@@ -749,6 +757,7 @@
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-grad"/></svg>Para estudar</b><code>Resuma e depois me faça 3 perguntas para eu testar se entendi.</code></div>
               <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-wrench"/></svg>Ferramentas</b>NotebookLM (resume PDFs e gera áudio), ChatGPT, Claude e Gemini com arquivo anexado, resumo de vídeos do YouTube.</div>
             </div>
+            <template class="deep-tpl" data-title="Resumo de texto por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>1958</b><span>Hans Peter Luhn (IBM) cria o primeiro resumo automático: conta as palavras mais frequentes e escolhe as frases que têm mais delas.</span></li><li><b>2004</b><span>TextRank: uma frase parecida com muitas outras ganha mais pontos, como no PageRank do Google.</span></li><li><b>2017–2019</b><span>Os Transformers passam a reescrever o texto: nasce o resumo abstrativo moderno.</span></li><li><b>2023</b><span>O Claude passa a ler 100 mil tokens de uma vez, cerca de 75 mil palavras.</span></li><li><b>2024</b><span>O Gemini 1.5 chega a 1 milhão de tokens e o NotebookLM cria resumos em áudio.</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="700" data-dec="0">700</em> mil</b><span>palavras cabem em 1 milhão de tokens</span><small>Google, fev/2024</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="75" data-dec="0">75</em> mil</b><span>palavras em 100 mil tokens, um livro inteiro</span><small>Anthropic, mai/2023</small><i style="--w:0.11"></i></div><div class="stat"><b><em data-to="99" data-dec="0">99</em>%</b><span>das vezes o Gemini 1.5 achou uma frase escondida em 1 milhão de tokens</span><small>Google, 2024</small><i style="--w:0.99"></i></div><div class="stat"><b><em data-to="1958" data-dec="0">1958</em></b><span>ano do primeiro resumo automático</span><small>Luhn, IBM</small><i style="--w:0.2"></i></div></div></section><section data-tab="Por dentro" data-ic="cpu"><ol class="steps"><li><b>Divide</b><span>O texto é quebrado em frases.</span></li><li><b>Pontua</b><span>Extrativo: cada frase ganha pontos pelas palavras importantes e pela posição.</span></li><li><b>Escolhe</b><span>As frases com mais pontos ficam, na ordem original.</span></li><li><b>Reescreve</b><span>Abstrativo: o modelo lê tudo e escreve um texto novo, token por token.</span></li><li><b>Confere</b><span>O abstrativo pode trocar um número ou um nome. Compare com o original.</span></li></ol><div class="ex"><span class="card-k nomb">Qual usar?</span><p><b>Extrativo</b> quando cada palavra importa, como contrato e norma. <b>Abstrativo</b> para entender rápido um texto longo.</p></div></section><section data-tab="No trabalho" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-clock"/></svg>Passagem de turno</b>Resumir o relatório do turno anterior em 5 tópicos.</div><div class="use"><b><svg class="i sm"><use href="#i-users"/></svg>Reuniões</b>Transformar a transcrição em ata com decisões e responsáveis.</div><div class="use"><b><svg class="i sm"><use href="#i-book"/></svg>Normas técnicas</b>O resumo ajuda a achar o trecho, mas quem vale é a NR original.</div><div class="use warn"><b><svg class="i sm"><use href="#i-alert"/></svg>Confira</b>Números, datas e nomes do resumo sempre batem com o texto?</div></div></section><p data-src>Luhn (1958) · Mihalcea e Tarau (2004) · Anthropic (2023) · Google (2024), Gemini 1.5.</p></template>
           </div>
         </section>
 
@@ -756,7 +765,7 @@
         <section class="slide" data-id="prompt" data-title="Monte um prompt perfeito, peça por peça" data-bubble="Ligue os ingredientes e veja a resposta melhorar">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag">1.6</span>
+              <div class="s-tagrow"><span class="tag">1.6</span><button class="deep-btn" type="button" data-deep aria-haspopup="dialog"><svg class="i sm"><use href="#i-book"/></svg>Saiba mais<small>história · números · por dentro</small></button></div>
               <h2>Elaboração de prompts</h2>
               <p><b>Prompt</b> é o pedido que você faz para a IA. A regra de ouro: escreva como se estivesse explicando para um colega novo e inteligente, que <b>não sabe nada</b> sobre você nem sobre a tarefa.</p>
             </header>
@@ -787,6 +796,7 @@
               <div class="glass card sm pair" data-anim><s>Traduz isso</s><span>Traduza para o inglês técnico, mantendo os termos de elétrica, este trecho do manual: …</span></div>
               <div class="glass card sm pair" data-anim><s>Me ajuda na prova</s><span>Me faça 5 perguntas sobre Lei de Ohm, uma por vez, e corrija cada resposta minha.</span></div>
             </div>
+            <template class="deep-tpl" data-title="Prompts por dentro"><section data-tab="Linha do tempo" data-ic="clock"><ol class="tl"><li><b>2020</b><span>GPT-3: dar exemplos no prompt ("few-shot") ensina a tarefa sem treinar o modelo de novo.</span></li><li><b>2022</b><span>Cadeia de pensamento: mostrar o raciocínio passo a passo nos exemplos melhora muito a matemática.</span></li><li><b>2022</b><span>"Vamos pensar passo a passo": só essa frase já ajuda o modelo a raciocinar.</span></li><li><b>2022</b><span>Com o ChatGPT, escrever prompts vira uma habilidade do dia a dia.</span></li><li><b>2024–2025</b><span>Modelos de raciocínio (como o o1 e o Claude com pensamento estendido) pensam antes de responder.</span></li></ol></section><section data-tab="Em números" data-ic="chart"><div class="stats"><div class="stat"><b><em data-to="58" data-dec="0">58</em>%</b><span>de acertos em problemas de matemática com cadeia de pensamento, recorde em 2022</span><small>Wei et al., 2022</small><i style="--w:0.58"></i></div><div class="stat"><b><em data-to="8" data-dec="0">8</em></b><span>exemplos no prompt bastaram para isso</span><small>Wei et al., 2022</small><i style="--w:0.3"></i></div><div class="stat"><b><em data-to="175" data-dec="0">175</em> bi</b><span>de parâmetros no GPT-3, que mostrou o poder dos exemplos</span><small>Brown et al., 2020</small><i style="--w:1"></i></div><div class="stat"><b><em data-to="6" data-dec="0">6</em></b><span>ingredientes no montador deste slide</span><small>este slide</small><i style="--w:0.5"></i></div></div></section><section data-tab="Passo a passo" data-ic="cpu"><ol class="steps"><li><b>Papel</b><span>"Você é um instrutor de elétrica do SENAI."</span></li><li><b>Contexto</b><span>Para quem é, para que serve, o que já existe.</span></li><li><b>Tarefa</b><span>Um verbo claro: liste, compare, explique, corrija.</span></li><li><b>Formato</b><span>Tabela, 5 tópicos, até 100 palavras.</span></li><li><b>Teste e ajuste</b><span>Leia a resposta, diga o que mudar e peça de novo.</span></li></ol><div class="ex"><span class="card-k nomb">Dica da Anthropic: separe as partes com marcações</span><p class="mono">&lt;contexto&gt;turma do 1º ano&lt;/contexto&gt;<br>&lt;tarefa&gt;5 perguntas sobre a Lei de Ohm&lt;/tarefa&gt;</p></div></section><section data-tab="Erros comuns" data-ic="factory"><div class="uses"><div class="use"><b><svg class="i sm"><use href="#i-x-circle"/></svg>Tudo de uma vez</b>Pedidos grandes demais. Quebre em etapas menores.</div><div class="use"><b><svg class="i sm"><use href="#i-users"/></svg>Sem público</b>"Explique" para quem? Diga a idade e o nível.</div><div class="use"><b><svg class="i sm"><use href="#i-repeat"/></svg>Aceitar a 1ª resposta</b>Converse: peça mais curto, mais simples, com exemplo.</div><div class="use warn"><b><svg class="i sm"><use href="#i-lock"/></svg>Dados sigilosos</b>Não cole senhas, dados de clientes ou segredos da empresa.</div></div></section><p data-src>Brown et al. (2020) · Wei et al. (2022) · Kojima et al. (2022) · Anthropic, Prompt engineering.</p></template>
           </div>
         </section>
 
@@ -932,11 +942,86 @@ codex</pre>
           </div>
         </section>
 
-        <!-- 16 · BÔNUS VÍDEO -->
+        <!-- 16 · AUTOMAÇÃO DE DADOS: PLANILHA → RELATÓRIO -->
+        <section class="slide" data-id="asheet" data-title="Automatize uma planilha: limpe os dados e gere um relatório" data-bubble="Planilha bagunçada? Eu arrumo e resumo">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag accent">Automação de dados · 1 de 2</span>
+              <h2>Da planilha bagunçada ao <em class="serif">relatório pronto</em></h2>
+              <p>Você pede, o Claude escreve um script em Python. O script abre a planilha, <b>corrige</b> o que está errado, <b>marca</b> o que falta (sem inventar número), calcula a variação e salva um relatório com gráfico. No mês seguinte, é só rodar de novo.</p>
+            </header>
+            <div class="sv-flow" data-anim>
+              <div class="glass card sv-col">
+                <div class="card-k"><svg class="i sm"><use href="#i-table"/></svg>vendas_marco.xlsx</div>
+                <table class="sv-table" id="sv-table"></table>
+                <p class="sv-legend"><span class="fix">corrigido</span><span class="dup">duplicado</span><span class="flag">faltando</span></p>
+              </div>
+              <span class="sv-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-right"/></svg></span>
+              <div class="term sv-col sv-term">
+                <div class="term-bar"><i></i><i></i><i></i><span>relatorio.py</span></div>
+                <pre class="term-body" id="sv-code"></pre>
+              </div>
+              <span class="sv-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-right"/></svg></span>
+              <div class="glass card sv-col">
+                <div class="card-k"><svg class="i sm"><use href="#i-file-text"/></svg>relatorio_marco.xlsx <button class="pill ghost sm" id="sv-run"><svg class="i sm"><use href="#i-play"/></svg>Rodar</button></div>
+                <div class="sv-out" id="sv-out"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-code"/></svg>pandas + openpyxl</b>O pandas lê, limpa e calcula a tabela; o openpyxl salva o .xlsx com gráfico.<code>pip install pandas openpyxl</code></div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Não invente dados</b>Célula vazia vira um <strong>alerta</strong> no relatório, não um número chutado. Quem conhece o dado confere.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-message"/></svg>O pedido</b>"Escreva um script que limpe vendas_marco.xlsx, calcule a variação por região e gere um relatório com gráfico e alertas."</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 17 · AUTOMAÇÃO DE DADOS: WORKFLOW COM AGENTE -->
+        <section class="slide" data-id="aflow" data-title="Mostre um workflow em que o agente gera o relatório sozinho" data-bubble="Toda segunda, 7h: o relatório sai sozinho">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag accent">Automação de dados · 2 de 2</span>
+              <h2>Workflow: o relatório <em class="serif">sai sozinho</em></h2>
+              <p>O Agendador de Tarefas do Windows roda um script toda segunda às 7h. O script chama o Claude Code no modo sem janela (<code>claude -p</code>): ele roda o relatório, confere os números, escreve o resumo e deixa o e-mail em rascunho. <b>Uma pessoa aprova antes de enviar.</b></p>
+            </header>
+            <div class="wf-grid" data-anim>
+              <div class="pc wf-pc">
+                <div class="pc-screen wf-screen">
+                  <div class="pc-win wf-files"><div class="pc-bar"><i></i><i></i><i></i><span>entrada/</span></div><div class="pc-body files" id="wf-in"></div></div>
+                  <div class="pc-win wf-term"><div class="pc-bar"><i></i><i></i><i></i><span>Terminal · toda segunda, 7h</span></div><div class="pc-body term-body" id="wf-log"></div></div>
+                  <div class="pc-win wf-files"><div class="pc-bar"><i></i><i></i><i></i><span>saida/</span></div><div class="pc-body files" id="wf-out"></div></div>
+                  <div class="wf-toast" id="wf-toast"><svg class="i sm"><use href="#i-check-circle"/></svg><div><b>Relatório pronto para aprovar</b><small>e-mail em rascunho · nada foi enviado</small></div></div>
+                </div>
+                <div class="pc-task"><span class="on"><svg class="i sm"><use href="#i-folder"/></svg></span><span class="on"><svg class="i sm"><use href="#i-sparkles"/></svg></span><span><svg class="i sm"><use href="#i-send"/></svg></span><small class="pc-clock">07:00</small></div>
+              </div>
+              <div class="glass card wf-side">
+                <div class="card-k">O caminho <button class="pill ghost sm" id="wf-run"><svg class="i sm"><use href="#i-play"/></svg>Simular</button></div>
+                <ol class="wf-nodes" id="wf-nodes">
+                  <li data-n="0"><b>Gatilho</b><span>toda segunda às 7h, ou planilha nova na pasta</span></li>
+                  <li data-n="1"><b>Agente</b><span><code>claude -p</code> roda o script e lê o resultado</span></li>
+                  <li data-n="2"><b>Conferência</b><span>teste: a soma do relatório bate com a planilha</span></li>
+                  <li data-n="3"><b>Saída</b><span>relatório, gráfico, resumo e e-mail em rascunho</span></li>
+                  <li data-n="4"><b>Aprovação humana</b><span>alguém confere e clica em enviar</span></li>
+                </ol>
+                <pre class="code sm wf-sh">claude -p "Gere o relatório de março,
+  confira os totais e escreva um resumo" \
+  --allowedTools "Read" "Write" \
+    "Bash(python relatorio.py)" \
+  --output-format json</pre>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-clock"/></svg>Agendar no Windows</b>Uma linha cria a tarefa semanal:<code>schtasks /create /tn "Relatorio" /tr "C:\scripts\relatorio.bat" /sc weekly /d MON /st 07:00</code></div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-lock"/></svg>Permissão mínima</b><code>--allowedTools</code> limita o agente: ele só lê, escreve e roda aquele script. Nada de apagar ou enviar sozinho.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-users"/></svg>Humano no fim</b>O agente prepara, a pessoa decide. O e-mail fica em rascunho até alguém revisar os alertas.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 18 · ESTÚDIO DE VÍDEO: INÍCIO -->
         <section class="slide" data-id="video" data-title="Ensine a criar e editar vídeos com o Claude Code" data-bubble="Luz, câmera… prompt!">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag dark">Bônus</span>
+              <span class="tag dark">Estúdio de vídeo · início</span>
               <h2>Criando vídeos com o Claude Code</h2>
               <p>Com o <b>HyperFrames</b>, o vídeo é uma página HTML animada, e o programa "filma" quadro a quadro até virar um MP4. Você pede e ajusta tudo <b>conversando</b>. Teste os botões de edição abaixo.</p>
             </header>
@@ -974,12 +1059,205 @@ codex</pre>
                   <li><b>Revise</b><code>npx hyperframes check</code></li>
                   <li><b>Exporte o MP4</b><code>npx hyperframes render</code></li>
                 </ol>
+                <button class="pill dark sm mt-sm" data-goto="19">Ver o fluxo completo, os 5 níveis e o 3D <svg class="i sm"><use href="#i-arrow-right"/></svg></button>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 17 · ÉTICA -->
+        <!-- 19 · ESTÚDIO: O FLUXO COMPLETO -->
+        <section class="slide" data-id="vflow" data-title="Mostre todo o caminho de um vídeo, do pedido ao MP4" data-bubble="Do chat ao MP4 em 6 passos">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 1 de 4</span>
+              <h2>Do pedido ao <em class="serif">MP4</em>: o fluxo completo</h2>
+              <p>Veja o que acontece no computador em cada etapa. O vídeo é uma página HTML; o HyperFrames abre essa página num Chrome invisível, <b>tira uma foto de cada quadro</b> e o FFmpeg junta tudo num MP4.</p>
+            </header>
+            <div class="vf-grid" data-anim>
+              <div class="pc" id="vf-pc" aria-live="polite">
+                <div class="pc-screen">
+                  <div class="pc-win" data-w="1"><div class="pc-bar"><i></i><i></i><i></i><span>Claude Code</span></div>
+                    <div class="pc-body chat"><p class="me" id="vf-ask"></p><p class="bot" id="vf-plan"></p></div></div>
+                  <div class="pc-win" data-w="2"><div class="pc-bar"><i></i><i></i><i></i><span>compositions/abertura.html</span></div>
+                    <pre class="pc-body code-ed" id="vf-code"></pre></div>
+                  <div class="pc-win" data-w="3"><div class="pc-bar"><i></i><i></i><i></i><span>localhost:3002 · prévia</span></div>
+                    <div class="pc-body pv"><div class="pv-stage" id="vf-pv"><b>SENAI</b><span>Iracemápolis</span><i class="pv-bar"></i></div>
+                      <div class="pv-scrub"><span id="vf-tc">00:00.0</span><div class="pv-track"><i id="vf-head"></i></div><span>00:05.0</span></div></div></div>
+                  <div class="pc-win" data-w="4"><div class="pc-bar"><i></i><i></i><i></i><span>Terminal</span></div>
+                    <div class="pc-body term-body" id="vf-check"></div></div>
+                  <div class="pc-win" data-w="5"><div class="pc-bar"><i></i><i></i><i></i><span>npx hyperframes render</span></div>
+                    <div class="pc-body rd"><div class="rd-frames" id="vf-frames"></div>
+                      <div class="rd-meta"><span id="vf-fn">quadro 0 / 150</span><span>Chrome sem janela → FFmpeg</span></div>
+                      <div class="rd-prog"><i id="vf-prog"></i></div></div></div>
+                  <div class="pc-win" data-w="6"><div class="pc-bar"><i></i><i></i><i></i><span>Explorador · meu-video/renders</span></div>
+                    <div class="pc-body files"><div class="file mp4"><svg class="i"><use href="#i-video"/></svg><b>abertura.mp4</b><small>1920×1080 · 30 fps · 5 s · 2,1 MB</small></div>
+                      <div class="file"><svg class="i"><use href="#i-code"/></svg><b>index.html</b><small>a composição principal</small></div>
+                      <div class="file"><svg class="i"><use href="#i-folder"/></svg><b>compositions/</b><small>uma cena por arquivo</small></div></div></div>
+                </div>
+                <div class="pc-task" id="vf-task">
+                  <span data-t="1" title="Claude Code"><svg class="i sm"><use href="#i-sparkles"/></svg></span>
+                  <span data-t="2" title="Editor"><svg class="i sm"><use href="#i-code"/></svg></span>
+                  <span data-t="3" title="Navegador"><svg class="i sm"><use href="#i-eye"/></svg></span>
+                  <span data-t="4" title="Terminal"><svg class="i sm"><use href="#i-check-circle"/></svg></span>
+                  <span data-t="5" title="Render"><svg class="i sm"><use href="#i-film"/></svg></span>
+                  <span data-t="6" title="Arquivos"><svg class="i sm"><use href="#i-folder"/></svg></span>
+                  <small class="pc-clock">14:05</small>
+                </div>
+              </div>
+              <div class="glass card vf-side">
+                <div class="card-k">As 6 etapas <button class="pill ghost sm" id="vf-replay"><svg class="i sm"><use href="#i-refresh"/></svg>Repetir</button></div>
+                <ol class="vf-steps" id="vf-steps">
+                  <li><button data-s="1"><b>Pedido</b><span>Você descreve o vídeo no chat</span></button></li>
+                  <li><button data-s="2"><b>Código</b><span>O Claude escreve HTML, CSS e GSAP</span></button></li>
+                  <li><button data-s="3"><b>Prévia</b><span><code>npx hyperframes preview</code></span></button></li>
+                  <li><button data-s="4"><b>Revisão</b><span><code>npx hyperframes check</code></span></button></li>
+                  <li><button data-s="5"><b>Render</b><span><code>npx hyperframes render</code></span></button></li>
+                  <li><button data-s="6"><b>MP4 pronto</b><span>Arquivo final na pasta renders/</span></button></li>
+                </ol>
+                <p class="vf-exp" id="vf-exp"></p>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-repeat"/></svg>Sempre igual</b>Tudo depende só do tempo: sem relógio nem sorteio. Renderizar duas vezes dá o mesmo vídeo.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-film"/></svg>Quadro a quadro</b>30 fps × 5 s = 150 fotos. Uma cena pesada não "trava" o vídeo: só demora mais para gravar.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-pen"/></svg>Sempre editável</b>Textos, cores e mídias são variáveis no HTML. Você muda conversando ou no editor visual.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 20 · ESTÚDIO: DO SIMPLES AO COMPLEXO -->
+        <section class="slide" data-id="vlevels" data-title="Mostre vídeos do mais simples ao mais complexo" data-bubble="Comece pelo nível 1 e vá subindo">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 2 de 4</span>
+              <h2>Do simples ao complexo: <em class="serif">5 níveis</em></h2>
+              <p>Cada nível acrescenta uma ideia nova. Escolha um nível para ver a prévia, o pedido para o Claude e o que ele cria.</p>
+            </header>
+            <div class="seg lv-tabs" id="lv-tabs" role="tablist" data-anim>
+              <button class="on" data-l="0">1 · Título animado</button>
+              <button data-l="1">2 · Legendas</button>
+              <button data-l="2">3 · Gráfico animado</button>
+              <button data-l="3">4 · Cena 3D</button>
+              <button data-l="4">5 · Vídeo completo</button>
+            </div>
+            <div class="g2 wide-left" data-anim>
+              <div class="glass card demo lv-demo">
+                <div class="lv-stage" id="lv-stage">
+                  <div class="lv-scene" data-l="0"><div class="k1"><span>Inteligência</span><span>Artificial</span><em>na prática</em></div></div>
+                  <div class="lv-scene" data-l="1"><div class="k2-video"><i class="k2-face"></i><i class="k2-wave"></i></div><p class="k2-cap" id="lv-cap"></p></div>
+                  <div class="lv-scene" data-l="2"><div class="k3"><b id="lv-num">0</b><small>matrículas em 2026</small><div class="k3-bars" id="lv-bars"></div><span class="k3-src">Fonte: secretaria do SENAI, 2026</span></div></div>
+                  <div class="lv-scene" data-l="3"><canvas class="k4" id="lv-3d" width="640" height="360"></canvas></div>
+                  <div class="lv-scene" data-l="4"><div class="k5" id="lv-batch"></div></div>
+                </div>
+                <div class="pv-scrub"><span id="lv-tc">00:00</span><div class="pv-track"><i id="lv-head"></i></div><span id="lv-dur">00:05</span></div>
+                <div class="lv-badges" id="lv-badges"></div>
+              </div>
+              <div class="glass card lv-info">
+                <div class="card-k">Peça para o Claude <button class="pill ghost sm copy-btn" id="lv-copy"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+                <p class="lv-prompt" id="lv-prompt"></p>
+                <div class="card-k mt">O que ele cria</div>
+                <pre class="code sm lv-code" id="lv-code"></pre>
+                <p class="lv-learn" id="lv-learn"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 21 · ESTÚDIO: 3D -->
+        <section class="slide" data-id="v3d" data-title="Mostre como uma cena 3D vira vídeo, quadro a quadro" data-bubble="Arraste o tempo e veja o 3D obedecer">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 3 de 4</span>
+              <h2>Cenas <em class="serif">3D</em> no vídeo</h2>
+              <p>Esta cena é <b>three.js de verdade</b>, rodando aqui. No vídeo, cada quadro é desenhado a partir do tempo: arraste a linha do tempo e veja que o mesmo instante sempre gera a mesma imagem.</p>
+            </header>
+            <div class="g2 wide-left" data-anim>
+              <div class="glass card demo t3-demo">
+                <div class="t3-view"><canvas id="t3-canvas"></canvas><span class="t3-hud" id="t3-hud">t = 0,00 s · quadro 0</span></div>
+                <div class="t3-ctrl">
+                  <button class="circle dark sm" id="t3-play" aria-label="Tocar ou pausar"><svg class="i sm"><use href="#i-play"/></svg></button>
+                  <input type="range" id="t3-time" min="0" max="600" value="0" aria-label="Tempo da cena">
+                  <span class="t3-dur">6,0 s</span>
+                </div>
+                <div class="t3-opts">
+                  <div class="seg" id="t3-shot"><button class="on" data-c="orbit">Câmera orbitando</button><button data-c="dive">Mergulho</button><button data-c="top">Vista de cima</button></div>
+                  <button class="pill ghost sm" id="t3-snap"><svg class="i sm"><use href="#i-film"/></svg>Gravar 3 quadros</button>
+                </div>
+                <div class="t3-thumbs" id="t3-thumbs"></div>
+              </div>
+              <div class="term light t3-code" data-anim>
+                <div class="term-bar"><i></i><i></i><i></i><span>compositions/cena3d.html</span></div>
+                <pre class="term-body md"><span class="fm">// 1. monta a cena uma vez</span>
+const cena = new THREE.Scene();
+const planeta = criarPlaneta();
+cena.add(planeta, luzQuente, luzFria);
+
+<span class="fm">// 2. desenha o quadro do tempo t (sem relógio)</span>
+<span class="key">function</span> desenhar(t) {
+  planeta.rotation.y = t * 0.6;
+  camera.position.copy(caminho.getPointAt(t / 6));
+  camera.lookAt(planeta.position);
+  renderer.render(cena, camera);
+}
+
+<span class="fm">// 3. o HyperFrames pede cada quadro</span>
+window.addEventListener(<span class="key">"hf-seek"</span>,
+  e =&gt; desenhar(e.detail.time));
+desenhar(0);</pre>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-sun"/></svg>Luz de estúdio</b>Luz quente na frente, luz fria na borda e fundo escuro: o objeto "salta" da tela.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-target"/></svg>Um herói só</b>Um objeto bem iluminado vale mais que muitos. Mergulhe nele em vez de só girar.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Sem sorteio</b>Nada de <code>Math.random()</code> solto: use uma semente, senão cada render sai diferente.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 22 · ESTÚDIO: MÃO NA MASSA -->
+        <section class="slide" data-id="vlab" data-title="Proponha exercícios de vídeo para fazer em aula" data-bubble="Bora criar? Copie um pedido e teste">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 4 de 4</span>
+              <h2>Mão na massa: <em class="serif">4 desafios</em> para a aula</h2>
+              <p>Cada desafio usa o anterior. Copie o pedido, cole no Claude Code dentro de uma pasta nova e ajuste conversando.</p>
+            </header>
+            <div class="lab-grid" id="lab-grid">
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">1</span><div><b>Vinheta do curso</b><small>15 min · iniciante</small></div><span class="lab-lv"><i class="on"></i><i></i><i></i><i></i></span></div>
+                <p class="lab-p">Crie um vídeo de 6 segundos, 1920×1080, com o nome do meu curso técnico entrando letra por letra, fundo escuro e um traço laranja que cresce embaixo.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">2</span><div><b>Dica com legenda</b><small>25 min · básico</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+                <p class="lab-p">Grave um áudio de 20 s com uma dica de segurança (NR-10). Transcreva e faça um vídeo vertical 9:16 com legendas palavra por palavra e ícones que aparecem quando cito cada EPI.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">3</span><div><b>Vídeo em 3 cenas</b><small>40 min · intermediário</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+                <p class="lab-p">Crie um vídeo de 15 s apresentando meu curso em 3 cenas: abertura com o nome, 3 tópicos que aparecem um por vez e uma chamada final. Use transição de deslize entre as cenas e música calma de licença livre.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">4</span><div><b>Peça 3D da oficina</b><small>60 min · avançado</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+                <p class="lab-p">Monte em three.js uma engrenagem 3D metálica com luz de estúdio. Faça a câmera mergulhar até os dentes da engrenagem e mostre 3 legendas com o nome de cada parte. Desenhe cada quadro a partir do tempo.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+            </div>
+            <div class="glass card lab-check" data-anim>
+              <div class="card-k">Antes de entregar o vídeo</div>
+              <ul class="lab-list">
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Texto legível: no máximo 2 linhas por vez, dentro da área segura (80% do centro)</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Números e informações com a fonte na tela</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Música e imagens com licença de uso</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Voz ou rosto de alguém só com autorização</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Avise que o vídeo foi feito com IA</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 23 · ÉTICA -->
         <section class="slide" data-id="ethics" data-title="Mostre como usar a IA com responsabilidade" data-bubble="Eu posso errar. Confere comigo?">
           <div class="wrap">
             <header class="s-head" data-anim>
@@ -1051,6 +1329,20 @@ codex</pre>
               <a class="glass ref" href="https://arxiv.org/abs/1609.08144" target="_blank" rel="noopener"><b>Wu et al. (2016)</b>Google's Neural Machine Translation System</a>
               <a class="glass ref" href="https://blog.google/products/translate/google-translate-new-languages-2024/" target="_blank" rel="noopener"><b>Google (2024)</b>110 new languages are coming to Google Translate</a>
               <a class="glass ref" href="https://arxiv.org/abs/2006.11239" target="_blank" rel="noopener"><b>Ho, Jain e Abbeel (2020)</b>Denoising Diffusion Probabilistic Models</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener"><b>Brown et al. (2020)</b>Language Models are Few-Shot Learners (GPT-3)</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener"><b>Wei et al. (2022)</b>Chain-of-Thought Prompting: 58% no GSM8K</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2205.11916" target="_blank" rel="noopener"><b>Kojima et al. (2022)</b>"Vamos pensar passo a passo": raciocínio sem exemplos</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1406.2661" target="_blank" rel="noopener"><b>Goodfellow et al. (2014)</b>Generative Adversarial Networks (GANs)</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2112.10752" target="_blank" rel="noopener"><b>Rombach et al. (2022)</b>Difusão no espaço latente: o Stable Diffusion</a>
+              <a class="glass ref" href="https://arxiv.org/abs/2210.08402" target="_blank" rel="noopener"><b>Schuhmann et al. (2022)</b>LAION-5B: 5,85 bilhões de pares imagem-texto</a>
+              <a class="glass ref" href="https://doi.org/10.1147/rd.22.0159" target="_blank" rel="noopener"><b>Luhn (1958)</b>The Automatic Creation of Literature Abstracts</a>
+              <a class="glass ref" href="https://aclanthology.org/W04-3252/" target="_blank" rel="noopener"><b>Mihalcea e Tarau (2004)</b>TextRank: Bringing Order into Texts</a>
+              <a class="glass ref" href="https://www.anthropic.com/news/100k-context-windows" target="_blank" rel="noopener"><b>Anthropic (2023)</b>Janela de contexto de 100 mil tokens</a>
+              <a class="glass ref" href="https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/" target="_blank" rel="noopener"><b>Google (2024)</b>Gemini 1.5: 1 milhão de tokens</a>
+              <a class="glass ref" href="https://arxiv.org/abs/1708.06073" target="_blank" rel="noopener"><b>Xiong et al. (2017)</b>Microsoft: reconhecimento de fala com 5,1% de erro</a>
+              <a class="glass ref" href="https://www.bloomberg.com/news/articles/2023-05-17/amazon-unveils-new-alexa-gadgets-as-chatgpt-rivalry-heats-up" target="_blank" rel="noopener"><b>Bloomberg (2023)</b>Amazon: mais de 500 milhões de aparelhos com Alexa</a>
+              <a class="glass ref" href="https://www.reuters.com/technology/chatgpt-sets-record-fastest-growing-user-base-analyst-note-2023-02-01/" target="_blank" rel="noopener"><b>Reuters (2023)</b>ChatGPT: 100 milhões de usuários em 2 meses (UBS)</a>
+              <a class="glass ref" href="https://tech.eu/2025/10/07/chatgpt-has-more-than-800m-weekly-active-users-says-altman/" target="_blank" rel="noopener"><b>tech.eu (2025)</b>ChatGPT passa de 800 milhões de usuários por semana</a>
               <a class="glass ref" href="https://teletime.com.br/16/09/2025/no-ensino-medio-sete-em-cada-dez-alunos-ja-usam-ia-generativa/" target="_blank" rel="noopener"><b>Cetic.br · TIC Educação 2024</b>Sete em cada dez alunos do ensino médio usam IA generativa</a>
               <a class="glass ref" href="https://news.un.org/en/node/1140477" target="_blank" rel="noopener"><b>UNESCO / ONU News (2023)</b>Guidance for generative AI in education and research</a>
               <a class="glass ref" href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener"><b>Anthropic</b>Prompt engineering overview</a>
@@ -1059,6 +1351,13 @@ codex</pre>
               <a class="glass ref" href="https://github.com/openai/codex" target="_blank" rel="noopener"><b>OpenAI</b>Codex CLI: repositório oficial</a>
               <a class="glass ref" href="https://ai.google.dev/gemini-api/docs" target="_blank" rel="noopener"><b>Google</b>Documentação da API do Gemini</a>
               <a class="glass ref" href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm" target="_blank" rel="noopener"><b>Brasil (2018)</b>Lei Geral de Proteção de Dados: Lei 13.709</a>
+              <a class="glass ref" href="https://github.com/heygen-com/hyperframes" target="_blank" rel="noopener"><b>HeyGen (2026)</b>HyperFrames: vídeo feito com HTML, código aberto</a>
+              <a class="glass ref" href="https://docs.claude.com/en/docs/claude-code/headless" target="_blank" rel="noopener"><b>Anthropic</b>Claude Code sem janela (claude -p) em scripts e automação</a>
+              <a class="glass ref" href="https://gsap.com/docs/v3/GSAP/Timeline/" target="_blank" rel="noopener"><b>GSAP</b>Linha do tempo (Timeline): documentação oficial</a>
+              <a class="glass ref" href="https://threejs.org/docs/" target="_blank" rel="noopener"><b>three.js</b>Documentação: cenas, câmeras, luzes e materiais</a>
+              <a class="glass ref" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html" target="_blank" rel="noopener"><b>openpyxl</b>Ler planilhas .xlsx e criar gráficos com Python</a>
+              <a class="glass ref" href="https://ffmpeg.org/documentation.html" target="_blank" rel="noopener"><b>FFmpeg</b>Documentação: juntar quadros e codificar vídeo</a>
+              <a class="glass ref" href="https://www.remotion.dev/docs/renderer/render-media" target="_blank" rel="noopener"><b>Remotion</b>Outra opção: vídeos em React com renderMedia()</a>
             </div>
           </div>
         </section>
@@ -1110,9 +1409,9 @@ codex</pre>
             <button class="pill dark sm" data-goto="2"><svg class="i sm"><use href="#i-brain"/></svg>Fundamentos</button>
             <button class="pill dark sm" data-goto="6"><svg class="i sm"><use href="#i-languages"/></svg>Ferramentas</button>
             <button class="pill dark sm" data-goto="11"><svg class="i sm"><use href="#i-sparkles"/></svg>Prompts</button>
-            <button class="pill dark sm" data-goto="13"><svg class="i sm"><use href="#i-table"/></svg>Automação</button>
-            <button class="pill dark sm" data-goto="16"><svg class="i sm"><use href="#i-film"/></svg>Vídeo</button>
-            <button class="pill dark sm" data-goto="18"><svg class="i sm"><use href="#i-help"/></svg>Quiz</button>
+            <button class="pill dark sm" data-goto="16"><svg class="i sm"><use href="#i-chart"/></svg>Automação</button>
+            <button class="pill dark sm" data-goto="18"><svg class="i sm"><use href="#i-film"/></svg>Vídeo</button>
+            <button class="pill dark sm" data-goto="24"><svg class="i sm"><use href="#i-help"/></svg>Quiz</button>
           </div>
           <button class="circle gem" id="ask-open" aria-label="Pergunte ao Gemini sobre este slide" title="Pergunte ao Gemini"><svg class="i"><use href="#i-gem"/></svg></button>
           <button class="circle ghost" id="btn-prev" aria-label="Slide anterior"><svg class="i"><use href="#i-arrow-left"/></svg></button>
@@ -1150,7 +1449,9 @@ codex</pre>
     </div>
   </div>
 
+  <script src="assets/js/studio.js"></script>
   <script src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/studio3d.js"></script>
   <script type="module" src="assets/js/galaxy.js"></script>
 </body>
 </html>

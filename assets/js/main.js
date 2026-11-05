@@ -216,7 +216,7 @@
   let cur = -1;
   slides.forEach(s => $$('[data-anim]', s).forEach((el, i) => el.style.setProperty('--i', i)));
 
-  const secOf = i => (i >= 19 ? 'fontes' : i === 16 ? 'video' : i >= 12 && i <= 15 ? 'agentes' : i === 11 ? 'prompt' : i >= 6 && i <= 10 ? 'ferr' : i >= 2 && i <= 5 ? 'fund' : null);
+  const secOf = i => (i >= 25 ? 'fontes' : i >= 18 && i <= 22 ? 'video' : i >= 16 && i <= 17 ? 'auto' : i >= 12 && i <= 15 ? 'agentes' : i === 11 ? 'prompt' : i >= 6 && i <= 10 ? 'ferr' : i >= 2 && i <= 5 ? 'fund' : null);
 
   let titleJob = 0, bubTimer = 0;
   async function typeTitle(text) {
@@ -253,11 +253,12 @@
   }
   window.addEventListener('resize', () => { if (slides[cur]) fit(slides[cur], true); });
 
-  const demos = {};
+  const demos = (window.IADemos = window.IADemos || {});   // studio.js e studio3d.js também registram demos aqui
   function go(i) {
     i = Math.max(0, Math.min(total - 1, i));
     if (i === cur) return;
     epoch++;
+    closeDeep(true);
     const prev = slides[cur];
     if (prev) { prev.classList.remove('active'); demos[prev.dataset.id]?.leave?.(); }
     cur = i;
@@ -301,7 +302,101 @@
     else document.exitFullscreen?.();
   });
 
+  /* ---------- "Saiba mais" dos tópicos 1.1 a 1.6 ----------
+     O conteúdo fica num <template> dentro do slide (não pesa no layout nem no zoom do slide).
+     Abre por cima, em abas; cada aba anima só quando aparece. */
+  const deep = document.createElement('div');
+  deep.className = 'deep'; deep.id = 'deep'; deep.hidden = true;
+  deep.innerHTML = `<div class="deep-back" data-x></div>
+    <div class="deep-card" role="dialog" aria-modal="true" aria-labelledby="deep-title">
+      <div class="deep-head">
+        <div class="deep-ttl"><span class="tag" id="deep-tag"></span><h3 id="deep-title"></h3></div>
+        <div class="seg" id="deep-tabs" role="tablist"></div>
+        <button class="circle deep-x" type="button" data-x aria-label="Fechar">${ic('x', 'i')}</button>
+      </div>
+      <div class="deep-body" id="deep-body" aria-live="polite"></div>
+      <div class="deep-foot"><span class="deep-src" id="deep-src"></span><span class="deep-keys">← → troca a aba · Esc fecha</span></div>
+    </div>`;
+  document.body.appendChild(deep);
+  let deepTab = 0, deepPanes = [], deepRaf = 0, deepFrom = null;
+  const deepOpen = () => !deep.hidden;
+  function countUp(pane) {
+    cancelAnimationFrame(deepRaf);
+    const els = $$('[data-to]', pane);
+    const fmt = (v, d) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: false });
+    if (reduce) { els.forEach(el => { el.textContent = fmt(+el.dataset.to, +el.dataset.dec || 0); }); return; }
+    const t0 = performance.now(), T = 1100;
+    const step = now => {
+      const k = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - k, 3);
+      els.forEach(el => { el.textContent = fmt(+el.dataset.to * e, +el.dataset.dec || 0); });
+      if (k < 1) deepRaf = requestAnimationFrame(step);
+    };
+    deepRaf = requestAnimationFrame(step);
+  }
+  function deepShow(k) {
+    deepTab = (k + deepPanes.length) % deepPanes.length;
+    $$('#deep-tabs button').forEach((b, i) => { b.classList.toggle('on', i === deepTab); b.setAttribute('aria-selected', i === deepTab); });
+    deepPanes.forEach((p, i) => { p.hidden = i !== deepTab; p.classList.remove('play'); });
+    const p = deepPanes[deepTab];
+    const st = $('.steps', p);
+    if (st) st.style.setProperty('--run', `${Math.max(0, st.clientWidth - 56)}px`);   // o "pacote" anda só com transform
+    void p.offsetWidth; p.classList.add('play');   // reinicia as animações da aba
+    countUp(p);
+  }
+  function openDeep(from) {
+    const s = slides[cur], t = $('template.deep-tpl', s);
+    if (!t) return;
+    deepFrom = from || null;
+    const frag = t.content.cloneNode(true);
+    $('#deep-tag').textContent = $('.tag', s)?.textContent || '';
+    $('#deep-title').textContent = t.dataset.title || '';
+    const src = $('[data-src]', frag);
+    $('#deep-src').textContent = src ? `Fontes: ${src.textContent}` : '';
+    src?.remove();
+    deepPanes = $$('section', frag);
+    deepPanes.forEach(p => {
+      p.className = 'deep-pane';
+      p.setAttribute('role', 'tabpanel');
+      $$('li, .stat, .use', p).forEach((el, i) => el.style.setProperty('--k', i));
+    });
+    $('#deep-tabs').innerHTML = deepPanes.map((p, i) => `<button type="button" role="tab" data-t="${i}">${ic(p.dataset.ic || 'bulb')}${esc(p.dataset.tab)}</button>`).join('');
+    const body = $('#deep-body'); body.innerHTML = ''; body.append(...deepPanes);
+    deep.hidden = false;
+    html.classList.add('deep-on');
+    requestAnimationFrame(() => deep.classList.add('show'));
+    deepShow(0);
+    $('#deep-tabs button')?.focus({ preventScroll: true });
+  }
+  function closeDeep(instant) {
+    if (deep.hidden) return;
+    cancelAnimationFrame(deepRaf);
+    deep.classList.remove('show');
+    html.classList.remove('deep-on');
+    const done = () => { if (!deep.classList.contains('show')) { deep.hidden = true; $('#deep-body').innerHTML = ''; } };
+    if (instant || reduce) done(); else setTimeout(done, 320);
+    if (!instant) deepFrom?.focus?.({ preventScroll: true });
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-deep]');
+    if (b) { openDeep(b); return; }
+    if (e.target.closest('#deep [data-x]')) closeDeep();
+    const t = e.target.closest('#deep-tabs button');
+    if (t) deepShow(+t.dataset.t);
+  });
+
   document.addEventListener('keydown', e => {
+    if (deepOpen()) {
+      if (e.key === 'Escape') { e.preventDefault(); closeDeep(); }
+      else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); deepShow(deepTab + 1); $$('#deep-tabs button')[deepTab]?.focus({ preventScroll: true }); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); deepShow(deepTab - 1); $$('#deep-tabs button')[deepTab]?.focus({ preventScroll: true }); }
+      else if (e.key === 'Tab') {   // mantém o foco dentro do painel
+        const f = $$('#deep button'); const i = f.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+      return;
+    }
+    if (!introOn() && (e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey && !['input', 'textarea', 'select'].includes((e.target.tagName || '').toLowerCase()) && $('template.deep-tpl', slides[cur])) { e.preventDefault(); openDeep($('[data-deep]', slides[cur])); return; }
     if (introOn()) {
       const t = (e.target.tagName || '').toLowerCase();
       if (e.key === 'Enter' && !['input', 'textarea', 'select', 'button'].includes(t)) { e.preventDefault(); closeIntro(0); }

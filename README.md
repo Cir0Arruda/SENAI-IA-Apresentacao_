@@ -8,29 +8,30 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
 
-- **Galáxia espiral volumétrica**, inspirada nas fotos do Hubble (como a M51): bojo dourado, dois braços azulados, regiões de gás rosadas (HII) e faixas escuras de poeira na borda interna dos braços.
+- **Galáxia espiral barrada volumétrica**, vista inclinada, inspirada nas fotos do Hubble (como a NGC 1300): uma barra central alongada e dourada, dois braços azuis finos e abertos que saem das pontas da barra, com contas de estrelas jovens, brilho azul difuso, nós rosados de gás (HII), nebulosas coloridas e faixas escuras de poeira.
   - Um mapa da galáxia vista de cima é calculado uma vez na placa de vídeo.
   - A cada quadro, cada raio de luz atravessa o disco (*raymarching*): soma o brilho do gás e perde luz na poeira.
   - **150 mil estrelas** são sorteadas a partir do mesmo mapa e ficam mais escuras quando há poeira entre elas e a câmera. As estrelas fogem do cursor.
 - **Clique num braço da galáxia** (ou no marcador "Sistema dos temas"): um único voo de câmera, sem cortes, como nos documentários:
   1. sobrevoa o braço e mergulha no disco;
-  2. atravessa uma **nebulosa volumétrica** (hidrogênio rosa, oxigênio verde-azulado, poeira e estrelas novas);
-  3. chega a um **sistema planetário**, com a faixa da galáxia e o brilho do centro ao fundo.
+  2. atravessa uma **nebulosa volumétrica**, e cada viagem mostra um tipo diferente: emissão, reflexão, nebulosa planetária, pilares de poeira e remanescente de supernova;
+  3. chega a um **sistema planetário** com o braço da galáxia ao fundo: estrelas, nebulosas e poeira, com o brilho do centro suavizado.
   - Legendas no estilo de documentário explicam cada trecho. A volta faz o caminho inverso até ver a galáxia inteira.
-- **8 planetas**, um por tema da apresentação, girando em volta de um sol, com cinturão de asteroides. Clique num planeta (ou na lista do painel) para ver o resumo e ir direto para o slide dele.
-- **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade). Clique em **Entrar no buraco negro** para ver por dentro:
+- **8 planetas**, um por tema da apresentação, girando em volta de um sol com coroa, com cinturão de asteroides, atmosferas, nuvens, anéis com divisões e luas. Clique num planeta (ou na lista do painel) para ver o resumo e ir direto para o slide dele.
+- **Buraco negro no centro**, calculado raio por raio (cada pixel é um raio de luz curvado pela gravidade), com disco de acreção em faixas, cor pela temperatura e anel de fótons. Clique em **Entrar no buraco negro**: a câmera se aproxima e a imagem passa para a vista de dentro com uma transição suave, sem clarão:
   - horizonte de eventos, esfera de fótons, disco de acreção, lente gravitacional e efeito Doppler, cada um com destaque e explicação;
   - controles para ligar ou desligar a curvatura da luz, o disco e o Doppler, e um controle de distância;
   - o botão **Mergulhar** leva a câmera até perto do horizonte.
 - Arraste para girar e use a roda do mouse para aproximar.
 - O botão **Iniciar**, no canto inferior direito (ou `Enter`), abre a apresentação. O ícone de espiral no menu lateral volta para a galáxia.
 - Endereços com slide (`…/#5`) pulam a abertura. Em computadores sem WebGL, a apresentação abre normalmente.
+- A imagem volumétrica é suavizada para não ficar granulada, e a qualidade se ajusta sozinha ao computador para manter a animação fluida.
 
 **Referências da galáxia e da nebulosa:** [ondas de densidade (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/), [Gaia Sky: nebulosas volumétricas](https://gaiasky.space/news/2024/2024-03-01-volumetric-nebulae/), [poeira cósmica volumétrica (Godot Shaders)](https://godotshaders.com/shader/volumetric-cosmic-dust/), [Volumetric Rendering (wallisc)](https://github.com/wallisc/VolumetricRendering), fotos da [M51 pelo Hubble (ESA/Hubble)](https://esahubble.org/images/heic0506a/) e as animações de aproximação do [ESO (Órion, Carina)](https://www.eso.org/public/videos/).
 
 **Referências do buraco negro e das estrelas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
 
-## Conteúdo (21 slides)
+## Conteúdo (27 slides)
 
 | Tema | Exemplo interativo |
 |---|---|
@@ -39,6 +40,7 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | A matemática | Neurônio artificial com controles (pesos, bias e sigmoide) que decide se vai chover |
 | Treinamento | Descida do gradiente animada, com taxa de aprendizado baixa, ideal e alta demais |
 | 1.1 Tradução automática | Interface de tradutor mostrando tokens, vetores e alinhamento; aba "Sua frase" com Gemini |
+| *Saiba mais* (1.1 a 1.6) | Painel com 4 abas animadas em cada tópico: linha do tempo, números com fonte, como funciona por dentro e uso no trabalho |
 | 1.2 Assistentes virtuais | As 5 etapas de um comando de voz, com a intenção em JSON |
 | 1.3 Chatbots | Bot de regras × bot com IA × **Gemini ao vivo** |
 | 1.4 Geração de conteúdo | Imagem "nascendo" do ruído, como num modelo de difusão |
@@ -48,8 +50,14 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | Extra: Claude + Excel | Animação do Claude criando fórmulas, formatação e gráfico numa planilha |
 | Extra: Claude Code e Codex | Terminal animado criando esta apresentação |
 | Extra: skills | Exemplo de `SKILL.md` |
-| Bônus: vídeos | Editor de vídeo simulado (HyperFrames) com edição por chat |
-| Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 20 referências |
+| Automação de dados · planilha → relatório | Script Python (pandas + openpyxl) limpa a planilha, marca o que falta sem inventar e salva o relatório com gráfico |
+| Automação de dados · workflow | O Agendador do Windows chama o Claude Code (`claude -p`) toda segunda; relatório, resumo e e-mail em rascunho esperam a aprovação de uma pessoa |
+| Estúdio de vídeo · início | Editor de vídeo simulado (HyperFrames) com edição por chat |
+| Estúdio · fluxo completo | Um computador simulado mostra as 6 etapas: pedido no Claude Code, código, prévia, revisão (`check`), render e entrega |
+| Estúdio · 5 níveis | Do simples ao complexo: título animado, legendas, gráfico animado, cena 3D e vídeo completo em 4 cenas, cada um com prévia, pedido e código |
+| Estúdio · cena 3D | Planeta em three.js controlado pela linha do tempo: o mesmo instante gera sempre a mesma imagem, como no render |
+| Estúdio · mão na massa | 4 desafios para fazer em aula, com o pedido pronto para copiar |
+| Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 41 referências |
 
 ## Ligar o Gemini ao vivo
 
@@ -69,7 +77,8 @@ Com o Gemini ligado, funcionam: a aba "Sua frase" do tradutor, o modo "Gemini ao
 - `←` `→`, `Espaço` ou deslizar o dedo: troca de slide
 - `F`: tela cheia
 - `Home` / `End`: primeiro / último slide
-- `Esc`: fecha o painel do Gemini
+- `S` nos tópicos 1.1 a 1.6: abre o *Saiba mais* (as setas trocam a aba)
+- `Esc`: fecha o *Saiba mais* ou o painel do Gemini
 - Cada slide tem endereço próprio: `…/#5` abre direto no slide 5
 
 ## Rodar no computador
@@ -82,17 +91,18 @@ npx http-server . -p 5173
 
 ## Testes automatizados
 
-O teste abre o site num Chrome automático, clica como uma pessoa e confere:
+Os testes abrem o site num Chrome automático, clicam como uma pessoa e conferem, no computador e no celular:
 
-- a imagem: centro brilhante, dois braços, contraste e cores medidos nos pixels;
-- o voo: atravessa a nebulosa, não tem cortes nem saltos de câmera, e chega ao sistema;
-- planetas, buraco negro, botão Iniciar e volta pela barra lateral;
-- a versão de celular e o console sem erros.
+- `galaxy.test.mjs` (46 verificações): centro brilhante, dois braços, contraste e cores medidos nos pixels; o voo atravessa um tipo diferente de nebulosa a cada viagem, sem cortes; o fundo do sistema mostra o braço sem a faixa estourada; o buraco negro entra com transição suave; planetas, botão Iniciar e volta pela barra lateral;
+- `slides.test.mjs` (47 verificações): os 27 slides pelo teclado, nada saindo da tela, o *Saiba mais* dos tópicos 1.1 a 1.6 (abas, números, teclado, fechar), atalhos da barra lateral e da barra de baixo, a automação de dados separada do vídeo, todas as demos do estúdio (etapas, níveis, 3D, botões de copiar) e o console sem erros.
 
 ```bash
 npm i -D puppeteer
 node tests/galaxy.test.mjs
+node tests/slides.test.mjs
 ```
+
+Opções: `--so-desktop`, `--so-celular` e `--headful` (mostra o navegador).
 
 Com o endereço terminando em `?teste`, o site expõe `IAGalaxy.test` para o teste ler o estado da cena.
 

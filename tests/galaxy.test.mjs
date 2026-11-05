@@ -114,16 +114,30 @@ async function desktop(browser) {
 
   // clique no braço: só funciona em cima de um braço
   const armHit = await page.evaluate(() => {
-    const t = window.IAGalaxy.test, r = 8, a = 1.9 * Math.log(r / 1.6), b = a + Math.PI / 2;
+    const t = window.IAGalaxy.test, r = 8, a = t.armAngle(r, 0), b = a + Math.PI / 2;
     return { on: t.armAt(Math.cos(a) * r, Math.sin(a) * r), off: t.armAt(Math.cos(b) * r, Math.sin(b) * r), core: t.armAt(0.5, 0.2) };
   });
   check('Detecção de braço: em cima do braço sim, entre braços e no centro não', armHit.on && !armHit.off && !armHit.core, JSON.stringify(armHit));
 
-  let target = await page.evaluate(() => window.IAGalaxy.test.armScreen(1, 7));
-  await page.mouse.move(target.x, target.y, { steps: 4 });
-  await sleep(250);
-  const hover = await page.evaluate(() => ({ ret: !document.querySelector('.gx-reticle').classList.contains('off'), lab: !document.querySelector('.gx-label.arm').classList.contains('off'), cur: document.getElementById('gx-canvas').classList.contains('point') }));
-  check('Passar o mouse num braço mostra a mira e o rótulo', hover.ret && hover.lab && hover.cur);
+  // um ponto de braço que esteja livre na tela (sem painel ou rótulo por cima), como uma pessoa escolheria
+  // a galáxia gira devagar: se o ponto saiu do braço, mira de novo (como uma pessoa faria)
+  let target, hover;
+  for (let tries = 0; tries < 3; tries++) {
+    target = await page.evaluate(() => {
+      const t = window.IAGalaxy.test, cv = document.getElementById('gx-canvas');
+      for (const r of [7, 8, 6, 9, 5.5, 10]) for (const k of [1, 0]) {
+        const p = t.armScreen(k, r);
+        if (p.onScreen && document.elementFromPoint(p.x, p.y) === cv) return p;
+      }
+      return t.armScreen(1, 7);
+    });
+    await page.mouse.move(target.x + (tries ? 3 : 0), target.y, { steps: 4 });
+    // no Chrome automático a cena roda a poucos quadros por segundo: espera o rótulo aparecer
+    await waitFor(page, () => !document.querySelector('.gx-reticle').classList.contains('off'), 3000);
+    hover = await page.evaluate(() => ({ ret: !document.querySelector('.gx-reticle').classList.contains('off'), lab: !document.querySelector('.gx-label.arm').classList.contains('off'), cur: document.getElementById('gx-canvas').classList.contains('point') }));
+    if (hover.ret && hover.lab && hover.cur) break;
+  }
+  check('Passar o mouse num braço mostra a mira e o rótulo', hover.ret && hover.lab && hover.cur, hover.ret && hover.lab && hover.cur ? '' : JSON.stringify({ ...hover, x: Math.round(target.x), y: Math.round(target.y), on: target.onScreen }));
 
   // viagem completa
   await page.evaluate(() => window.IAGalaxy.test.record(true));
@@ -159,6 +173,9 @@ async function desktop(browser) {
   check('Sistema: 8 planetas com rótulo e painel aberto', s.planetLabels === 8 && s.sysPanel && !s.hero, `${s.planetLabels} rótulos`);
   const ss = await page.evaluate(() => window.IAGalaxy.test.stats());
   check('Galáxia visível ao fundo do sistema', ss.mean > 5, `brilho médio ${ss.mean.toFixed(1)}`);
+  // o fundo é um braço de estrelas (céu do braço ligado), sem a faixa estourada do centro
+  check('Fundo do sistema: braço de estrelas e centro suavizado', s.armSky > 0.95 && ss.brightFrac < 0.35, `céu ${s.armSky.toFixed(2)} · claros ${(ss.brightFrac * 100).toFixed(0)}%`);
+  const kind1 = s.nebKind;
 
   // planeta
   await page.click('#gxs-list [data-i="3"]');
@@ -196,6 +213,7 @@ async function desktop(browser) {
   await sleep(300);
   s = await state(page);
   check('Marcador "Sistema dos temas" inicia a viagem', pinOk && s.mode === 'travel');
+  check('Cada viagem atravessa um tipo diferente de nebulosa', s.nebKind !== kind1 && s.nebKind >= 0, `1ª: ${kind1} · 2ª: ${s.nebKind}`);
   await waitFor(page, () => window.IAGalaxy.test.state().mode === 'system', 25000);
   await page.keyboard.press('Escape');
   await waitFor(page, () => window.IAGalaxy.test.state().mode === 'galaxy', 20000);
@@ -205,6 +223,11 @@ async function desktop(browser) {
   const inBH = await waitFor(page, () => window.IAGalaxy.test.state().mode === 'inside', 8000);
   s = await state(page);
   check('Entrar no buraco negro', inBH && s.bhPanel);
+  // transição suave: a última imagem some aos poucos (sem clarão branco)
+  // a imagem antiga começa a sumir dois quadros depois da troca (no Chrome automático, poucos quadros por segundo)
+  await waitFor(page, () => document.querySelector('.gx-xfade')?.classList.contains('out'), 3000);
+  const xf = await page.evaluate(() => { const x = document.querySelector('.gx-xfade'); return { has: !!x, out: x && x.classList.contains('out'), flash: getComputedStyle(document.getElementById('gx-flash')).opacity }; });
+  check('Entrada no buraco negro com transição suave (sem clarão)', xf.has && xf.out && +xf.flash < 0.05, JSON.stringify(xf));
   await page.click('#gxb-parts [data-part="2"]');
   const partTxt = await page.$eval('#gxb-text', el => el.textContent);
   check('Partes do buraco negro explicadas', /fótons/i.test(partTxt));

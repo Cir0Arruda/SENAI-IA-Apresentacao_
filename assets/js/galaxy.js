@@ -49,13 +49,15 @@ function init() {
   renderer.setClearColor(0x020206, 1);
   const basePR = Math.min(window.devicePixelRatio || 1, lowEnd ? 1.25 : 1.6);
   let pr = basePR;
+  const PR_MIN = Math.min(basePR, lowEnd ? 0.85 : 1);
   renderer.setPixelRatio(pr);
 
   const scene = new THREE.Scene();        // estrelas da galáxia e céu
   const bhScene = new THREE.Scene();      // buraco negro (desenhado depois da lente)
   const sysScene = new THREE.Scene();     // sistema planetário
   const nebStarScene = new THREE.Scene(); // estrelas dentro da nebulosa
-  const HOME_BASE = new THREE.Vector3(0, 12.6, 15.6), HOME_POS = HOME_BASE.clone(), ORIGIN = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+  // vista inclinada, como a foto de referência (o disco aparece como uma elipse)
+  const HOME_BASE = new THREE.Vector3(0, 52, 99.5), HOME_POS = HOME_BASE.clone(), ORIGIN = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.004, 2000);
   camera.position.copy(HOME_POS);
@@ -64,7 +66,7 @@ function init() {
   controls.dampingFactor = 0.06;
   controls.enablePan = false;
   controls.minDistance = 3.2;
-  controls.maxDistance = 48;
+  controls.maxDistance = 130;
   controls.rotateSpeed = 0.55;
   controls.zoomSpeed = 0.7;
   controls.autoRotate = !reduce;
@@ -86,6 +88,7 @@ function init() {
   const rand = mulberry32(20261103);
   const gauss = () => { let u = 0, v = 0; while (!u) u = rand(); while (!v) v = rand(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v); };
   const clamp = THREE.MathUtils.clamp;
+  const tmpV2 = new THREE.Vector2();
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
   /* ---------- Uniforms compartilhados ---------- */
@@ -95,17 +98,19 @@ function init() {
     uMouse: { value: new THREE.Vector3(999, 0, 999) },
     uMouseOn: { value: 0 },
     uWarp: { value: 0 },
-    uCube: { value: 0 }
+    uCube: { value: 0 },
+    uFovK: { value: 1 }      // lente fechada: estrelas maiores na tela, como tudo o mais
   };
 
   /* =========================================================
-     Galáxia espiral
-     Os braços seguem uma espiral logarítmica:
-       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1)
+     Galáxia espiral barrada (como a NGC 1300)
+     Uma barra de estrelas velhas atravessa o centro; os dois braços
+     nascem nas pontas da barra e seguem uma espiral logarítmica:
+       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1, R0 = ponta da barra)
      A galáxia gira como um bloco (padrão de onda de densidade),
      então os braços não se enrolam com o tempo.
      ========================================================= */
-  const KS = 1.9, R0 = 1.6, R_MAX = 13;
+  const KS = 2.9, R0 = 3.1, R_MAX = 13;     // R0 = meio comprimento da barra
   const SPAN = 28;                         // o mapa cobre de -14 a 14
   const MAP_RES = lowEnd ? 1024 : 2048;
   const HE = 0.13, HD = 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira
@@ -151,39 +156,44 @@ function init() {
         vec2 p = (vUv - 0.5) * ${SPAN.toFixed(1)};
         float r0 = length(p);
         // distorção suave: braços irregulares, como nas galáxias reais
-        vec2 wv = vec2(fb2(p * 0.42 + 3.1), fb2(p * 0.42 - 8.7)) - 0.5;
-        vec2 q = p + wv * 0.62;
+        vec2 wv = vec2(fb2(p * 0.38 + 3.1), fb2(p * 0.38 - 8.7)) - 0.5;
+        vec2 q = p + wv * 0.55 * smoothstep(2.0, 5.0, r0);
         float r = max(length(q), 0.02), th = atan(q.y, q.x), lr = log(r / R0);
         float phi = th - KS * lr;                       // coordenada da espiral (0 = crista do braço)
         float armC = 0.5 + 0.5 * cos(2.0 * phi);
-        vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);   // ruído que acompanha os braços
-        float flo = fb3(sp + vec3(0.0, 0.0, 1.7), 5);
-        float spur = fb3(vec3(cos(th - KS * 0.45 * lr) * 4.0, sin(th - KS * 0.45 * lr) * 4.0, lr * 5.0), 4);
-        float clump = fb2(p * 2.2 + 5.0), fine = fb2(p * 7.0 - 2.0);
-        float inner = smoothstep(0.7, 2.6, r0), outer = smoothstep(13.9, 7.5, r0);
-        float arm = pow(armC, 2.4) * (0.45 + 1.0 * flo) * (0.75 + 0.5 * spur) * inner * outer;
-        float armN = pow(armC, 12.0) * inner * outer;
-        // disco de estrelas velhas, que também se concentra um pouco nos braços
-        float dw = mix(1.0, 0.5 + 0.75 * armC, smoothstep(1.4, 3.5, r0));
-        float disk = exp(-r0 / 3.3) * (0.9 + 0.25 * clump) * dw + 0.16 * exp(-r0 / 6.0) * (0.5 + 0.9 * flo) * outer * dw;
-        // aglomerados azuis e regiões HII (rosadas) na borda externa dos braços
-        float kn = fb2(p * 3.3 + 11.0) * 0.72 + fine * 0.28;
-        float hii = smoothstep(0.6, 0.77, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.16)), 5.0) * inner * outer;
-        float blu = smoothstep(0.56, 0.74, fb2(p * 4.4 - 3.0) * 0.8 + fine * 0.2) * armC * armC * inner * outer;
-        vec3 OLD = vec3(1.0, 0.76, 0.52), YOUNG = vec3(0.5, 0.66, 1.0), HII = vec3(1.0, 0.3, 0.5);
-        vec3 E = OLD * disk * 0.5
-               + YOUNG * arm * 0.5 * exp(-r0 / 10.0) * mix(0.4, 1.0, smoothstep(1.5, 4.5, r0))
-               + vec3(0.62, 0.74, 1.0) * blu * 0.75 + vec3(0.86, 0.9, 1.0) * armN * 0.18 * exp(-r0 / 9.0)
-               + HII * hii * 1.5;
-        E *= smoothstep(14.0, 12.2, r0);
-        // poeira: faixas finas na borda interna dos braços e filamentos pelo disco
-        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.4)), 12.0);
+        float inner = smoothstep(R0 * 0.8, R0 * 1.3, r0), outer = smoothstep(13.9, 10.2, r0);
+        float env = inner * outer;
+        // braços finos: uma crista estreita e um corpo um pouco mais largo
+        float ridge = pow(armC, 14.0), body = pow(armC, 5.0), wide = pow(armC, 2.0);
+        // contas de estrelas: aglomerados brilhantes em fila ao longo do braço
+        float bead = smoothstep(0.44, 0.8, fb2(p * 2.4 + 5.0) * 0.75 + fb2(p * 6.5 - 2.0) * 0.25);
+        float fine = fb2(p * 9.0 + 1.3);
+        float br = mix(0.55, 1.0, smoothstep(R0, 5.0, r0)) * exp(-r0 / 14.0);
+        // barra: estrelas velhas, alongada no eixo x (os braços saem das suas pontas)
+        float bar = exp(-(p.x * p.x) / (R0 * R0 * 0.5) - (p.y * p.y) / 0.42);
+        float lens = exp(-r0 * r0 / 2.2);                 // brilho redondo em volta da barra
+        // disco de estrelas velhas: forte no centro e quase nada entre os braços
+        float disk = exp(-r0 / 1.7) * 0.9 + 0.05 * exp(-r0 / 6.0) * (0.4 + 0.6 * wide) * outer;
+        // regiões HII (rosadas): poucas, pequenas, presas às contas do braço
+        float kn = fb2(p * 3.6 + 11.0) * 0.7 + fine * 0.3;
+        float hii = smoothstep(0.57, 0.72, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.1)), 8.0) * env;
+        vec3 OLD = vec3(1.0, 0.86, 0.66), BAR = vec3(1.0, 0.93, 0.78), YOUNG = vec3(0.5, 0.68, 1.0), HII = vec3(1.0, 0.34, 0.62);
+        vec3 E = OLD * disk * 0.3 + BAR * (bar * 0.36 + lens * 0.09)
+               + YOUNG * (ridge * (0.25 + 1.5 * bead) + body * 0.22 * (0.6 + 0.8 * bead)) * env * br
+               + vec3(0.78, 0.86, 1.0) * ridge * bead * fine * 0.5 * env * br      // estrelas azuis mais brilhantes
+               + vec3(0.24, 0.42, 1.0) * wide * 0.3 * env * exp(-r0 / 10.0)       // halo azul difuso
+               + HII * hii * 1.15;
+        E *= smoothstep(14.0, 12.4, r0);
+        // poeira: faixa fina na borda interna dos braços e duas faixas ao longo da barra
+        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.32)), 22.0);
+        vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);
         float laneN = fb3(sp * 1.9 + 4.0, 4);
-        float ridge = pow(1.0 - abs(2.0 * fb2(p * 2.6 + 1.0) - 1.0), 6.0);
-        float ridgeB = pow(1.0 - abs(2.0 * fb3(sp * 2.4 + 7.0, 4) - 1.0), 8.0);
-        float dust = lane * (0.25 + 1.35 * smoothstep(0.32, 0.72, laneN)) * smoothstep(1.0, 2.6, r0) * smoothstep(13.0, 6.5, r0)
-                   + (ridge * 0.45 + ridgeB * 0.5) * smoothstep(1.3, 3.2, r0) * smoothstep(12.5, 3.5, r0)
-                   + 0.05 * exp(-r0 / 4.0);
+        float barLane = exp(-pow((abs(p.y) - 0.42) / 0.09, 2.0)) * smoothstep(R0 * 1.1, R0 * 0.4, abs(p.x)) * smoothstep(0.15, 0.6, abs(p.x));
+        float ridgeD = pow(1.0 - abs(2.0 * fb2(p * 2.6 + 1.0) - 1.0), 8.0);
+        float dust = lane * (0.3 + 1.3 * smoothstep(0.3, 0.7, laneN)) * env
+                   + barLane * 0.7
+                   + ridgeD * 0.22 * wide * env
+                   + 0.04 * exp(-r0 / 4.0);
         if (uLDR > 0.5) gl_FragColor = vec4(E / (1.0 + E), clamp(dust, 0.0, 1.0));
         else gl_FragColor = vec4(E * 0.5, dust);
       }`,
@@ -230,14 +240,14 @@ function init() {
     for (let i = 0; i < N; i++) {
       const u = rand();
       let x, y, z, s, b;
-      if (u < 0.08) {                       // bojo central, levemente achatado
+      if (u < 0.1) {                        // bojo e barra
         let r = 0.42 * Math.pow(-Math.log(1 - rand() * 0.9995), 1.25);
         if (r > 3) r = rand() * 3;
         d3.set(gauss(), gauss(), gauss()).normalize();
-        x = d3.x * r; y = d3.y * r * 0.6; z = d3.z * r;
+        x = d3.x * r * 2.3; y = d3.y * r * 0.55; z = d3.z * r * 0.62;   // alongado como a barra
         c.copy(pick(PAL.bulge));
-        b = 0.45 + 0.3 * Math.min(1, r / 1.5); s = 0.5 + rand() * 0.7;
-      } else if (u < 0.105) {               // halo esparso
+        b = 0.2 + 0.16 * Math.min(1, r / 1.5); s = 0.5 + rand() * 0.7;   // muitas e fracas: de perto não estouram
+      } else if (u < 0.12) {                // halo esparso
         d3.set(gauss(), gauss(), gauss()).normalize();
         const r = 3 + rand() * 13;
         x = d3.x * r; y = d3.y * r * 0.45; z = d3.z * r;
@@ -250,15 +260,16 @@ function init() {
           x = Math.cos(a) * r; z = Math.sin(a) * r;
           k = mapIdx(x, z);
           const l = (0.3 * mapPix[k] + 0.5 * mapPix[k + 1] + 0.2 * mapPix[k + 2]) / maxL;
-          if (rand() < Math.pow(l, 1.35)) break;
+          // a barra é a parte mais brilhante do mapa: sem limite, ela ficaria com quase todas as estrelas
+          if (rand() < Math.pow(Math.min(1, l / 0.32), 1.35) * (r < R0 * 1.1 ? 0.35 : 1)) break;
         }
         const mr = mapPix[k], mg = mapPix[k + 1], mb = mapPix[k + 2], mx = Math.max(mr, mg, mb, 1);
         const blue = mb > mr * 0.95, pink = mr > mg * 1.45 && mb > mg * 0.8;
         y = gauss() * (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r);
-        c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.45);
-        b = 0.42 + Math.pow(rand(), 3) * 0.7; s = 0.45 + Math.pow(rand(), 3) * 1.3;
-        if (blue && rand() < 0.1) { c.copy(PAL.young); s *= 1.6; b = 1.25; }
-        if (pink && rand() < 0.35) { c.copy(PAL.hii).lerp(PAL.white, rand() * 0.3); b = 1.1; s *= 1.2; }
+        c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
+        b = (0.36 + Math.pow(rand(), 3) * 0.6) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.45 + Math.pow(rand(), 3) * 1.2;
+        if (blue && rand() < 0.1) { c.copy(PAL.young); s *= 1.5; b = 1.1; }
+        if (pink && rand() < 0.3) { c.copy(PAL.hii).lerp(PAL.white, rand() * 0.3); b = 1.0; s *= 1.15; }
       }
       pos.set([x, y, z], i * 3);
       col.set([c.r * b, c.g * b, c.b * b], i * 3);
@@ -267,7 +278,7 @@ function init() {
     return starGeometry(pos, col, size, seed);
   }
   const STAR_VS = /* glsl */`
-    uniform float uTime, uPR, uMouseOn, uWarp, uCube, uScaleK, uAlpha, uMaxSize, uDustOn;
+    uniform float uTime, uPR, uMouseOn, uWarp, uCube, uScaleK, uAlpha, uMaxSize, uDustOn, uFovK;
     uniform vec2 uNear;
     uniform vec3 uMouse, uCamL;
     uniform sampler2D tMap;
@@ -299,7 +310,7 @@ function init() {
       gl_Position = projectionMatrix * mv;
       float tw = 0.8 + 0.2 * sin(uTime * (1.1 + aSeed * 3.0) + aSeed * 50.0);
       float z = max(-mv.z, 0.001);
-      float s = aSize * uPR * (1.0 + infl * 1.4) * (1.0 + uWarp * 2.5) * mix(1.0, 0.35, uCube) * uScaleK / z;
+      float s = aSize * uPR * (1.0 + infl * 1.4) * (1.0 + uWarp * 2.5) * mix(1.0, 0.35, uCube) * uScaleK * uFovK / z;
       // estrelas menores que 1 pixel: mantém o tamanho e reduz o brilho (sem cintilar)
       float mn = 1.1 * uPR, e = 1.0;
       if (s < mn) { e = (s / mn) * (s / mn); s = mn; }
@@ -329,13 +340,53 @@ function init() {
   stars.frustumCulled = false;
   stars.renderOrder = 1;
   // posição da câmera no espaço da galáxia (serve para qualquer câmera: principal, fundo ou cubo)
-  stars.onBeforeRender = (r, s, cam) => { galaxy.worldToLocal(starMat.uniforms.uCamL.value.setFromMatrixPosition(cam.matrixWorld)); };
+  stars.onBeforeRender = (r, s, cam) => {
+    galaxy.worldToLocal(starMat.uniforms.uCamL.value.setFromMatrixPosition(cam.matrixWorld));
+    U.uFovK.value = cam.fov && cam.fov < 50 ? 0.46631 / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) : 1;
+  };
   galaxy.add(stars);
   // perto (dentro da galáxia) as estrelas ficam menores, para não virarem bolas
   function setStarView(k) {
     starMat.uniforms.uScaleK.value = 34 + (9 - 34) * k * k;
     starMat.uniforms.uMaxSize.value = 10 + (4 - 10) * k;
     starMat.uniforms.uNear.value.set(0.03 - 0.02 * k, 0.6 - 0.45 * k);
+  }
+
+  /* Nebulosas espalhadas pelos braços (vistas de longe, cada uma com forma e cor próprias) */
+  {
+    const n = lowEnd ? 70 : 120, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
+    const NC = [C('#ff4f8f'), C('#ff6a9e'), C('#4fd6cf'), C('#6f95ff'), C('#ff7a4a'), C('#c86bff')];
+    for (let i = 0; i < n; i++) {
+      const r = 2.6 + Math.pow(rand(), 0.8) * 9.6, k = rand() < 0.5 ? 0 : 1;
+      const a = armAngle(r, k) + 0.14 + gauss() * 0.16;
+      pos.set([Math.cos(a) * r, gauss() * 0.03, Math.sin(a) * r], i * 3);
+      const c = NC[rand() < 0.55 ? (rand() < 0.5 ? 0 : 1) : 2 + ((rand() * 4) | 0)];
+      col.set([c.r, c.g, c.b], i * 3);
+      size[i] = 0.22 + Math.pow(rand(), 2) * 0.6; seed[i] = rand() * 50;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+    g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+    const m = new THREE.ShaderMaterial({
+      uniforms: { uPx: { value: 600 }, uCube: U.uCube },
+      vertexShader: `uniform float uPx, uCube; attribute vec3 aColor; attribute float aSize, aSeed; varying vec3 vC; varying float vS;
+        void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
+          float z = max(-mv.z, 0.01); gl_PointSize = min(aSize * uPx / z, 260.0);
+          vC = aColor * smoothstep(0.5, 2.5, z) * (1.0 - uCube); vS = aSeed; }`,
+      fragmentShader: `${GLSL_NOISE} varying vec3 vC; varying float vS;
+        void main(){ vec2 p = gl_PointCoord - 0.5; float r = length(p) * 2.0; if (r > 1.0) discard;
+          float a = atan(p.y, p.x);
+          float nz = fb2(p * 4.0 + vS) * 0.7 + fb2(vec2(cos(a), sin(a)) * 1.5 + vS * 1.7) * 0.5;
+          float f = smoothstep(1.0, 0.15, r + (nz - 0.6) * 0.9);
+          gl_FragColor = vec4(vC * f * f * 0.16, 1.0); }`,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    const neb = new THREE.Points(g, m);
+    neb.frustumCulled = false; neb.renderOrder = 2;
+    neb.onBeforeRender = (r, s, cam) => { m.uniforms.uPx.value = r.getDrawingBufferSize(tmpV2).y / (2 * Math.tan(THREE.MathUtils.degToRad((cam.fov || 90) / 2))); };
+    galaxy.add(neb);
   }
 
   /* Céu de fundo */
@@ -361,6 +412,69 @@ function init() {
     const sky = new THREE.Points(g, m); sky.frustumCulled = false; sky.renderOrder = -1;
     scene.add(sky);
   }
+
+  /* Céu visto de dentro do braço (fundo do sistema planetário)
+     De dentro do disco, a galáxia aparece como uma faixa no céu, como a Via Láctea:
+     milhares de estrelas resolvidas, faixas escuras de poeira e nebulosas coloridas.
+     Tudo é calculado por direção (sem textura), então fica nítido em qualquer resolução. */
+  const armSkyMat = new THREE.ShaderMaterial({
+    uniforms: { uGalInv: { value: new THREE.Matrix4() }, uCtr: { value: new THREE.Vector2(1, 0) }, uSeed: { value: 0 }, uAmt: { value: 1 } },
+    vertexShader: `varying vec3 vD; void main(){ vD = (modelMatrix * vec4(position, 0.0)).xyz; gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); gl_Position.z = gl_Position.w; }`,
+    fragmentShader: /* glsl */`
+      uniform mat4 uGalInv; uniform vec2 uCtr; uniform float uSeed, uAmt; varying vec3 vD;
+      ${GLSL_NOISE}
+      vec3 starLayer(vec3 d, float K, float dens, float pw){
+        vec3 g = d * K, id = floor(g), f = fract(g) - 0.5;
+        float h = h3(id + uSeed);
+        if (h > dens) return vec3(0.0);
+        vec3 o = vec3(h3(id + 3.1), h3(id + 7.7), h3(id + 1.3)) - 0.5;
+        vec3 e = f - o * 0.7;
+        float r = max(0.07, pw * K * 0.75);
+        float a = exp(-dot(e, e) / (r * r)) * (0.07 / r) * (0.07 / r);
+        float t = h3(id + 5.9);
+        vec3 c = t < 0.3 ? vec3(1.0, 0.82, 0.62) : t < 0.75 ? vec3(1.0, 0.97, 0.92) : vec3(0.7, 0.82, 1.0);
+        return c * a * (0.6 + 3.2 * pow(h3(id + 2.2), 6.0));
+      }
+      void main(){
+        vec3 dW = normalize(vD);
+        vec3 d = normalize(mat3(uGalInv) * dW);           // direção no espaço da galáxia
+        float pw = length(fwidth(dW));                     // tamanho do pixel (para estrelas nítidas)
+        float lat = d.y;
+        // o braço onde estamos ondula: a faixa não é uma linha reta
+        float wav = (fb3(vec3(d.xz * 2.2, 3.0 + uSeed), 3) - 0.5) * 0.09;
+        float y = lat - wav;
+        float core = exp(-pow(y / 0.07, 2.0)), band = exp(-pow(y / 0.17, 2.0)), halo = exp(-pow(y / 0.45, 2.0));
+        vec2 hd = normalize(d.xz + 1e-5);
+        float toC = 0.5 + 0.5 * dot(hd, uCtr);             // 1 = olhando para o centro da galáxia
+        float bright = 0.35 + 0.65 * pow(toC, 2.2);
+        vec3 q = d * 5.0 + uSeed;
+        float cl = fb3(q, 5), cl2 = fb3(q * 2.3 + 4.0, 4);
+        // brilho difuso: milhões de estrelas fracas demais para ver uma a uma
+        vec3 col = mix(vec3(0.55, 0.62, 0.9), vec3(1.0, 0.82, 0.6), pow(toC, 3.0));
+        float grain = fb3(d * 38.0 + uSeed, 3);                // nuvens de estrelas (textura fina)
+        vec3 E = col * (core * 0.24 + band * 0.08 + halo * 0.01) * bright * (0.3 + 1.2 * cl * cl) * (0.55 + 0.9 * grain * grain);
+        // poeira: filamentos escuros no meio da faixa
+        float rid = pow(1.0 - abs(2.0 * fb3(q * 1.6 + 9.0, 5) - 1.0), 5.0);
+        float lane = smoothstep(0.35, 0.85, rid) * exp(-pow((y + 0.012) / 0.055, 2.0));
+        float blot = smoothstep(0.5, 0.75, cl2) * band;
+        float dust = clamp(lane * 0.95 + blot * 0.55, 0.0, 0.95);
+        // nebulosas: hidrogênio rosa, reflexão azul e oxigênio verde-azulado
+        float nP = smoothstep(0.6, 0.82, fb3(d * 9.0 + 11.0 + uSeed, 5)) * band;
+        float nB = smoothstep(0.62, 0.84, fb3(d * 7.0 - 5.0 + uSeed, 5)) * band;
+        float nO = smoothstep(0.7, 0.88, fb3(d * 13.0 + 2.0 + uSeed, 4)) * core;
+        E += vec3(1.0, 0.28, 0.5) * nP * 0.42 + vec3(0.32, 0.5, 1.0) * nB * 0.22 + vec3(0.3, 0.9, 0.85) * nO * 0.2;
+        E *= 1.0 - dust;
+        // estrelas resolvidas: muito mais densas dentro da faixa
+        float sd = 0.05 + 0.5 * band + 0.35 * core * (1.0 - dust);
+        vec3 S = starLayer(d, 150.0, sd * 0.5, pw) + starLayer(d, 340.0, sd, pw) * 0.7 + starLayer(d, 700.0, 0.1 + 0.6 * band, pw) * 0.45;
+        S *= 1.0 - dust * 0.8;
+        gl_FragColor = vec4((E + S) * uAmt, 1.0);
+      }`,
+    side: THREE.BackSide, depthTest: false, depthWrite: false
+  });
+  const armSky = new THREE.Mesh(new THREE.SphereGeometry(50, 48, 24), armSkyMat);
+  armSky.frustumCulled = false; armSky.renderOrder = -2; armSky.visible = false;
+  scene.add(armSky);
 
   /* ---------- 3) Raymarching do disco (gás que brilha + poeira que absorve) ---------- */
   const CAM_UNI = () => ({ uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() }, uCamPos: { value: new THREE.Vector3() }, uPixAng: { value: 0.001 } });
@@ -390,10 +504,11 @@ function init() {
         }
         if (t1 <= t0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
         // bojo: soma de três gaussianas achatadas, integradas exatamente ao longo do raio (sem ruído)
-        const float Q = 0.6;
-        vec3 o2 = vec3(ro.x, ro.y / Q, ro.z), d2 = vec3(rd.x, rd.y / Q, rd.z);
+        // achatado na vertical e alongado no eixo da barra (x)
+        const vec3 Q = vec3(1.0 / 2.3, 1.0 / 0.55, 1.0 / 0.8);
+        vec3 o2 = ro * Q, d2 = rd * Q;
         float bA = dot(d2, d2), bB = dot(o2, d2), bC = dot(o2, o2) - bB * bB / bA, sA = sqrt(bA), tc = bB / bA;
-        vec3 S = vec3(0.07, 0.24, 0.8), AMP = vec3(4.5, 1.25, 0.42) * uBulge;
+        vec3 S = vec3(0.07, 0.24, 1.05), AMP = vec3(1.6, 0.42, 0.11) * uBulge;
         vec3 K = AMP * S * 0.8862269 / sA * exp(-bC / (S * S));
         vec3 prevE = vec3(erf1(sA * (t0 + tc) / S.x), erf1(sA * (t0 + tc) / S.y), erf1(sA * (t0 + tc) / S.z));
         float L = t1 - t0;
@@ -411,7 +526,7 @@ function init() {
           float cd = colI(pa.y, pb.y, ${HD}, ds) / ${(2 * HD).toFixed(3)};
           vec3 nE = vec3(erf1(sA * (tB + tc) / S.x), erf1(sA * (tB + tc) / S.y), erf1(sA * (tB + tc) / S.z));
           vec3 bk = K * (nE - prevE); prevE = nE;
-          vec3 em = m.rgb * 2.0 * ce + vec3(1.0, 0.9, 0.74) * bk.x + vec3(1.0, 0.8, 0.56) * bk.y + vec3(1.0, 0.74, 0.5) * bk.z;
+          vec3 em = m.rgb * 2.0 * ce + vec3(1.0, 0.96, 0.86) * bk.x + vec3(1.0, 0.86, 0.62) * bk.y + vec3(1.0, 0.78, 0.54) * bk.z;
           // perto da câmera a luz do disco já aparece como estrelas separadas (os pontos), não como névoa
           em *= smoothstep(0.04, 1.1, mix(tA, tB, j));
           float tau = m.a * ${SIG.toFixed(2)} * cd;
@@ -429,10 +544,10 @@ function init() {
   const NEB_R = 0.6;
   const nebMarch = new THREE.ShaderMaterial({
     uniforms: { ...CAM_UNI(), uTime: U.uTime, uNebC: { value: new THREE.Vector3(0, -99, 0) }, uNebSeed: { value: new THREE.Vector3() },
-      uNL: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) } },
+      uNL: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) }, uKind: { value: 0 } },
     vertexShader: FSQ_VS,
     fragmentShader: /* glsl */`
-      uniform mat4 uInvProj, uCamWorld; uniform vec3 uCamPos, uNebC, uNebSeed; uniform vec3 uNL[4]; uniform float uTime;
+      uniform mat4 uInvProj, uCamWorld; uniform vec3 uCamPos, uNebC, uNebSeed; uniform vec3 uNL[4]; uniform float uTime, uKind;
       varying vec2 vUv;
       ${GLSL_NOISE}
       const float R = ${NEB_R.toFixed(2)};
@@ -462,12 +577,38 @@ function init() {
           float ill = 0.0;
           for (int k = 0; k < 4; k++){ vec3 dl = (p - uNL[k]) / R; ill += 1.0 / (dot(dl, dl) * 14.0 + 0.35); }
           ill = min(ill, 9.0);
-          // perto das estrelas o oxigênio brilha verde-azulado; longe, o hidrogênio brilha rosa
-          vec3 col = mix(vec3(1.0, 0.26, 0.46), vec3(0.32, 0.86, 0.92), smoothstep(1.6, 5.5, ill));
-          col = mix(col, vec3(1.0, 0.62, 0.42), smoothstep(0.55, 0.85, n) * 0.35);
-          float rim = 0.55 + 1.4 * smoothstep(0.42, 0.52, n) * (1.0 - smoothstep(0.6, 0.72, n));
+          vec3 col; float rim = 0.55 + 1.4 * smoothstep(0.42, 0.52, n) * (1.0 - smoothstep(0.6, 0.72, n)), dk = 7.0;
+          if (uKind < 0.5) {
+            // emissão (como Órion e Lagoa): perto das estrelas o oxigênio brilha verde-azulado; longe, o hidrogênio brilha rosa
+            col = mix(vec3(1.0, 0.26, 0.46), vec3(0.32, 0.86, 0.92), smoothstep(1.6, 5.5, ill));
+            col = mix(col, vec3(1.0, 0.62, 0.42), smoothstep(0.55, 0.85, n) * 0.35);
+          } else if (uKind < 1.5) {
+            // reflexão (como as Plêiades): poeira que só espalha a luz azul das estrelas
+            col = mix(vec3(0.25, 0.42, 1.0), vec3(0.72, 0.84, 1.0), smoothstep(2.0, 7.0, ill));
+            dens = shape * smoothstep(0.42, 0.78, n) * 0.8; rim = 0.7 + 0.6 * rim; dk = 4.0;
+          } else if (uKind < 2.5) {
+            // planetária (como a Hélice): uma casca de gás expulsa por uma estrela que morreu
+            float sh = exp(-pow((r - 0.55) / 0.17, 2.0));
+            dens = sh * (0.35 + 0.9 * smoothstep(0.35, 0.75, n));
+            col = mix(vec3(0.25, 0.95, 0.85), vec3(1.0, 0.22, 0.3), smoothstep(0.45, 0.7, r + (n - 0.5) * 0.2));
+            ill = 3.2 + 2.0 * sh; dn *= 0.3; rim = 1.0;
+          } else if (uKind < 3.5) {
+            // pilares (como os Pilares da Criação): colunas de poeira com bordas iluminadas
+            float n2 = fb3(vec3(wp.x * 1.7, wp.y * 0.45, wp.z * 1.7) + 5.0, ${lowEnd ? 4 : 5});
+            dn = shape * smoothstep(0.5, 0.66, n2) * 1.4;
+            float edge = smoothstep(0.42, 0.5, n2) * (1.0 - smoothstep(0.5, 0.58, n2));
+            col = mix(vec3(0.45, 0.78, 0.62), vec3(1.0, 0.66, 0.32), edge);
+            dens = shape * (0.35 * smoothstep(0.3, 0.7, n) + 1.3 * edge); rim = 1.0; dk = 9.0;
+          } else {
+            // remanescente de supernova (como o Véu): filamentos finos numa bolha em expansão
+            float sh = exp(-pow((r - 0.68) / 0.24, 2.0));
+            float fil = pow(1.0 - abs(2.0 * n - 1.0), 9.0);
+            dens = sh * fil * 1.6;
+            col = mix(vec3(1.0, 0.28, 0.22), vec3(0.3, 0.6, 1.0), smoothstep(0.4, 0.62, fb3(wp * 0.7 + 2.0, 3)));
+            ill = 3.5; dn *= 0.15; rim = 1.0;
+          }
           vec3 em = col * dens * ill * rim * 0.85 * smoothstep(0.015, 0.16, t0 + (float(i) + j) * ds);
-          float tau = (dens * 1.6 + dn * 7.0) * ds / R;
+          float tau = (dens * 1.6 + dn * dk) * ds / R;
           float tr = exp(-tau);
           E += T * em * (ds / R) * (tau > 1e-4 ? (1.0 - tr) / tau : 1.0);
           T *= tr;
@@ -492,12 +633,24 @@ function init() {
   const nebStars = new THREE.Points(nebStarGeo, nebStarMat);
   nebStars.frustumCulled = false;
   nebStarScene.add(nebStars);
-  let nebOn = false;
+  let nebOn = false, nebKind = -1;
+  // cada viagem atravessa um tipo diferente de nebulosa
+  const NEB_KINDS = [
+    ['Nebulosa de emissão', 'Um berçário de estrelas', 'o hidrogênio brilha em rosa; o oxigênio, em verde-azulado'],
+    ['Nebulosa de reflexão', 'Poeira iluminada por estrelas azuis', 'a poeira não brilha sozinha: ela espalha a luz azul'],
+    ['Nebulosa planetária', 'O último suspiro de uma estrela', 'uma casca de gás expulsa por uma estrela parecida com o Sol'],
+    ['Pilares de poeira', 'Onde as estrelas estão nascendo', 'colunas de gás frio, esculpidas pela luz das estrelas jovens'],
+    ['Remanescente de supernova', 'Os restos de uma explosão', 'filamentos de gás quente, ainda se expandindo']
+  ];
   function placeNebula(Cn) {
+    nebKind = (nebKind + 1) % NEB_KINDS.length;
+    nebMarch.uniforms.uKind.value = nebKind;
     nebMarch.uniforms.uNebC.value.copy(Cn);
     nebMarch.uniforms.uNebSeed.value.set(rand() * 40, rand() * 40, rand() * 40);
     const q = new THREE.Vector3(), pa = nebStarGeo.attributes.position, sa = nebStarGeo.attributes.aSize, ca = nebStarGeo.attributes.aColor;
-    nebMarch.uniforms.uNL.value.forEach(L => L.copy(Cn).add(q.set(gauss(), gauss() * 0.7, gauss()).multiplyScalar(NEB_R * 0.28)));
+    // na planetária, a estrela que morreu fica no centro da casca
+    const spread = nebKind === 2 ? 0.02 : 0.28;
+    nebMarch.uniforms.uNL.value.forEach(L => L.copy(Cn).add(q.set(gauss(), gauss() * 0.7, gauss()).multiplyScalar(NEB_R * spread)));
     for (let i = 0; i < NEB_STARS; i++) {
       if (i < 4) { q.copy(nebMarch.uniforms.uNL.value[i]); sa.setX(i, 0.9); ca.setXYZ(i, 1.4, 1.5, 1.8); }
       else {
@@ -530,8 +683,8 @@ function init() {
       text: 'Monte um prompt com papel, contexto, formato e exemplo, e veja a resposta melhorar.', facts: [['sparkles', '6 ingredientes'], ['gem', 'Teste real no Gemini']] },
     { name: 'Agentes e Excel', slide: 12, icon: 'bot', tag: 'Extra', r: 31, size: 1.2, cols: ['#4fe3ff', '#d8fbff', '#0f4c5c'], type: 2,
       text: 'Agentes que pensam, agem e conferem. Inclui o Claude automatizando uma planilha inteira do Excel.', facts: [['repeat', 'Ciclo do agente'], ['table', 'Claude + Excel']] },
-    { name: 'Vídeo', slide: 16, icon: 'film', tag: 'Bônus', r: 35.5, size: 1.0, cols: ['#ffb36b', '#fff3e3', '#7a3e0a'], type: 1,
-      text: 'Como criar e editar vídeos com o Claude Code usando HTML: cada pedido no chat vira uma edição.', facts: [['film', 'Editor simulado'], ['code', 'HyperFrames']] }
+    { name: 'Vídeo', slide: 16, icon: 'film', tag: 'Estúdio · 7 slides', r: 35.5, size: 1.0, cols: ['#ffb36b', '#fff3e3', '#7a3e0a'], type: 1,
+      text: 'O estúdio de vídeo: do título animado ao 3D, legendas, gráficos vindos de planilhas e vídeos em lote feitos por um agente.', facts: [['film', '7 slides com demos'], ['code', 'HyperFrames + three.js'], ['table', 'Planilha → vídeo']] }
   ];
   const PLANET_VS = /* glsl */`
     varying vec3 vN; varying vec3 vW; varying vec3 vO;
@@ -580,10 +733,34 @@ function init() {
     void main(){
       float r = length(vO.xy);
       float t = (r - 1.45) / 0.85;
-      float bands = 0.55 + 0.45 * sin(t * 40.0) * n3(vec3(t * 18.0, 1.0, 2.0));
-      float a = smoothstep(0.0, 0.08, t) * smoothstep(1.0, 0.85, t) * bands * 0.75;
+      // anéis finos de várias larguras e uma divisão escura (como a de Cassini em Saturno)
+      float bands = 0.45 + 0.3 * sin(t * 40.0) * n3(vec3(t * 18.0, 1.0, 2.0)) + 0.25 * n3(vec3(t * 90.0, 3.0, 1.0));
+      bands *= 1.0 - 0.85 * exp(-pow((t - 0.63) / 0.035, 2.0)) - 0.4 * exp(-pow((t - 0.86) / 0.02, 2.0));
+      float a = smoothstep(0.0, 0.08, t) * smoothstep(1.0, 0.85, t) * bands * 0.8;
       float lit = 0.35 + 0.65 * max(dot(normalize(vN), normalize(-vW)) * 0.5 + 0.5, 0.0);
       gl_FragColor = vec4(mix(uC1, uC2, t) * lit * (1.0 + uHover * 0.6), a);
+    }`;
+  // atmosfera: um brilho fino na borda do planeta, mais forte do lado iluminado pelo sol
+  const ATMO_FS = /* glsl */`
+    uniform vec3 uC1; uniform float uHover;
+    varying vec3 vN; varying vec3 vW; varying vec3 vO;
+    void main(){
+      vec3 n = normalize(vN), V = normalize(cameraPosition - vW), L = normalize(-vW);
+      float rim = pow(clamp(1.0 + dot(n, V) * 1.15, 0.0, 1.0), 3.0);
+      float lit = smoothstep(-0.35, 0.55, dot(n, L));
+      gl_FragColor = vec4(uC1 * rim * lit * (0.75 + uHover * 0.5), 1.0);
+    }`;
+  // nuvens que giram mais rápido que a superfície
+  const CLOUD_FS = /* glsl */`
+    uniform float uTime, uSeed;
+    varying vec3 vN; varying vec3 vW; varying vec3 vO;
+    ${NOISE}
+    void main(){
+      vec3 o = normalize(vO), n = normalize(vN), L = normalize(-vW);
+      float c = smoothstep(0.5, 0.78, fbm3(o * 4.2 + vec3(uTime * 0.03, 0.0, uSeed)));
+      c *= 0.6 + 0.4 * smoothstep(0.2, 0.8, abs(sin(o.y * 6.0 + fbm3(o * 2.0) * 3.0)));
+      float diff = smoothstep(-0.1, 0.5, dot(n, L));
+      gl_FragColor = vec4(vec3(0.95, 0.97, 1.0) * diff, c * 0.75);
     }`;
   function glowTex() {
     const s = 128, cv = document.createElement('canvas'); cv.width = cv.height = s;
@@ -609,6 +786,23 @@ function init() {
       }`
   }));
   sysScene.add(sun);
+  // coroa do sol: filamentos que saem da borda e se mexem devagar
+  const corona = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({
+    uniforms: { uTime: U.uTime },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `uniform float uTime; varying vec2 vUv; ${NOISE}
+      void main(){
+        vec2 p = (vUv - 0.5) * 2.0; float r = length(p), a = atan(p.y, p.x);
+        float rays = fbm3(vec3(cos(a) * 3.0, sin(a) * 3.0, r * 1.5 - uTime * 0.06));
+        rays = pow(rays, 2.0) * 1.8 + fbm3(vec3(cos(a) * 9.0, sin(a) * 9.0, uTime * 0.04)) * 0.5;
+        float I = smoothstep(0.27, 0.3, r) * pow(max(1.0 - (r - 0.28) / 0.72, 0.0), 3.0) * rays;
+        gl_FragColor = vec4(vec3(1.0, 0.6, 0.3) * I * 0.32, 1.0);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  corona.scale.setScalar(22);
+  corona.onBeforeRender = (r, s, cam) => corona.quaternion.copy(cam.quaternion);
+  sysScene.add(corona);
   [[24, '#ffb070', 0.95], [64, '#ff7a3d', 0.32]].forEach(([s, col, op]) => {
     const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: C(col), opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
     g.scale.setScalar(s); sysScene.add(g);
@@ -646,6 +840,35 @@ function init() {
     m.rotation.z = 0.25 - rand() * 0.5;
     m.userData.i = i;
     g.add(m);
+    // atmosfera (todos) e nuvens (planetas do tipo 2, com gelo nos polos)
+    const atmo = new THREE.Mesh(sphereGeo, new THREE.ShaderMaterial({
+      uniforms: { uC1: mat.uniforms.uC1, uHover: mat.uniforms.uHover },
+      vertexShader: PLANET_VS, fragmentShader: ATMO_FS, side: THREE.BackSide,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    }));
+    atmo.scale.setScalar(p.size * 1.1);
+    g.add(atmo);
+    if (p.type === 2 || i === 1) {
+      const cl = new THREE.Mesh(sphereGeo, new THREE.ShaderMaterial({
+        uniforms: { uTime: U.uTime, uSeed: { value: i * 5.1 } },
+        vertexShader: PLANET_VS, fragmentShader: CLOUD_FS, transparent: true, depthWrite: false
+      }));
+      cl.scale.setScalar(1.025);           // filho do planeta: já herda o tamanho dele
+      m.add(cl);
+    }
+    // luas: pequenas, crateradas, em órbitas inclinadas
+    p.moons = [];
+    const nMoons = [2, 0, 1, 1, 0, 2, 1, 0][i];
+    for (let k = 0; k < nMoons; k++) {
+      const mm = new THREE.Mesh(sphereGeo, new THREE.ShaderMaterial({
+        uniforms: { uC1: { value: C('#cfc8bf') }, uC2: { value: C('#f2eee8') }, uC3: { value: C('#5d5852') }, uType: { value: 1 }, uTime: U.uTime, uHover: { value: 0 }, uSeed: { value: i * 7.3 + k * 2.1 } },
+        vertexShader: PLANET_VS, fragmentShader: PLANET_FS
+      }));
+      const ms = p.size * (0.16 + rand() * 0.1);
+      mm.scale.setScalar(ms);
+      g.add(mm);
+      p.moons.push({ mesh: mm, d: p.size * (2.3 + k * 1.1) + (p.ring ? p.size * 1.2 : 0), ph: rand() * TAU, sp: 0.5 + rand() * 0.5, inc: (rand() - 0.5) * 0.5 });
+    }
     if (p.ring) {
       const rm = new THREE.ShaderMaterial({
         uniforms: { uC1: { value: C(p.cols[1]) }, uC2: { value: C(p.cols[0]) }, uHover: mat.uniforms.uHover },
@@ -765,9 +988,15 @@ function init() {
       vec2 pc = vec2(cos(a), sin(a)) * r;
       float n = fbm(pc * 1.05);
       n = mix(n, fbm(pc * 3.1 + 4.0), 0.45);
+      // filamentos finos ao longo da órbita: a rotação estica o gás em fios
+      float st = fbm(vec2(r * 7.0 + cos(a) * 1.4, sin(a) * 1.4 + r * 0.5));
+      n *= 0.5 + 0.8 * st;
       float t = clamp((r - RIN) / (ROUT - RIN), 0.0, 1.0);
-      vec3 c = mix(vec3(1.0, 0.96, 0.9), vec3(1.0, 0.64, 0.3), smoothstep(0.0, 0.35, t));
-      c = mix(c, vec3(0.78, 0.3, 0.32), smoothstep(0.4, 1.0, t));
+      // temperatura cai com a distância (T ~ r^-3/4): branco-azulado por dentro, laranja e vermelho por fora
+      float Tk = pow(RIN / max(r, RIN), 0.75);
+      vec3 c = mix(vec3(0.85, 0.22, 0.08), vec3(1.0, 0.62, 0.28), smoothstep(0.35, 0.62, Tk));
+      c = mix(c, vec3(1.0, 0.93, 0.84), smoothstep(0.62, 0.9, Tk));
+      c = mix(c, vec3(0.86, 0.9, 1.0), smoothstep(0.93, 1.0, Tk));
       float I = pow(1.0 - t, 1.8) * 2.3 + 0.2;
       vec3 vel = normalize(vec3(-q.z, 0.0, q.x));
       float beta = clamp(sqrt(0.5 / max(r - 1.0, 0.2)), 0.0, 0.72);
@@ -822,6 +1051,8 @@ function init() {
         if (wantBg) col += (1.0 - al) * background(normalize(v));
         float ringGlow = exp(-max(minR - 1.5, 0.0) * 5.0) * step(minR, 3.0);
         col += vec3(1.0, 0.82, 0.62) * ringGlow * 0.22 * (1.0 - al) * uLens;
+        // anel de fótons: luz que deu voltas no buraco negro antes de escapar (fino e nítido)
+        col += vec3(1.0, 0.88, 0.74) * exp(-pow((minR - 1.53) / 0.1, 2.0)) * 0.4 * (1.0 - al * 0.6) * uLens;
         if (uHighlight == 2.0) col += vec3(1.0, 0.78, 0.45) * exp(-pow((minR - 1.55) / 0.16, 2.0)) * 2.6;
       } else if (state == 1) {
         outA = 1.0;
@@ -884,10 +1115,16 @@ function init() {
      modo 0: galáxia (as estrelas já são escurecidas pela poeira)
      modo 1: nebulosa (o que está atrás é coberto pela nuvem)
      ========================================================= */
+  // o volume é calculado em meia resolução com um deslocamento por pixel (jitter):
+  // um filtro de 5 amostras bilineares (cobre 4×4 pixels do volume) remove o granulado
   const COMP_FS = /* glsl */`
-    uniform sampler2D tScene, tVol; uniform float uMode, uExposure; varying vec2 vUv;
+    uniform sampler2D tScene, tVol; uniform float uMode, uExposure; uniform vec2 uTexel; varying vec2 vUv;
     void main(){
-      vec4 s = texture2D(tScene, vUv), v = texture2D(tVol, vUv);
+      vec4 s = texture2D(tScene, vUv);
+      vec2 o = uTexel * 0.75;
+      vec4 v = texture2D(tVol, vUv) * 0.32
+             + (texture2D(tVol, vUv + vec2(o.x, o.y)) + texture2D(tVol, vUv + vec2(-o.x, o.y))
+              + texture2D(tVol, vUv + vec2(o.x, -o.y)) + texture2D(tVol, vUv + vec2(-o.x, -o.y))) * 0.17;
       vec3 e = 1.0 - exp(-v.rgb * uExposure);
       gl_FragColor = vec4(s.rgb * mix(1.0, v.a, uMode) + e, 1.0);
     }`;
@@ -898,12 +1135,17 @@ function init() {
       this.quad = new FullScreenQuad(mat);
       this.rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
       this.comp = new THREE.ShaderMaterial({
-        uniforms: { tScene: { value: null }, tVol: { value: this.rt.texture }, uMode: { value: mode }, uExposure: { value: mode ? 1.25 : 1.55 } },
+        uniforms: { tScene: { value: null }, tVol: { value: this.rt.texture }, uMode: { value: mode }, uExposure: { value: mode ? 1.25 : 1.55 }, uTexel: { value: new THREE.Vector2(1, 1) } },
         vertexShader: FSQ_VS, fragmentShader: COMP_FS, depthTest: false, depthWrite: false
       });
       this.cq = new FullScreenQuad(this.comp);
     }
-    setSize(w, h) { this.h = Math.max(1, Math.round(h * this.scale)); this.rt.setSize(Math.max(1, Math.round(w * this.scale)), this.h); }
+    setSize(w, h) {
+      const rw = Math.max(1, Math.round(w * this.scale));
+      this.h = Math.max(1, Math.round(h * this.scale));
+      this.rt.setSize(rw, this.h);
+      this.comp.uniforms.uTexel.value.set(1 / rw, 1 / this.h);
+    }
     march(renderer) {
       const u = this.mat.uniforms, cam = this.cam;
       cam.updateMatrixWorld();
@@ -989,8 +1231,8 @@ function init() {
   const bhPass = new RenderPass(bhScene, camera);
   bhPass.clear = false;
   composer.addPass(bhPass);
-  const BLOOM = 0.55;
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM, 0.55, 0.62);
+  const BLOOM = 0.7;
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM, 0.62, 0.58);
   composer.addPass(bloom);
 
   const composerIn = new EffectComposer(renderer);
@@ -1002,8 +1244,7 @@ function init() {
   const composerSys = new EffectComposer(renderer);
   composerSys.addPass(new RenderPass(scene, bgCam));
   const volS = new VolumePass(bgCam, galMarch, 0, VOL_SCALE);
-  volS.comp.uniforms.uExposure.value = 2.3;     // de dentro do disco a faixa da galáxia é mais fraca
-  composerSys.addPass(volS);
+  composerSys.addPass(volS);                    // a exposição é ajustada a cada quadro (ver o loop)
   const sysPass = new RenderPass(sysScene, sysCam);
   sysPass.clear = false; sysPass.clearDepth = true;
   composerSys.addPass(sysPass);
@@ -1028,7 +1269,8 @@ function init() {
   function resize() {
     W = Math.max(1, innerWidth); H = Math.max(1, innerHeight);
     // tela em pé: a câmera inicial fica mais longe para a galáxia caber
-    HOME_POS.copy(HOME_BASE).multiplyScalar(clamp(1.25 / (W / H), 1, 1.9));
+    HOME_POS.copy(HOME_BASE).multiplyScalar(clamp(1.3 / (W / H), 1, 2.6));
+    controls.maxDistance = HOME_POS.length() * 1.3;
     renderer.setPixelRatio(pr);
     renderer.setSize(W, H, false);
     composer.setPixelRatio(pr); composer.setSize(W, H);
@@ -1091,7 +1333,7 @@ function init() {
   // ponto do braço mais próximo (em coordenadas da galáxia), ou null
   function armAt(local) {
     const r = Math.hypot(local.x, local.z);
-    if (r < 2.3 || r > 12.2) return null;
+    if (r < R0 * 0.85 || r > 12.8) return null;
     const th = Math.atan2(local.z, local.x);
     let best = 1e9, bk = 0;
     for (let k = 0; k < 2; k++) {
@@ -1183,12 +1425,6 @@ function init() {
     fly.cam.lookAt(fly.ctrl.target);
     if (t >= 1) { const d = fly.done; fly = null; d && d(); }
   }
-  function flash(kind) {
-    const f = $('#gx-flash');
-    f.classList.remove('go', 'neb'); void f.offsetWidth;
-    if (kind) f.classList.add(kind);
-    f.classList.add('go');
-  }
 
   /* =========================================================
      Viagem: braço da galáxia → nebulosa → sistema planetário
@@ -1249,9 +1485,9 @@ function init() {
     const d = clamp(40 / (Math.tan(THREE.MathUtils.degToRad(25)) * Math.min(W / H, 1.6)), 60, 150);
     return hF.clone().multiplyScalar(-Math.cos(0.45)).addScaledVector(UP, Math.sin(0.45)).multiplyScalar(d);
   }
-  function startArrival() {
+  function startArrival(t0 = performance.now()) {   // t0: quando a fase anterior terminou de fato (o resto do quadro não se perde)
     view = 'system';
-    trip.phase = 'arrive'; trip.t0 = performance.now(); trip.ms = reduce ? 1 : T_ARR * 1000;
+    trip.phase = 'arrive'; trip.t0 = t0; trip.ms = reduce ? 1 : T_ARR * 1000;
     trip.a0 = trip.F.clone().multiplyScalar(-ARRIVE_D);
     trip.a1 = sysHomePos();
     trip.tilt = 0;
@@ -1272,14 +1508,14 @@ function init() {
     $('#gx-bubble').innerHTML = 'Voltando: vamos <b>sair do sistema</b>, atravessar a nebulosa e ver a galáxia inteira de novo.';
     caption('leave', 'De volta', 'Saindo do sistema dos temas', 'pela nebulosa, até ver a galáxia inteira');
   }
-  function startOut() {
+  function startOut(t0 = performance.now()) {
     view = 'galaxy';
     const { Q, F } = trip;
     trip.curve = tripCurve(HOME_POS, Q, F);
     trip.L = trip.curve.getLength();
     const vLeave = 3 * trip.l0.distanceTo(trip.a0) * SYS_SCALE / T_LEAVE;
     trip.m1 = clamp(vLeave * T_OUT / trip.L, 0.04, 1.6);
-    trip.phase = 'out'; trip.t0 = performance.now(); trip.ms = reduce ? 1 : T_OUT * 1000;
+    trip.phase = 'out'; trip.t0 = t0; trip.ms = reduce ? 1 : T_OUT * 1000;
     camera.position.copy(Q); camera.lookAt(tmpT.copy(Q).addScaledVector(F, 3));
   }
   const tmpT = new THREE.Vector3(), tmpA = new THREE.Vector3(), qTilt = new THREE.Quaternion();
@@ -1294,7 +1530,7 @@ function init() {
       tmpT.lerpVectors(trip.T0, trip.P, w1).lerp(tmpA.copy(trip.Q).addScaledVector(trip.F, 3), w2);
       camera.lookAt(tmpT); controls.target.copy(tmpT);
       setStarView(1 - clamp((camera.position.distanceTo(trip.Q) - 0.6) / 9, 0, 1));
-      if (t >= 1) { camera.position.copy(trip.Q); camera.lookAt(tmpT.copy(trip.Q).addScaledVector(trip.F, 3)); startArrival(); }
+      if (t >= 1) { camera.position.copy(trip.Q); camera.lookAt(tmpT.copy(trip.Q).addScaledVector(trip.F, 3)); startArrival(trip.t0 + trip.ms); stepTrip(); }
     } else if (trip.phase === 'arrive') {
       const k = 1 - Math.pow(1 - t, 3);
       sysCam.position.lerpVectors(trip.a0, trip.a1, k);
@@ -1311,7 +1547,7 @@ function init() {
       sysCam.position.lerpVectors(trip.l0, trip.a0, k);
       sysCam.lookAt(ORIGIN);
       trip.tilt = trip.tilt0 * (1 - ease(t));
-      if (t >= 1) startOut();
+      if (t >= 1) { startOut(trip.t0 + trip.ms); stepTrip(); }
     } else if (trip.phase === 'out') {
       // a câmera recua pelo mesmo caminho, olhando para trás, e termina vendo a galáxia inteira
       const u = clamp(hermite(1 - t, trip.m1), 0, 1);
@@ -1419,6 +1655,21 @@ function init() {
   const bindToggle = (id, key) => $(id).addEventListener('change', e => { fullMat.uniforms[key].value = e.target.checked ? 1 : 0; bbMat.uniforms[key].value = e.target.checked ? 1 : 0; });
   bindToggle('#gxb-lens', 'uLens'); bindToggle('#gxb-disk', 'uDisk'); bindToggle('#gxb-doppler', 'uDoppler');
 
+  /* Transição suave: a última imagem de uma cena fica por cima e some aos poucos
+     enquanto a câmera continua o mesmo movimento na outra cena (sem clarão, sem corte). */
+  const xfade = document.createElement('canvas');
+  xfade.className = 'gx-xfade';
+  canvas.after(xfade);
+  const xctx = xfade.getContext('2d');
+  function crossfade(renderNow) {
+    if (reduce) return;
+    renderNow();                                   // desenha agora para poder copiar a imagem
+    xfade.width = canvas.width; xfade.height = canvas.height;
+    xctx.drawImage(canvas, 0, 0);
+    xfade.classList.remove('out'); xfade.classList.add('on');
+    requestAnimationFrame(() => requestAnimationFrame(() => { xfade.classList.add('out'); xfade.classList.remove('on'); }));
+  }
+  let insideAnim = null;                           // aproximação contínua logo depois de entrar
   function enterBH() {
     if (mode !== 'galaxy') return;
     setMode('warp');
@@ -1426,33 +1677,34 @@ function init() {
     const dir = camera.position.clone().sub(controls.target).normalize();
     if (Math.abs(dir.y) < 0.15) dir.y = 0.15;
     dir.normalize();
-    const near = dir.clone().multiplyScalar(26 * BH_SCALE);
-    flyRig(camera, controls, near, ORIGIN, 2200, () => {
-      flash();
-      setTimeout(() => {
-        captureSky();
-        const local = near.clone().divideScalar(BH_SCALE).applyMatrix3(TILT_INV);
-        const d0 = W / H < 0.8 ? 34 : 22; // tela em pé: começa mais longe para caber o disco
-        insideCam.dist = d0; setDist(d0);
-        insideCam.az = Math.atan2(local.x, local.z);
-        insideCam.el = clamp(Math.asin(clamp(local.y / local.length(), -1, 1)), 0.1, 0.22);
-        setPart(0); fullMat.uniforms.uHighlight.value = 0;
-        view = 'inside';
-        setMode('inside');
-        canvas.focus({ preventScroll: true });
-      }, reduce ? 0 : 260);
+    const near = dir.clone().multiplyScalar(30 * BH_SCALE);
+    flyRig(camera, controls, near, ORIGIN, 2600, () => {
+      crossfade(() => composer.render(0));
+      captureSky();
+      const local = near.clone().divideScalar(BH_SCALE).applyMatrix3(TILT_INV);
+      const d0 = W / H < 0.8 ? 34 : 22; // tela em pé: termina mais longe para caber o disco
+      insideCam.az = Math.atan2(local.x, local.z);
+      insideCam.el = clamp(Math.asin(clamp(local.y / local.length(), -1, 1)), 0.1, 0.22);
+      const el0 = Math.asin(clamp(local.y / local.length(), -1, 1));
+      setDist(30);
+      insideAnim = { t0: performance.now(), ms: reduce ? 1 : 2400, d0: 30, d1: d0, e0: el0, e1: insideCam.el };
+      insideCam.el = el0;
+      setPart(0); fullMat.uniforms.uHighlight.value = 0;
+      view = 'inside';
+      setMode('inside');
+      canvas.focus({ preventScroll: true });
     });
   }
   function exitBH() {
     if (mode !== 'inside') return;
-    stopDive();
-    flash();
+    stopDive(); insideAnim = null;
+    crossfade(() => composerIn.render(0));
     const local = new THREE.Vector3(Math.sin(insideCam.az) * Math.cos(insideCam.el), Math.sin(insideCam.el), Math.cos(insideCam.az) * Math.cos(insideCam.el)).multiplyScalar(Math.max(insideCam.dist, 14));
     const world = local.applyMatrix3(TILT).multiplyScalar(BH_SCALE);
     camera.position.copy(world); controls.target.set(0, 0, 0); camera.lookAt(ORIGIN);
     view = 'galaxy';
     setMode('galaxy');
-    flyRig(camera, controls, HOME_POS, ORIGIN, 2200, () => { controls.enabled = true; controls.autoRotate = !reduce; });
+    flyRig(camera, controls, HOME_POS, ORIGIN, 2800, () => { controls.enabled = true; controls.autoRotate = !reduce; });
   }
   $('#gx-enter').addEventListener('click', enterBH);
   $('#gxb-exit').addEventListener('click', exitBH);
@@ -1529,6 +1781,11 @@ function init() {
       p.hover += (h - p.hover) * Math.min(1, dt * 8);
       p.mat.uniforms.uHover.value = p.hover;
       p.group.scale.setScalar(1 + p.hover * 0.12);
+      p.moons.forEach(mn => {
+        if (!reduce) mn.ph += mn.sp * dt;
+        mn.mesh.position.set(Math.cos(mn.ph) * mn.d, Math.sin(mn.ph) * mn.d * mn.inc, Math.sin(mn.ph) * mn.d);
+        mn.mesh.rotation.y += dt * 0.2;
+      });
     });
     belt.rotation.y += dt * 0.01;
     sun.rotation.y += dt * 0.04;
@@ -1549,7 +1806,7 @@ function init() {
     cam.getWorldDirection(gDir);
     if (trip) {
       const inN = nebOn && gPos.distanceTo(trip.Cn) < NEB_R * 0.95;
-      if (inN && !trip.inNeb && trip.phase !== 'leave' && trip.phase !== 'out') caption('neb', 'Nebulosa de emissão', 'Um berçário de estrelas', 'o hidrogênio brilha em rosa; o oxigênio, em verde-azulado', 3400);
+      if (inN && !trip.inNeb && trip.phase !== 'leave' && trip.phase !== 'out') caption('neb', ...NEB_KINDS[Math.max(0, nebKind)], 3400);
       trip.inNeb = inN; trip.sawNeb = trip.sawNeb || inN;
     }
     if (rec) rec.push({ t: performance.now(), view, mode, phase: trip ? trip.phase : null, p: gPos.toArray(), d: gDir.toArray(), inNeb: !!(trip && trip.inNeb) });
@@ -1570,7 +1827,8 @@ function init() {
       if (slowFrames >= 2) {
         slowFrames = 0;
         if (view === 'inside' && insideScale > 0.4) { insideScale = Math.max(0.4, insideScale - 0.15); resize(); }
-        else if (view !== 'inside' && pr > 0.75) { pr = Math.max(0.75, pr - 0.25); resize(); }
+        // nunca abaixo de 1 no computador: abaixo disso a imagem fica borrada e granulada
+        else if (view !== 'inside' && pr > PR_MIN) { pr = Math.max(PR_MIN, pr - 0.2); resize(); }
       }
       frames = 0; fpsT = 0;
     }
@@ -1593,6 +1851,12 @@ function init() {
     nebG.enabled = nebS.enabled = nebStarsG.enabled = nebStarsS.enabled = nebOn;
 
     if (view === 'inside') {
+      if (insideAnim) {
+        const t = clamp((performance.now() - insideAnim.t0) / insideAnim.ms, 0, 1), k = 1 - Math.pow(1 - t, 3);
+        setDist(insideAnim.d0 + (insideAnim.d1 - insideAnim.d0) * k);
+        insideCam.el = insideAnim.e0 + (insideAnim.e1 - insideAnim.e0) * k;
+        if (t >= 1 || down || dive) insideAnim = null;
+      }
       if (dive) {
         setDist(insideCam.dist * Math.exp(-dive * dt * 0.35));
         if (insideCam.dist <= DIST_MIN + 0.001 || insideCam.dist >= DIST_MAX - 0.01) stopDive();
@@ -1624,13 +1888,31 @@ function init() {
         bgCam.quaternion.copy(qTilt).multiply(sysCam.quaternion);
       }
       trackGalaxyCam();
+      // céu do braço: entra aos poucos na chegada e sai aos poucos na partida
+      let sk = 1;
+      if (trip && trip.phase === 'arrive') sk = sstep(0.05, 0.65, (performance.now() - trip.t0) / trip.ms);
+      else if (trip && trip.phase === 'leave') sk = 1 - sstep(0.2, 0.9, (performance.now() - trip.t0) / trip.ms);
+      armSky.visible = sk > 0.001;
+      armSky.position.copy(bgCam.position);
+      armSkyMat.uniforms.uGalInv.value.copy(galInv);
+      tmp.copy(bgCam.position).applyMatrix4(galInv);
+      armSkyMat.uniforms.uCtr.value.set(-tmp.x, -tmp.z).normalize();
+      armSkyMat.uniforms.uAmt.value = sk;
+      // o centro da galáxia, visto de dentro do disco, vira um brilho suave (não uma faixa estourada)
+      galMarch.uniforms.uBulge.value = 1 - 0.92 * sk;
+      volS.comp.uniforms.uExposure.value = 1.55 - 1.0 * sk;
       composerSys.render(dt);
+      armSky.visible = false; galMarch.uniforms.uBulge.value = 1;
       afterRender();
       return;
     }
 
     if (mode === 'galaxy' && !reduce) galaxy.rotation.y -= dt * 0.022;
     if (controls.enabled) controls.update();
+    // de longe, lente fechada (sem distorção de perspectiva, como numa foto de telescópio);
+    // de perto, lente aberta (sensação de estar dentro da galáxia)
+    const fovT = 50 - 38.4 * sstep(14, 92, camera.position.length());
+    if (Math.abs(camera.fov - fovT) > 0.02) { camera.fov = fovT; camera.updateProjectionMatrix(); }
     updateHover();
     U.uMouse.value.lerp(mouseTarget.x > 900 ? U.uMouse.value : mouseTarget, Math.min(1, dt * 10));
     U.uMouseOn.value += ((pointerIn && mouseTarget.x < 900 && mode === 'galaxy' ? 1 : 0) - U.uMouseOn.value) * Math.min(1, dt * 5);
@@ -1650,7 +1932,10 @@ function init() {
     lensPass.uniforms.uR.value = tmp.z < 1 ? rE * bhF : 0;
 
     updateGalaxyLabels();
+    // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
+    galMarch.uniforms.uBulge.value = 0.45 + 0.55 * sstep(10, 70, camD);
     composer.render(dt);
+    galMarch.uniforms.uBulge.value = 1;
     afterRender();
   }
 
@@ -1686,13 +1971,14 @@ function init() {
   }
   const testApi = {
     state: () => ({
-      mode, view, phase: trip ? trip.phase : null, nebOn, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N,
+      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N,
       cam: gPos.toArray(), caption: cap && cap.classList.contains('on') ? cap.textContent : '',
       planetLabels: PLANETS.filter(p => !p.label.classList.contains('off')).length,
       hero: !$('#gx-hero').hidden, sysPanel: !$('#gx-sys').hidden, planetPanel: !$('#gx-planet').hidden, bhPanel: !$('#gx-bh').hidden,
       planetTitle: $('#gxp-title').textContent
     }),
     // ponto de um braço na tela (para o teste clicar como uma pessoa)
+    armAngle,
     armScreen(k, r) {
       const a = armAngle(r, k), w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
       return { x: (w.x + 1) / 2 * W, y: (1 - w.y) / 2 * H, onScreen: Math.abs(w.x) < 1 && Math.abs(w.y) < 1 && w.z < 1 };
