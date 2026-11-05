@@ -8,13 +8,13 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
 
-- **Galáxia espiral barrada volumétrica**, vista inclinada, inspirada nas fotos do Hubble (como a NGC 1300): uma barra central alongada e dourada, dois braços azuis finos e abertos que saem das pontas da barra, com contas de estrelas jovens, brilho azul difuso, nós rosados de gás (HII), nebulosas coloridas e faixas escuras de poeira.
+- **Galáxia espiral barrada volumétrica**, vista inclinada, desenhada a partir de fotos reais do Hubble (M51, M74 e NGC 1300): um bojo oval dourado com uma barra curta, e dois braços que nascem nas pontas da barra, abraçam o centro e vão se abrindo para fora (o ângulo de abertura passa de ~10° para ~18°, como nas galáxias reais). Cada braço tem o perfil de uma onda de densidade: a faixa de poeira fica na borda de dentro, logo depois vêm as regiões HII rosadas e os aglomerados de estrelas azuis, e o brilho azul se espalha para fora, com esporas de poeira atravessando o braço. Entre os braços há a luz fraca das estrelas velhas, como numa foto de verdade.
   - Um mapa da galáxia vista de cima é calculado uma vez na placa de vídeo.
   - A cada quadro, cada raio de luz atravessa o disco (*raymarching*): soma o brilho do gás e perde luz na poeira.
   - **150 mil estrelas** são sorteadas a partir do mesmo mapa e ficam mais escuras quando há poeira entre elas e a câmera. As estrelas fogem do cursor.
 - **Clique num braço da galáxia** (ou no marcador "Sistema dos temas"): um único voo de câmera, sem cortes, como nos documentários:
   1. sobrevoa o braço e mergulha no disco;
-  2. atravessa uma **nebulosa volumétrica**, e cada viagem mostra um tipo diferente: emissão, reflexão, nebulosa planetária, pilares de poeira e remanescente de supernova;
+  2. atravessa uma **nebulosa volumétrica**, e cada viagem mostra um dos **7 tipos**, com cores das linhas de emissão reais (hidrogênio vermelho, oxigênio verde-azulado, enxofre laranja): emissão (como Órion, com a cavidade aberta pelas estrelas), reflexão (como as Plêiades), planetária (como a do Anel), pilares de poeira (como os Pilares da Criação), remanescente de supernova (como o Véu), nebulosa escura (como a Cabeça de Cavalo) e bipolar (como a Formiga);
   3. chega a um **sistema planetário** com o braço da galáxia ao fundo: estrelas, nebulosas e poeira, com o brilho do centro suavizado.
   - Legendas no estilo de documentário explicam cada trecho. A volta faz o caminho inverso até ver a galáxia inteira.
 - **8 planetas**, um por tema da apresentação, girando em volta de um sol com coroa, com cinturão de asteroides, atmosferas, nuvens, anéis com divisões e luas. Clique num planeta (ou na lista do painel) para ver o resumo e ir direto para o slide dele.
@@ -26,8 +26,10 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 - O botão **Iniciar**, no canto inferior direito (ou `Enter`), abre a apresentação. O ícone de espiral no menu lateral volta para a galáxia.
 - Endereços com slide (`…/#5`) pulam a abertura. Em computadores sem WebGL, a apresentação abre normalmente.
 - A imagem volumétrica é suavizada para não ficar granulada, e a qualidade se ajusta sozinha ao computador para manter a animação fluida.
+- **Exposição como numa câmera**: a luz forte é comprimida aos poucos pelo canal de cor mais forte, então nada estoura em branco, nem de perto, no mergulho no braço.
+- Cada tipo de nebulosa é um shader separado, compilado em segundo plano enquanto a abertura está na tela: a viagem não trava no primeiro uso.
 
-**Referências da galáxia e da nebulosa:** [ondas de densidade (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/), [Gaia Sky: nebulosas volumétricas](https://gaiasky.space/news/2024/2024-03-01-volumetric-nebulae/), [poeira cósmica volumétrica (Godot Shaders)](https://godotshaders.com/shader/volumetric-cosmic-dust/), [Volumetric Rendering (wallisc)](https://github.com/wallisc/VolumetricRendering), fotos da [M51 pelo Hubble (ESA/Hubble)](https://esahubble.org/images/heic0506a/) e as animações de aproximação do [ESO (Órion, Carina)](https://www.eso.org/public/videos/).
+**Referências da galáxia e da nebulosa:** [M74 pelo Hubble (ESA/Hubble)](https://esahubble.org/news/heic0719/), [ondas de densidade (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/), [galáxias procedurais do Gaia Sky](https://gaia.ari.uni-heidelberg.de/gaiasky/docs/master/Procedural-galaxies.html), [nebulosas e auroras volumétricas (Toni Sagristà)](https://tonisagrista.com/blog/2024/rendering-aurorae-nebulae/), [Gaia Sky: nebulosas volumétricas](https://gaiasky.space/news/2024/2024-03-01-volumetric-nebulae/), [poeira cósmica volumétrica (Godot Shaders)](https://godotshaders.com/shader/volumetric-cosmic-dust/), [Volumetric Rendering (wallisc)](https://github.com/wallisc/VolumetricRendering), fotos da [M51 pelo Hubble (ESA/Hubble)](https://esahubble.org/images/heic0506a/) e as animações de aproximação do [ESO (Órion, Carina)](https://www.eso.org/public/videos/).
 
 **Referências do buraco negro e das estrelas:** [javascript-blackhole](https://github.com/flightlesstux/javascript-blackhole), [Gargantua em three.js](https://discourse.threejs.org/t/gargantua-a-ray-traced-black-hole-in-my-portfolio-webgl-one-draw-call/94960), [oseiskar/black-hole](https://github.com/oseiskar/black-hole), [Galaxy Generator (Three.js Journey)](https://www.threejs-journey.com/lessons/galaxy-generator), [Particles Galaxy (Codrops)](https://tympanus.net/codrops/2022/06/21/creating-a-particles-galaxy-with-three-js).
 
@@ -93,7 +95,7 @@ npx http-server . -p 5173
 
 Os testes abrem o site num Chrome automático, clicam como uma pessoa e conferem, no computador e no celular:
 
-- `galaxy.test.mjs` (46 verificações): centro brilhante, dois braços, contraste e cores medidos nos pixels; o voo atravessa um tipo diferente de nebulosa a cada viagem, sem cortes; o fundo do sistema mostra o braço sem a faixa estourada; o buraco negro entra com transição suave; planetas, botão Iniciar e volta pela barra lateral;
+- `galaxy.test.mjs` (49 verificações): nada estoura em branco na abertura nem no mergulho no braço; 7 tipos de nebulosa; centro brilhante, dois braços, contraste e cores medidos nos pixels; o voo atravessa um tipo diferente de nebulosa a cada viagem, sem cortes; o fundo do sistema mostra o braço sem a faixa estourada; o buraco negro entra com transição suave; planetas, botão Iniciar e volta pela barra lateral;
 - `slides.test.mjs` (47 verificações): os 27 slides pelo teclado, nada saindo da tela, o *Saiba mais* dos tópicos 1.1 a 1.6 (abas, números, teclado, fechar), atalhos da barra lateral e da barra de baixo, a automação de dados separada do vídeo, todas as demos do estúdio (etapas, níveis, 3D, botões de copiar) e o console sem erros.
 
 ```bash

@@ -105,16 +105,19 @@ function init() {
   /* =========================================================
      Galáxia espiral barrada (como a NGC 1300)
      Uma barra de estrelas velhas atravessa o centro; os dois braços
-     nascem nas pontas da barra e seguem uma espiral logarítmica:
-       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1, R0 = ponta da barra)
+     nascem nas pontas da barra e seguem uma espiral que se abre aos poucos.
      A galáxia gira como um bloco (padrão de onda de densidade),
      então os braços não se enrolam com o tempo.
      ========================================================= */
-  const KS = 2.9, R0 = 3.1, R_MAX = 13;     // R0 = meio comprimento da barra
+  // Enrolamento dos braços: perto da barra eles são fechados (abraçam o bojo, ângulo de ~10°)
+  // e vão se abrindo para fora (~18°, como a M51 e a M74). dθ/d(ln r) = K(u), u = ln(r/R0):
+  //   K(u) = K_OUT + (K_IN − K_OUT)·e^(−u/U0)   →   θ(u) = K_OUT·u + (K_IN − K_OUT)·U0·(1 − e^(−u/U0))
+  const K_IN = 5.6, K_OUT = 3.0, U0 = 0.5, R0 = 2.6, R_MAX = 13;     // R0 = meio comprimento da barra
   const SPAN = 28;                         // o mapa cobre de -14 a 14
   const MAP_RES = lowEnd ? 1024 : 2048;
   const HE = 0.13, HD = 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira
-  const armAngle = (r, k) => k * Math.PI + KS * Math.log(r / R0);
+  const wind = u => K_OUT * u + (K_IN - K_OUT) * U0 * (1 - Math.exp(-u / U0));
+  const armAngle = (r, k) => k * Math.PI + wind(Math.log(Math.max(r, R0 * 0.6) / R0));
   const galaxy = new THREE.Group();
   scene.add(galaxy);
 
@@ -151,49 +154,93 @@ function init() {
     fragmentShader: /* glsl */`
       uniform float uLDR; varying vec2 vUv;
       ${GLSL_NOISE}
-      const float KS = ${KS.toFixed(3)}, R0 = ${R0.toFixed(3)};
+      const float K_IN = ${K_IN.toFixed(3)}, K_OUT = ${K_OUT.toFixed(3)}, U0 = ${U0.toFixed(3)}, R0 = ${R0.toFixed(3)};
+      const float PI = 3.14159265;
+      // Voronoi (distância ao ponto mais próximo e um número sorteado da célula):
+      // aglomerados de estrelas e regiões HII aparecem como "contas" separadas, e não como névoa
+      vec2 vor(vec2 x){
+        vec2 i = floor(x), f = fract(x); float d = 9.0, id = 0.0;
+        for (int y = -1; y <= 1; y++) for (int xx = -1; xx <= 1; xx++){
+          vec2 g = vec2(float(xx), float(y)), c = i + g;
+          vec2 o = vec2(h2(c), h2(c + 17.3));
+          vec2 r = g + o - f; float dd = dot(r, r);
+          if (dd < d){ d = dd; id = h2(c + 41.7); }
+        }
+        return vec2(sqrt(d), id);
+      }
+      float ridge(float n){ return 1.0 - abs(2.0 * n - 1.0); }
       void main(){
         vec2 p = (vUv - 0.5) * ${SPAN.toFixed(1)};
         float r0 = length(p);
-        // distorção suave: braços irregulares, como nas galáxias reais
-        vec2 wv = vec2(fb2(p * 0.38 + 3.1), fb2(p * 0.38 - 8.7)) - 0.5;
-        vec2 q = p + wv * 0.55 * smoothstep(2.0, 5.0, r0);
-        float r = max(length(q), 0.02), th = atan(q.y, q.x), lr = log(r / R0);
-        float phi = th - KS * lr;                       // coordenada da espiral (0 = crista do braço)
-        float armC = 0.5 + 0.5 * cos(2.0 * phi);
-        float inner = smoothstep(R0 * 0.8, R0 * 1.3, r0), outer = smoothstep(13.9, 10.2, r0);
+        // os braços reais não são curvas perfeitas: uma distorção lenta deixa cada trecho com seu desenho
+        vec2 wv = vec2(fb2(p * 0.32 + 3.1), fb2(p * 0.32 - 8.7)) - 0.5;
+        vec2 q = p + wv * 0.7 * smoothstep(R0, R0 + 3.0, r0);
+        float r = max(length(q), 0.02), th = atan(q.y, q.x);
+        float u = log(max(r, R0 * 0.6) / R0);
+        float K = K_OUT + (K_IN - K_OUT) * exp(-u / U0);
+        float phi = th - (K_OUT * u + (K_IN - K_OUT) * U0 * (1.0 - exp(-u / U0)));
+        float dphi = mod(phi + PI * 0.5, PI) - PI * 0.5;            // distância angular até o braço mais próximo
+        float sinP = 1.0 / sqrt(1.0 + K * K);                        // seno do ângulo de abertura
+        float dA = r * dphi * sinP;                                  // distância perpendicular ao braço (> 0 = lado de dentro)
+        float w = 0.3 + 0.06 * r;                                    // o braço fica mais largo para fora
+        float armK = mod(floor((phi + PI * 0.5) / PI), 2.0);         // qual dos dois braços
+        // coordenadas presas ao braço: ao longo (s) e através (dA), para o ruído seguir o desenho do braço
+        float s = u * 9.0 + armK * 37.0;
+        float inner = smoothstep(R0 * 0.85, R0 * 1.25, r0), outer = smoothstep(13.8, 9.5, r0);
         float env = inner * outer;
-        // braços finos: uma crista estreita e um corpo um pouco mais largo
-        float ridge = pow(armC, 14.0), body = pow(armC, 5.0), wide = pow(armC, 2.0);
-        // contas de estrelas: aglomerados brilhantes em fila ao longo do braço
-        float bead = smoothstep(0.44, 0.8, fb2(p * 2.4 + 5.0) * 0.75 + fb2(p * 6.5 - 2.0) * 0.25);
-        float fine = fb2(p * 9.0 + 1.3);
-        float br = mix(0.55, 1.0, smoothstep(R0, 5.0, r0)) * exp(-r0 / 14.0);
-        // barra: estrelas velhas, alongada no eixo x (os braços saem das suas pontas)
-        float bar = exp(-(p.x * p.x) / (R0 * R0 * 0.5) - (p.y * p.y) / 0.42);
-        float lens = exp(-r0 * r0 / 2.2);                 // brilho redondo em volta da barra
-        // disco de estrelas velhas: forte no centro e quase nada entre os braços
-        float disk = exp(-r0 / 1.7) * 0.9 + 0.05 * exp(-r0 / 6.0) * (0.4 + 0.6 * wide) * outer;
-        // regiões HII (rosadas): poucas, pequenas, presas às contas do braço
-        float kn = fb2(p * 3.6 + 11.0) * 0.7 + fine * 0.3;
-        float hii = smoothstep(0.57, 0.72, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.1)), 8.0) * env;
-        vec3 OLD = vec3(1.0, 0.86, 0.66), BAR = vec3(1.0, 0.93, 0.78), YOUNG = vec3(0.5, 0.68, 1.0), HII = vec3(1.0, 0.34, 0.62);
-        vec3 E = OLD * disk * 0.3 + BAR * (bar * 0.36 + lens * 0.09)
-               + YOUNG * (ridge * (0.25 + 1.5 * bead) + body * 0.22 * (0.6 + 0.8 * bead)) * env * br
-               + vec3(0.78, 0.86, 1.0) * ridge * bead * fine * 0.5 * env * br      // estrelas azuis mais brilhantes
-               + vec3(0.24, 0.42, 1.0) * wide * 0.3 * env * exp(-r0 / 10.0)       // halo azul difuso
-               + HII * hii * 1.15;
-        E *= smoothstep(14.0, 12.4, r0);
-        // poeira: faixa fina na borda interna dos braços e duas faixas ao longo da barra
-        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.32)), 22.0);
-        vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);
-        float laneN = fb3(sp * 1.9 + 4.0, 4);
-        float barLane = exp(-pow((abs(p.y) - 0.42) / 0.09, 2.0)) * smoothstep(R0 * 1.1, R0 * 0.4, abs(p.x)) * smoothstep(0.15, 0.6, abs(p.x));
-        float ridgeD = pow(1.0 - abs(2.0 * fb2(p * 2.6 + 1.0) - 1.0), 8.0);
-        float dust = lane * (0.3 + 1.3 * smoothstep(0.3, 0.7, laneN)) * env
-                   + barLane * 0.7
-                   + ridgeD * 0.22 * wide * env
-                   + 0.04 * exp(-r0 / 4.0);
+        // cada braço muda de brilho ao longo do caminho (trechos fortes e fracos, como na M51)
+        float along = 0.55 + 0.9 * fb2(vec2(s * 0.35, armK * 7.0 + 1.0));
+        // ---- estrelas velhas: disco exponencial contínuo (o espaço entre os braços não é vazio) ----
+        float disk = exp(-r0 / 3.3) * smoothstep(13.5, 8.0, r0);
+        // ---- barra: oval largo e suave (não uma faixa fina), com as pontas um pouco mais claras ----
+        vec2 bp = vec2(p.x / (R0 * 0.95), p.y / 0.95);
+        float bar = exp(-pow(dot(bp, bp), 0.85) * 2.2);
+        float ansae = exp(-pow((abs(p.x) - R0 * 0.82) / 0.5, 2.0) - p.y * p.y / 0.35) * 0.35;
+        // ---- braço: perfil assimétrico. O gás entra pelo lado de dentro, onde fica a poeira;
+        // as estrelas novas nascem logo depois e se espalham para o lado de fora ----
+        float x = dA / w;
+        float young = exp(-pow((x + 0.15) / (x > -0.15 ? 0.75 : 1.5), 2.0));
+        float haze = exp(-pow((x + 0.4) / 2.8, 2.0));                // brilho azul difuso em volta
+        // ---- contas: aglomerados de estrelas azuis e regiões HII rosadas, em fila no braço ----
+        vec2 cs = vec2(s * 1.3, x * 1.1);
+        vec2 v1 = vor(cs + vec2(0.0, armK * 3.0));
+        float on1 = step(0.45, v1.y);
+        float clump = on1 * exp(-pow(v1.x / (0.18 + 0.12 * v1.y), 2.0)) * exp(-pow((x + 0.2) / 0.9, 2.0));
+        vec2 sc = p * 3.4 + 7.0, sf = fract(sc) - 0.5 - (vec2(h2(floor(sc)), h2(floor(sc) + 5.1)) - 0.5) * 0.6;
+        float spark = step(0.62, h2(floor(sc) + 9.3)) * exp(-dot(sf, sf) / 0.026);
+        vec2 v3 = vor(cs * 1.7 + vec2(13.0, 5.0));
+        float hii = step(0.58, v3.y) * exp(-pow(v3.x / (0.15 + 0.2 * (v3.y - 0.58)), 2.0)) * exp(-pow((x + 0.05) / 0.6, 2.0));
+        // ---- esporas: filetes que saem dos braços para fora, com ângulo bem mais aberto ----
+        float spurN = fb2(vec2((phi + 2.4 * u) * 5.0, u * 2.0 + armK * 5.0));
+        float spur = smoothstep(0.55, 0.85, ridge(spurN)) * exp(-pow((x + 1.6) / 1.4, 2.0)) * smoothstep(0.4, -0.6, x);
+        float fine = fb2(p * 7.0 + 1.3);
+        float lum = (0.5 + 0.5 * smoothstep(R0, R0 + 2.5, r0)) * exp(-max(r0 - 3.0, 0.0) / 9.0);
+        // ---- cores (aproximadas das fotos do Hubble em cor real) ----
+        vec3 OLD = vec3(1.0, 0.82, 0.6), DISK = vec3(0.94, 0.88, 0.82), YOUNG = vec3(0.5, 0.66, 1.0), HAZE = vec3(0.32, 0.48, 1.0);
+        vec3 HII = vec3(1.0, 0.36, 0.5), CL = vec3(0.78, 0.86, 1.0);
+        float a = env * along * lum;
+        vec3 E = DISK * disk * 0.3
+               + OLD * (bar * 0.75 + ansae * 0.45)
+               + YOUNG * young * a * (0.42 + 0.22 * fine)
+               + HAZE * haze * env * lum * 0.16
+               + CL * clump * a * 1.1
+               + YOUNG * spur * a * 0.14
+               + CL * spark * young * a * 0.6
+               + HII * hii * a * 2.5;
+        E *= smoothstep(14.0, 12.0, r0);
+        // ---- poeira ----
+        // faixa principal: estreita, na borda de dentro do braço, cheia de filamentos
+        vec2 dq = vec2(s * 0.8, x * 0.9);
+        float fil = ridge(fb2(dq * 1.3 + 4.0));
+        float lane = exp(-pow((x - 0.75) / 0.32, 2.0)) * (0.35 + 1.3 * smoothstep(0.55, 0.9, fil)) * env;
+        // poeira das esporas (atravessa o braço em ângulo, como na M51)
+        float dspur = smoothstep(0.62, 0.9, ridge(fb2(vec2((phi + 1.9 * u) * 7.0, u * 3.0 + 9.0)))) * exp(-pow((x - 0.2) / 1.1, 2.0)) * env;
+        // poeira floculenta espalhada pelo disco
+        float floc = smoothstep(0.6, 0.85, ridge(fb2(p * 1.9 - 3.0))) * exp(-r0 / 6.0) * smoothstep(1.0, 2.2, r0);
+        // faixas da barra: no lado que vai na frente, curvando até entrar nos braços (como na NGC 1300)
+        float yl = p.y * sign(p.x) - 0.32 - 0.06 * abs(p.x);
+        float barLane = exp(-pow(yl / 0.16, 2.0)) * (0.5 + 0.8 * fil) * smoothstep(R0 * 1.15, R0 * 0.55, abs(p.x)) * smoothstep(0.25, 0.8, abs(p.x));
+        float dust = lane * 1.1 + dspur * 0.4 + floc * 0.3 + barLane * 0.55 + 0.03 * exp(-r0 / 4.0);
         if (uLDR > 0.5) gl_FragColor = vec4(E / (1.0 + E), clamp(dust, 0.0, 1.0));
         else gl_FragColor = vec4(E * 0.5, dust);
       }`,
@@ -244,7 +291,7 @@ function init() {
         let r = 0.42 * Math.pow(-Math.log(1 - rand() * 0.9995), 1.25);
         if (r > 3) r = rand() * 3;
         d3.set(gauss(), gauss(), gauss()).normalize();
-        x = d3.x * r * 2.3; y = d3.y * r * 0.55; z = d3.z * r * 0.62;   // alongado como a barra
+        x = d3.x * r * 1.35; y = d3.y * r * 0.6; z = d3.z * r * 0.85;   // oval, um pouco alongado como a barra
         c.copy(pick(PAL.bulge));
         b = 0.2 + 0.16 * Math.min(1, r / 1.5); s = 0.5 + rand() * 0.7;   // muitas e fracas: de perto não estouram
       } else if (u < 0.12) {                // halo esparso
@@ -267,9 +314,9 @@ function init() {
         const blue = mb > mr * 0.95, pink = mr > mg * 1.45 && mb > mg * 0.8;
         y = gauss() * (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r);
         c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
-        b = (0.36 + Math.pow(rand(), 3) * 0.6) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.45 + Math.pow(rand(), 3) * 1.2;
-        if (blue && rand() < 0.1) { c.copy(PAL.young); s *= 1.5; b = 1.1; }
-        if (pink && rand() < 0.3) { c.copy(PAL.hii).lerp(PAL.white, rand() * 0.3); b = 1.0; s *= 1.15; }
+        b = (0.2 + Math.pow(rand(), 4) * 0.7) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.4 + Math.pow(rand(), 4) * 1.1;
+        if (blue && rand() < 0.08) { c.copy(PAL.young); s *= 1.3; b = 0.9; }
+        if (pink && rand() < 0.16) { c.copy(PAL.hii).lerp(PAL.white, 0.25 + rand() * 0.3); b = 0.7; }
       }
       pos.set([x, y, z], i * 3);
       col.set([c.r * b, c.g * b, c.b * b], i * 3);
@@ -352,17 +399,19 @@ function init() {
     starMat.uniforms.uNear.value.set(0.03 - 0.02 * k, 0.6 - 0.45 * k);
   }
 
-  /* Nebulosas espalhadas pelos braços (vistas de longe, cada uma com forma e cor próprias) */
+  /* Regiões HII espalhadas pelos braços: nuvens de hidrogênio acesas por estrelas novas.
+     Nas fotos reais elas ficam do lado de fora do braço (depois da faixa de poeira), são
+     pequenas e quase todas vermelho-rosadas; algumas têm o miolo verde-azulado (oxigênio). */
   {
-    const n = lowEnd ? 70 : 120, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
-    const NC = [C('#ff4f8f'), C('#ff6a9e'), C('#4fd6cf'), C('#6f95ff'), C('#ff7a4a'), C('#c86bff')];
+    const n = lowEnd ? 90 : 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
+    const NC = [C('#ff5a7a'), C('#ff6f8c'), C('#ff8a7a'), C('#e86aa8'), C('#7fd8d0'), C('#a8b8ff')];
     for (let i = 0; i < n; i++) {
-      const r = 2.6 + Math.pow(rand(), 0.8) * 9.6, k = rand() < 0.5 ? 0 : 1;
-      const a = armAngle(r, k) + 0.14 + gauss() * 0.16;
-      pos.set([Math.cos(a) * r, gauss() * 0.03, Math.sin(a) * r], i * 3);
-      const c = NC[rand() < 0.55 ? (rand() < 0.5 ? 0 : 1) : 2 + ((rand() * 4) | 0)];
+      const r = R0 * 1.25 + Math.pow(rand(), 0.85) * 9.2, k = rand() < 0.5 ? 0 : 1;
+      const a = armAngle(r, k) - 0.03 * (1 + r / 6) + gauss() * 0.045;
+      pos.set([Math.cos(a) * r, gauss() * 0.02, Math.sin(a) * r], i * 3);
+      const u = rand(), c = NC[u < 0.82 ? (u * 4.9) | 0 : u < 0.93 ? 4 : 5];
       col.set([c.r, c.g, c.b], i * 3);
-      size[i] = 0.22 + Math.pow(rand(), 2) * 0.6; seed[i] = rand() * 50;
+      size[i] = 0.08 + Math.pow(rand(), 3) * 0.3; seed[i] = rand() * 50;
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -373,14 +422,15 @@ function init() {
       uniforms: { uPx: { value: 600 }, uCube: U.uCube },
       vertexShader: `uniform float uPx, uCube; attribute vec3 aColor; attribute float aSize, aSeed; varying vec3 vC; varying float vS;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
-          float z = max(-mv.z, 0.01); gl_PointSize = min(aSize * uPx / z, 260.0);
-          vC = aColor * smoothstep(0.5, 2.5, z) * (1.0 - uCube); vS = aSeed; }`,
+          float z = max(-mv.z, 0.01); gl_PointSize = min(aSize * uPx / z, 70.0);
+          vC = aColor * smoothstep(0.8, 3.0, z) * (1.0 - uCube); vS = aSeed; }`,
       fragmentShader: `${GLSL_NOISE} varying vec3 vC; varying float vS;
         void main(){ vec2 p = gl_PointCoord - 0.5; float r = length(p) * 2.0; if (r > 1.0) discard;
           float a = atan(p.y, p.x);
-          float nz = fb2(p * 4.0 + vS) * 0.7 + fb2(vec2(cos(a), sin(a)) * 1.5 + vS * 1.7) * 0.5;
-          float f = smoothstep(1.0, 0.15, r + (nz - 0.6) * 0.9);
-          gl_FragColor = vec4(vC * f * f * 0.16, 1.0); }`,
+          float nz = fb2(p * 6.0 + vS) * 0.6 + fb2(p * 14.0 - vS) * 0.4;
+          float f = smoothstep(1.0, 0.1, r + (nz - 0.5) * 1.1);
+          float knot = smoothstep(0.55, 0.8, fb2(p * 11.0 + vS * 2.0)) * (1.0 - r);
+          gl_FragColor = vec4(vC * (f * f * 0.22 + knot * 0.35), 1.0); }`,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
     });
     const neb = new THREE.Points(g, m);
@@ -462,7 +512,9 @@ function init() {
         float nP = smoothstep(0.6, 0.82, fb3(d * 9.0 + 11.0 + uSeed, 5)) * band;
         float nB = smoothstep(0.62, 0.84, fb3(d * 7.0 - 5.0 + uSeed, 5)) * band;
         float nO = smoothstep(0.7, 0.88, fb3(d * 13.0 + 2.0 + uSeed, 4)) * core;
-        E += vec3(1.0, 0.28, 0.5) * nP * 0.42 + vec3(0.32, 0.5, 1.0) * nB * 0.22 + vec3(0.3, 0.9, 0.85) * nO * 0.2;
+        // textura fina de filamentos: de longe as nebulosas não são bolhas lisas
+        float filS = 0.35 + 1.1 * pow(1.0 - abs(2.0 * fb3(d * 34.0 + uSeed, 3) - 1.0), 4.0);
+        E += (vec3(1.0, 0.3, 0.42) * nP * 0.3 + vec3(0.32, 0.5, 1.0) * nB * 0.14 + vec3(0.3, 0.9, 0.85) * nO * 0.12) * filS;
         E *= 1.0 - dust;
         // estrelas resolvidas: muito mais densas dentro da faixa
         float sd = 0.05 + 0.5 * band + 0.35 * core * (1.0 - dust);
@@ -505,10 +557,10 @@ function init() {
         if (t1 <= t0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
         // bojo: soma de três gaussianas achatadas, integradas exatamente ao longo do raio (sem ruído)
         // achatado na vertical e alongado no eixo da barra (x)
-        const vec3 Q = vec3(1.0 / 2.3, 1.0 / 0.55, 1.0 / 0.8);
+        const vec3 Q = vec3(1.0 / 1.3, 1.0 / 0.62, 1.0 / 0.95);
         vec3 o2 = ro * Q, d2 = rd * Q;
         float bA = dot(d2, d2), bB = dot(o2, d2), bC = dot(o2, o2) - bB * bB / bA, sA = sqrt(bA), tc = bB / bA;
-        vec3 S = vec3(0.07, 0.24, 1.05), AMP = vec3(1.6, 0.42, 0.11) * uBulge;
+        vec3 S = vec3(0.07, 0.26, 1.0), AMP = vec3(2.0, 0.62, 0.12) * uBulge;
         vec3 K = AMP * S * 0.8862269 / sA * exp(-bC / (S * S));
         vec3 prevE = vec3(erf1(sA * (t0 + tc) / S.x), erf1(sA * (t0 + tc) / S.y), erf1(sA * (t0 + tc) / S.z));
         float L = t1 - t0;
@@ -542,15 +594,19 @@ function init() {
 
   /* ---------- 4) Nebulosa volumétrica atravessada na viagem ---------- */
   const NEB_R = 0.6;
-  const nebMarch = new THREE.ShaderMaterial({
-    uniforms: { ...CAM_UNI(), uTime: U.uTime, uNebC: { value: new THREE.Vector3(0, -99, 0) }, uNebSeed: { value: new THREE.Vector3() },
-      uNL: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) }, uKind: { value: 0 } },
-    vertexShader: FSQ_VS,
-    fragmentShader: /* glsl */`
+  // um shader pequeno por tipo (o tipo é uma constante): compilar um shader com os 7 tipos juntos
+  // levava segundos no Windows e travava a viagem. Os 7 são compilados em segundo plano na abertura.
+  const NEB_U = { ...CAM_UNI(), uTime: U.uTime, uNebC: { value: new THREE.Vector3(0, -99, 0) }, uNebSeed: { value: new THREE.Vector3() },
+    uNL: { value: [0, 1, 2, 3].map(() => new THREE.Vector3()) }, uKind: { value: 0 }, uNebRot: { value: new THREE.Matrix3() } };
+  const nebFS = KIND => /* glsl */`
       uniform mat4 uInvProj, uCamWorld; uniform vec3 uCamPos, uNebC, uNebSeed; uniform vec3 uNL[4]; uniform float uTime, uKind;
+      uniform mat3 uNebRot;
       varying vec2 vUv;
       ${GLSL_NOISE}
       const float R = ${NEB_R.toFixed(2)};
+      float rdg(float n){ return 1.0 - abs(2.0 * n - 1.0); }
+      // cores aproximadas das linhas de emissão (cor real, não a paleta falsa do Hubble)
+      const vec3 HA = vec3(1.0, 0.22, 0.32), OIII = vec3(0.25, 0.85, 0.85), SII = vec3(1.0, 0.45, 0.25), BLU = vec3(0.35, 0.55, 1.0);
       void main(){
         vec4 v = uInvProj * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
         vec3 rd = normalize(mat3(uCamWorld) * normalize(v.xyz / v.w));
@@ -559,65 +615,129 @@ function init() {
         if (disc <= 0.0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
         float sq = sqrt(disc), t0 = max(-b - sq, 0.0), t1 = -b + sq;
         if (t1 <= 0.0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
-        const int NS = ${lowEnd ? 26 : 40};
+        const int NS = ${lowEnd ? 30 : 42};
         float ds = (t1 - t0) / float(NS), j = ign(gl_FragCoord.xy);
         vec3 E = vec3(0.0); float T = 1.0;
+        const int kind = ${KIND};
         for (int i = 0; i < NS; i++){
-          vec3 p = uCamPos + rd * (t0 + (float(i) + j) * ds);
-          vec3 q = (p - uNebC) / R;
+          float tt = t0 + (float(i) + j) * ds;
+          vec3 p = uCamPos + rd * tt;
+          vec3 q = uNebRot * ((p - uNebC) / R);         // cada nebulosa tem a sua orientação
           float r = length(q);
           if (r > 1.0) continue;
-          vec3 w = q * 2.7 + uNebSeed;
-          vec3 wp = w + 0.55 * vec3(n3(w * 0.9 + 3.0), n3(w * 0.9 - 7.0), n3(w * 0.9 + 11.0));
+          // ruído com distorção (domain warping): dá as volutas e os filamentos das fotos
+          vec3 w = q * 2.4 + uNebSeed;
+          vec3 wp = w + 0.8 * (vec3(fb3(w * 0.7 + 3.0, 3), fb3(w * 0.7 - 7.0, 3), fb3(w * 0.7 + 11.0, 3)) - 0.5);
           float n = fb3(wp, ${lowEnd ? 4 : 5});
-          float shape = smoothstep(1.0, 0.3, r);
-          float dens = shape * smoothstep(0.47, 0.8, n);
-          float dn = shape * smoothstep(0.52, 0.8, fb3(wp * 1.45 + 9.0, ${lowEnd ? 3 : 4}));
-          // luz das estrelas jovens dentro da nebulosa
-          float ill = 0.0;
-          for (int k = 0; k < 4; k++){ vec3 dl = (p - uNL[k]) / R; ill += 1.0 / (dot(dl, dl) * 14.0 + 0.35); }
-          ill = min(ill, 9.0);
-          vec3 col; float rim = 0.55 + 1.4 * smoothstep(0.42, 0.52, n) * (1.0 - smoothstep(0.6, 0.72, n)), dk = 7.0;
-          if (uKind < 0.5) {
-            // emissão (como Órion e Lagoa): perto das estrelas o oxigênio brilha verde-azulado; longe, o hidrogênio brilha rosa
-            col = mix(vec3(1.0, 0.26, 0.46), vec3(0.32, 0.86, 0.92), smoothstep(1.6, 5.5, ill));
-            col = mix(col, vec3(1.0, 0.62, 0.42), smoothstep(0.55, 0.85, n) * 0.35);
-          } else if (uKind < 1.5) {
-            // reflexão (como as Plêiades): poeira que só espalha a luz azul das estrelas
-            col = mix(vec3(0.25, 0.42, 1.0), vec3(0.72, 0.84, 1.0), smoothstep(2.0, 7.0, ill));
-            dens = shape * smoothstep(0.42, 0.78, n) * 0.8; rim = 0.7 + 0.6 * rim; dk = 4.0;
-          } else if (uKind < 2.5) {
-            // planetária (como a Hélice): uma casca de gás expulsa por uma estrela que morreu
-            float sh = exp(-pow((r - 0.55) / 0.17, 2.0));
-            dens = sh * (0.35 + 0.9 * smoothstep(0.35, 0.75, n));
-            col = mix(vec3(0.25, 0.95, 0.85), vec3(1.0, 0.22, 0.3), smoothstep(0.45, 0.7, r + (n - 0.5) * 0.2));
-            ill = 3.2 + 2.0 * sh; dn *= 0.3; rim = 1.0;
-          } else if (uKind < 3.5) {
-            // pilares (como os Pilares da Criação): colunas de poeira com bordas iluminadas
-            float n2 = fb3(vec3(wp.x * 1.7, wp.y * 0.45, wp.z * 1.7) + 5.0, ${lowEnd ? 4 : 5});
-            dn = shape * smoothstep(0.5, 0.66, n2) * 1.4;
-            float edge = smoothstep(0.42, 0.5, n2) * (1.0 - smoothstep(0.5, 0.58, n2));
-            col = mix(vec3(0.45, 0.78, 0.62), vec3(1.0, 0.66, 0.32), edge);
-            dens = shape * (0.35 * smoothstep(0.3, 0.7, n) + 1.3 * edge); rim = 1.0; dk = 9.0;
+          float nf = fb3(wp * 2.7 + 5.0, ${lowEnd ? 3 : 4});         // detalhe fino
+          float rw = r + (n - 0.5) * 0.45;                              // borda irregular (nada de esfera)
+          float shape = smoothstep(1.0, 0.5, rw);
+          // luz das estrelas que iluminam a nebulosa (inverso do quadrado da distância)
+          float ill = 0.0; vec3 toS = vec3(0.0);
+          for (int k = 0; k < 4; k++){ vec3 dl = (p - uNL[k]) / R; float d2 = dot(dl, dl); ill += 1.0 / (d2 * 10.0 + 0.25); toS -= dl / (d2 + 0.05); }
+          ill = min(ill, 8.0); toS = normalize(toS + 1e-5);
+          vec3 col = vec3(0.0); float dens = 0.0, dn = 0.0;
+          if (kind == 0) {
+            // EMISSÃO (como Órion): as estrelas do centro sopraram uma cavidade; a parede da cavidade
+            // brilha forte. Perto das estrelas o oxigênio (verde-azulado), longe o hidrogênio (vermelho)
+            float cav = smoothstep(0.18, 0.5, rw);
+            float wall = exp(-pow((rw - 0.48) / 0.16, 2.0));
+            dens = shape * cav * (0.25 + 0.75 * smoothstep(0.35, 0.75, n)) * (0.6 + 0.8 * nf) + wall * 0.8 * smoothstep(0.3, 0.6, n);
+            col = mix(OIII * 0.9 + vec3(0.2), HA, smoothstep(0.3, 0.7, rw + (nf - 0.5) * 0.3));
+            col = mix(col, SII, smoothstep(0.62, 0.9, rw) * 0.5);
+            dn = shape * pow(rdg(fb3(wp * 1.3 + 9.0, 4)), 7.0) * smoothstep(0.3, 0.65, rw) * 1.4;
+          } else if (kind == 1) {
+            // REFLEXÃO (como as Plêiades): poeira fina que espalha a luz azul das estrelas,
+            // em estrias paralelas (a poeira é penteada pelo campo magnético)
+            vec3 sq3 = vec3(q.x * 5.5, q.y * 1.0, q.z * 1.4) + uNebSeed;
+            float st = fb3(sq3 + 0.6 * vec3(n), 4);
+            dens = shape * (0.3 + 1.1 * smoothstep(0.35, 0.75, st)) * (0.5 + 0.7 * n);
+            col = mix(BLU, vec3(0.75, 0.85, 1.0), smoothstep(2.5, 7.0, ill));
+            ill = ill * 1.6 + 0.8; dn = dens * 0.12;
+          } else if (kind == 2) {
+            // PLANETÁRIA (como a do Anel e a Hélice): casca elíptica; por dentro o oxigênio,
+            // na borda o hidrogênio e o nitrogênio; nós "cometários" na parte de dentro
+            vec3 e = q / vec3(1.0, 0.78, 0.9);
+            float re = length(e) + (nf - 0.5) * 0.08;
+            float shell = exp(-pow((re - 0.52) / 0.09, 2.0)), halo = exp(-pow((re - 0.8) / 0.1, 2.0)) * 0.15;
+            float knots = smoothstep(0.62, 0.8, fb3(wp * 3.5, 3)) * exp(-pow((re - 0.38) / 0.07, 2.0));
+            dens = shell * (0.45 + 0.8 * n) + halo + knots * 0.7 + smoothstep(0.5, 0.2, re) * 0.02;
+            col = mix(OIII, HA, smoothstep(0.42, 0.6, re));
+            col = mix(col, SII, knots * 0.6);
+            ill = 1.15; dn = knots * 2.5;
+          } else if (kind == 3) {
+            // PILARES (como os Pilares da Criação): três colunas de poeira fria que afinam para cima;
+            // a ponta e o lado virados para as estrelas ficam acesos; atrás, um véu de gás brilhando
+            float fld = -1.0;
+            for (int m = 0; m < 3; m++){
+              float fm = float(m);
+              vec2 c0 = vec2(-0.42 + fm * 0.4, -0.1 + 0.12 * sin(fm * 2.3));
+              float top = 0.55 - fm * 0.28 + 0.08 * sin(fm * 5.1 + uNebSeed.x);
+              float hy = clamp((q.y + 1.0) / (top + 1.0), 0.0, 1.0);
+              float rad = (0.2 - 0.04 * fm) * (1.0 - 0.55 * hy) + 0.06 * exp(-pow((q.y - top + 0.06) / 0.08, 2.0));
+              vec2 dc = q.xz - c0 - vec2(0.05 * sin(q.y * 4.0 + fm), 0.0);
+              fld = max(fld, min(rad - length(dc), (top + 0.05 * n - q.y) * 0.6));
+            }
+            fld = max(fld, (-0.62 - q.y + 0.18 * (n - 0.5)) * 0.8);          // nuvem na base, de onde as colunas sobem
+            fld += (nf - 0.5) * 0.16 + (n - 0.5) * 0.1;
+            float pil = smoothstep(0.0, 0.04, fld);
+            float rim = exp(-pow(fld / 0.03, 2.0)) * smoothstep(-0.3, 0.5, toS.y);
+            float veil = smoothstep(1.0, 0.55, rw) * smoothstep(0.0, -0.45, q.z) * (0.3 + 0.9 * smoothstep(0.3, 0.75, n));
+            dn = pil * 3.5;
+            dens = rim * 1.6 + veil * 1.1 + pil * 0.035 * (0.5 + nf);
+            col = mix(mix(HA, OIII, smoothstep(-0.2, 0.7, q.y) * 0.7), vec3(1.0, 0.68, 0.45), rim / max(dens, 1e-3) * 1.3);
+            ill = 2.2;
+          } else if (kind == 4) {
+            // REMANESCENTE DE SUPERNOVA (como o Véu): só filamentos finos numa bolha em expansão;
+            // vermelho (hidrogênio) e azul (oxigênio) um pouco separados
+            float sh = exp(-pow((rw - 0.72) / 0.09, 2.0));
+            float f1 = pow(rdg(fb3(wp * 1.1, 4)), 24.0), f2 = pow(rdg(fb3(wp * 1.1 + 0.06, 4)), 28.0);
+            dens = sh * (f1 + f2) * 2.2;
+            col = (HA * f1 + OIII * 1.3 * f2) / max(f1 + f2, 1e-3);
+            ill = 2.2; dn = 0.0;
+          } else if (kind == 5) {
+            // NEBULOSA ESCURA (como a Cabeça de Cavalo): uma coluna de poeira opaca com uma "cabeça",
+            // saindo de uma nuvem escura, recortada contra uma cortina de hidrogênio que brilha atrás
+            float sheet = exp(-pow((q.z + 0.4) / 0.3, 2.0)) * smoothstep(1.0, 0.7, rw);
+            dens = sheet * (0.45 + 0.9 * smoothstep(0.3, 0.75, n)) * (0.7 + 0.6 * pow(rdg(nf), 2.0));
+            float neck = 0.13 + 0.05 * n - abs(q.x + 0.12 - 0.18 * q.y);
+            float body = min(neck, 0.3 - q.y);
+            vec2 hd = (q.xy - vec2(0.05, 0.34)) / vec2(0.26, 0.15);
+            float head = (1.0 - length(hd)) * 0.16;
+            float base = (-0.42 - q.y + 0.1 * sin(q.x * 6.0 + uNebSeed.y)) * 0.7 + 0.22 * (n - 0.5);
+            float fld = max(max(body, head), base) + (nf - 0.5) * 0.1 + (n - 0.5) * 0.1;
+            float slab = smoothstep(-0.35, -0.1, q.z) * smoothstep(0.35, 0.1, q.z);
+            dn = smoothstep(0.0, 0.03, fld) * slab * smoothstep(1.0, 0.8, rw) * 7.0;
+            float edge = exp(-pow(fld / 0.025, 2.0)) * slab;
+            dens += edge * 0.4;
+            col = mix(HA, vec3(1.0, 0.6, 0.55), edge * 0.6);
+            ill = 2.4;
           } else {
-            // remanescente de supernova (como o Véu): filamentos finos numa bolha em expansão
-            float sh = exp(-pow((r - 0.68) / 0.24, 2.0));
-            float fil = pow(1.0 - abs(2.0 * n - 1.0), 9.0);
-            dens = sh * fil * 1.6;
-            col = mix(vec3(1.0, 0.28, 0.22), vec3(0.3, 0.6, 1.0), smoothstep(0.4, 0.62, fb3(wp * 0.7 + 2.0, 3)));
-            ill = 3.5; dn *= 0.15; rim = 1.0;
+            // BIPOLAR (como a Formiga e a Borboleta): dois lóbulos saindo de uma cintura
+            // estreita, com um anel de poeira no meio
+            float ax = abs(q.y), rad = length(q.xz);
+            float lobeR = (0.14 + 0.5 * smoothstep(0.0, 0.7, ax) * (1.0 - smoothstep(0.75, 1.0, ax))) * (0.8 + 0.45 * n);
+            float lobe = exp(-pow((rad - lobeR * 0.85) / (0.06 + 0.12 * ax), 2.0)) + 0.35 * smoothstep(lobeR, lobeR * 0.4, rad);
+            dens = lobe * (0.2 + 1.2 * smoothstep(0.3, 0.75, n)) * (0.6 + 0.6 * nf) * smoothstep(1.0, 0.85, r) * (q.y > 0.0 ? 1.0 : 0.75);
+            col = mix(OIII, HA, smoothstep(0.15, 0.75, ax + (nf - 0.5) * 0.3));
+            col = mix(col, vec3(1.0, 0.75, 0.55), exp(-ax * ax / 0.01) * 0.6);
+            dn = exp(-pow(ax / 0.05, 2.0)) * exp(-pow((rad - 0.13) / 0.07, 2.0)) * 4.0;
+            ill = 2.2 + 3.0 * exp(-ax * 4.0);
           }
-          vec3 em = col * dens * ill * rim * 0.85 * smoothstep(0.015, 0.16, t0 + (float(i) + j) * ds);
-          float tau = (dens * 1.6 + dn * dk) * ds / R;
+          vec3 em = col * dens * ill * 0.95 * smoothstep(0.015, 0.16, tt);
+          float tau = (dens * 0.9 + dn * 7.0) * ds / R;
           float tr = exp(-tau);
           E += T * em * (ds / R) * (tau > 1e-4 ? (1.0 - tr) / tau : 1.0);
           T *= tr;
           if (T < 0.01) break;
         }
         gl_FragColor = vec4(E, T);
-      }`,
-    depthTest: false, depthWrite: false
-  });
+      }`;
+  const NEB_N = 7;
+  const nebMats = Array.from({ length: NEB_N }, (_, k) => new THREE.ShaderMaterial({
+    uniforms: NEB_U, vertexShader: FSQ_VS, fragmentShader: nebFS(k), depthTest: false, depthWrite: false
+  }));
+  const nebMarch = nebMats[0];
   // estrelas novas dentro da nebulosa
   const NEB_STARS = lowEnd ? 700 : 1400;
   const nebStarGeo = (() => {
@@ -640,17 +760,25 @@ function init() {
     ['Nebulosa de reflexão', 'Poeira iluminada por estrelas azuis', 'a poeira não brilha sozinha: ela espalha a luz azul'],
     ['Nebulosa planetária', 'O último suspiro de uma estrela', 'uma casca de gás expulsa por uma estrela parecida com o Sol'],
     ['Pilares de poeira', 'Onde as estrelas estão nascendo', 'colunas de gás frio, esculpidas pela luz das estrelas jovens'],
-    ['Remanescente de supernova', 'Os restos de uma explosão', 'filamentos de gás quente, ainda se expandindo']
+    ['Remanescente de supernova', 'Os restos de uma explosão', 'filamentos de gás quente, ainda se expandindo'],
+    ['Nebulosa escura', 'Poeira na frente da luz', 'uma nuvem fria e opaca recortada contra o hidrogênio que brilha atrás'],
+    ['Nebulosa bipolar', 'Uma estrela soprando em duas direções', 'dois lóbulos de gás saindo de uma cintura de poeira']
   ];
   function placeNebula(Cn) {
     nebKind = (nebKind + 1) % NEB_KINDS.length;
     nebMarch.uniforms.uKind.value = nebKind;
+    [nebG, nebS].forEach(p => { p.mat = nebMats[nebKind]; p.quad.material = nebMats[nebKind]; });
     nebMarch.uniforms.uNebC.value.copy(Cn);
     nebMarch.uniforms.uNebSeed.value.set(rand() * 40, rand() * 40, rand() * 40);
+    // orientação: pilares ficam em pé; as outras giram um pouco, para cada viagem ser diferente
+    const eul = nebKind === 3 || nebKind === 5 ? new THREE.Euler(0, rand() * TAU, 0) : new THREE.Euler(gauss() * 0.5, rand() * TAU, gauss() * 0.5);
+    nebMarch.uniforms.uNebRot.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(eul).invert());
     const q = new THREE.Vector3(), pa = nebStarGeo.attributes.position, sa = nebStarGeo.attributes.aSize, ca = nebStarGeo.attributes.aColor;
     // na planetária, a estrela que morreu fica no centro da casca
-    const spread = nebKind === 2 ? 0.02 : 0.28;
+    // planetária e bipolar: a estrela que morreu fica no centro; pilares: as estrelas ficam acima
+    const spread = nebKind === 2 || nebKind === 6 ? 0.02 : 0.28;
     nebMarch.uniforms.uNL.value.forEach(L => L.copy(Cn).add(q.set(gauss(), gauss() * 0.7, gauss()).multiplyScalar(NEB_R * spread)));
+    if (nebKind === 3) nebMarch.uniforms.uNL.value.forEach(L => L.y += NEB_R * 0.85);
     for (let i = 0; i < NEB_STARS; i++) {
       if (i < 4) { q.copy(nebMarch.uniforms.uNL.value[i]); sa.setX(i, 0.9); ca.setXYZ(i, 1.4, 1.5, 1.8); }
       else {
@@ -1125,7 +1253,8 @@ function init() {
       vec4 v = texture2D(tVol, vUv) * 0.32
              + (texture2D(tVol, vUv + vec2(o.x, o.y)) + texture2D(tVol, vUv + vec2(-o.x, o.y))
               + texture2D(tVol, vUv + vec2(o.x, -o.y)) + texture2D(tVol, vUv + vec2(-o.x, -o.y))) * 0.17;
-      vec3 e = 1.0 - exp(-v.rgb * uExposure);
+      vec3 vv = max(v.rgb * uExposure, 0.0); float mx = max(vv.r, max(vv.g, vv.b));
+      vec3 e = mx > 1e-5 ? vv * ((1.0 - exp(-mx)) / mx) : vv;
       gl_FragColor = vec4(s.rgb * mix(1.0, v.a, uMode) + e, 1.0);
     }`;
   class VolumePass extends Pass {
@@ -1218,11 +1347,30 @@ function init() {
         gl_FragColor = texture2D(tDiffuse, uCenter + s);
       }`
   };
+  // Exposição final: até 60% do brilho nada muda; acima disso a luz é comprimida aos poucos
+  // pelo canal mais forte, então um braço azul muito claro continua azul (não estoura em branco)
+  const ToneShader = {
+    uniforms: { tDiffuse: { value: null }, uExp: { value: 1 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float uExp; varying vec2 vUv;
+      void main(){
+        vec3 c = max(texture2D(tDiffuse, vUv).rgb * uExp, 0.0);
+        float m = max(c.r, max(c.g, c.b)), k = 0.6;
+        if (m > k) {
+          float t = k + (1.0 - k) * (1.0 - exp(-(m - k) / (1.0 - k)));
+          c *= t / m;
+          float L = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          c = mix(c, vec3(L), 0.35 * (1.0 - t / m));
+        }
+        gl_FragColor = vec4(c, 1.0);
+      }`
+  };
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const volG = new VolumePass(camera, galMarch, 0, VOL_SCALE);
   composer.addPass(volG);
-  const nebG = new VolumePass(camera, nebMarch, 1, VOL_SCALE);
+  const NEB_SCALE = lowEnd ? 0.48 : 0.62;     // a nebulosa tem detalhe fino: resolução maior que a do disco
+  const nebG = new VolumePass(camera, nebMarch, 1, NEB_SCALE);
   composer.addPass(nebG);
   const nebStarsG = new RenderPass(nebStarScene, camera); nebStarsG.clear = false;
   composer.addPass(nebStarsG);
@@ -1231,9 +1379,11 @@ function init() {
   const bhPass = new RenderPass(bhScene, camera);
   bhPass.clear = false;
   composer.addPass(bhPass);
-  const BLOOM = 0.7;
-  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM, 0.62, 0.58);
+  const BLOOM = 0.42;
+  const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM, 0.5, 0.82);
   composer.addPass(bloom);
+  const tone = new ShaderPass(ToneShader);
+  composer.addPass(tone);
 
   const composerIn = new EffectComposer(renderer);
   composerIn.addPass(new RenderPass(insideScene, orthoCam));
@@ -1248,13 +1398,23 @@ function init() {
   const sysPass = new RenderPass(sysScene, sysCam);
   sysPass.clear = false; sysPass.clearDepth = true;
   composerSys.addPass(sysPass);
-  const nebS = new VolumePass(bgCam, nebMarch, 1, VOL_SCALE);
+  const nebS = new VolumePass(bgCam, nebMarch, 1, NEB_SCALE);
   composerSys.addPass(nebS);
   const nebStarsS = new RenderPass(nebStarScene, bgCam); nebStarsS.clear = false;
+  // compila os shaders das nebulosas sem travar a página (KHR_parallel_shader_compile)
+  {
+    const cs = new THREE.Scene(), geo = new THREE.PlaneGeometry(2, 2);
+    nebMats.forEach(m => { const q = new THREE.Mesh(geo, m); q.frustumCulled = false; cs.add(q); });
+    const done = () => { cs.clear(); geo.dispose(); };
+    // espera a abertura aparecer primeiro
+    setTimeout(() => { if (renderer.compileAsync) renderer.compileAsync(cs, orthoCam).then(done, done); else done(); }, 1200);
+  }
   composerSys.addPass(nebStarsS);
-  const BLOOM_SYS = 0.8;
-  const bloomSys = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM_SYS, 0.55, 0.58);
+  const BLOOM_SYS = 0.5;
+  const bloomSys = new UnrealBloomPass(new THREE.Vector2(256, 256), BLOOM_SYS, 0.5, 0.8);
   composerSys.addPass(bloomSys);
+  const toneSys = new ShaderPass(ToneShader);
+  composerSys.addPass(toneSys);
 
   /* ---------- Tamanho ---------- */
   let W = 1, H = 1, viewShift = 0, viewShiftTo = 0, viewShiftY = 0, viewShiftYTo = 0;
@@ -1950,10 +2110,11 @@ function init() {
     cb({ px, w, h });
   }
   function pixelStats({ px, w, h }, samplesWorld) {
-    let sum = 0, n = 0, blue = 0, warm = 0, pink = 0, bright = 0;
+    let sum = 0, n = 0, blue = 0, warm = 0, pink = 0, bright = 0, sat = 0;
     for (let y = 0; y < h; y += 4) for (let x = 0; x < w; x += 4) {
       const i = (y * w + x) * 4, r = px[i], g = px[i + 1], b = px[i + 2], l = 0.3 * r + 0.55 * g + 0.15 * b;
       sum += l; n++;
+      if (r > 245 && g > 245 && b > 245) sat++;        // branco estourado
       if (l > 40) { bright++; if (b > r * 1.05) blue++; else if (r > b * 1.12 && g > b) warm++; if (r > g * 1.35 && b > g) pink++; }
     }
     const at = v => {
@@ -1967,11 +2128,33 @@ function init() {
       }
       return s / c;
     };
-    return { mean: sum / n, brightFrac: bright / n, blueFrac: blue / Math.max(1, bright), warmFrac: warm / Math.max(1, bright), pinkFrac: pink / Math.max(1, bright), samples: samplesWorld ? samplesWorld.map(at) : [] };
+    return { mean: sum / n, satFrac: sat / n, brightFrac: bright / n, blueFrac: blue / Math.max(1, bright), warmFrac: warm / Math.max(1, bright), pinkFrac: pink / Math.max(1, bright), samples: samplesWorld ? samplesWorld.map(at) : [] };
   }
   const testApi = {
+    // mapa da galáxia vista de cima (para conferir o desenho dos braços)
+    mapImage() {
+      const cv = document.createElement('canvas'); cv.width = cv.height = RB;
+      const ctx = cv.getContext('2d'), im = ctx.createImageData(RB, RB);
+      for (let y = 0; y < RB; y++) for (let x = 0; x < RB; x++) {
+        const i = (y * RB + x) * 4, o = ((RB - 1 - y) * RB + x) * 4, d = mapPix[i + 3] / 255;
+        for (let c = 0; c < 3; c++) im.data[o + c] = Math.min(255, mapPix[i + c] * 1.6 * (1 - 0.85 * d));
+        im.data[o + 3] = 255;
+      }
+      ctx.putImageData(im, 0, 0); return cv.toDataURL('image/png');
+    },
+    // posiciona a câmera (para fotos de conferência)
+    // mostra um tipo de nebulosa de perto (para conferir o desenho de cada uma)
+    showNeb(kind, dist = 1.9) {
+      controls.autoRotate = false; galaxy.rotation.y = 0; galaxy.updateMatrixWorld();
+      const a = armAngle(7, 0), Cn = new THREE.Vector3(Math.cos(a) * 7, 0.15, Math.sin(a) * 7);
+      nebKind = kind - 1; placeNebula(Cn); setNebula(true);
+      const dir = Cn.clone().setY(0).normalize().negate();
+      camera.position.copy(Cn).addScaledVector(dir, -NEB_R * dist).add(new THREE.Vector3(0, 0.12, 0));
+      controls.target.copy(Cn); camera.lookAt(Cn); controls.update(); return NEB_KINDS[nebKind][0];
+    },
+    camAt(x, y, z) { controls.autoRotate = false; camera.position.set(x, y, z); controls.target.set(0, 0, 0); controls.update(); return true; },
     state: () => ({
-      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N,
+      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, nebKinds: NEB_KINDS.length, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N,
       cam: gPos.toArray(), caption: cap && cap.classList.contains('on') ? cap.textContent : '',
       planetLabels: PLANETS.filter(p => !p.label.classList.contains('off')).length,
       hero: !$('#gx-hero').hidden, sysPanel: !$('#gx-sys').hidden, planetPanel: !$('#gx-planet').hidden, bhPanel: !$('#gx-bh').hidden,

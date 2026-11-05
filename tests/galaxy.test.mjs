@@ -111,6 +111,9 @@ async function desktop(browser) {
   check('Contraste entre braços e espaço entre eles', ring.contrast > 1.8, `p90/p10 = ${ring.contrast.toFixed(2)}`);
   check('Cores de foto real: braços azulados, centro dourado e regiões rosadas', st.blueFrac > 0.12 && st.warmFrac > 0.08 && st.pinkFrac > 0.003,
     `azul ${(st.blueFrac * 100).toFixed(0)}% · dourado ${(st.warmFrac * 100).toFixed(0)}% · rosa ${(st.pinkFrac * 100).toFixed(1)}%`);
+  // como numa foto real: nada estoura em branco (os braços continuam azuis mesmo onde são mais claros)
+  check('Sem brilho estourado na abertura', st.satFrac < 0.004, `${(st.satFrac * 100).toFixed(2)}% dos pixels em branco puro`);
+  check('7 tipos de nebulosa para atravessar', s.nebKinds >= 7, `${s.nebKinds} tipos`);
 
   // clique no braço: só funciona em cima de um braço
   const armHit = await page.evaluate(() => {
@@ -148,6 +151,11 @@ async function desktop(browser) {
   check('Clique no braço inicia a viagem', s.mode === 'travel' && s.nebOn, `modo ${s.mode}`);
   check('Legenda de documentário no início', /braço/i.test(s.caption), s.caption.slice(0, 60));
   const tTravel = Date.now();
+  // no meio do mergulho no braço: a imagem não pode virar uma faixa de luz estourada
+  await waitFor(page, () => { const s = window.IAGalaxy.test.state(); return s.phase !== 'in' || s.cam[1] < 8; }, 12000);
+  const mid = await page.evaluate(() => window.IAGalaxy.test.stats());
+  check('Mergulho no braço sem faixa de luz estourada', mid.satFrac < 0.02 && mid.brightFrac < 0.7,
+    `branco puro ${(mid.satFrac * 100).toFixed(2)}% · claros ${(mid.brightFrac * 100).toFixed(0)}%`);
   const arrived = await waitFor(page, () => window.IAGalaxy.test.state().mode === 'system', 25000);
   const tripMs = Date.now() - tTravel;
   const rec = await page.evaluate(() => window.IAGalaxy.test.record(false));
