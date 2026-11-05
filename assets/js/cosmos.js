@@ -18,6 +18,8 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { Sky } from 'three/addons/objects/Sky.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const root = $('.cos');
@@ -34,16 +36,18 @@ function mulberry32(a) { return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t 
 
 /* ---------- Capítulos ---------- */
 const ACTS = [
-  { id: 'bang', dur: 9, kicker: '13,8 bilhões de anos atrás', title: 'O Big Bang', sub: 'Espaço, tempo, matéria e energia surgem juntos. Numa fração de segundo, a inflação estica o universo mais de 10²⁶ vezes.' },
-  { id: 'nuc', dur: 8, kicker: 'Os 3 primeiros minutos', title: 'Nascem os primeiros núcleos', sub: 'Prótons (vermelho) e nêutrons (azul) se juntam. O universo sai com cerca de 75% de hidrogênio e 25% de hélio, em massa.' },
-  { id: 'cmb', dur: 8, kicker: '380 mil anos depois', title: 'A primeira luz', sub: 'O universo esfria a ~3.000 °C, os átomos se formam e a luz escapa. Ela chega até hoje como micro-ondas a 2,7 K: o fundo cósmico.' },
-  { id: 'stars', dur: 8, kicker: '~200 milhões de anos', title: 'As primeiras estrelas', sub: 'Depois da "idade das trevas", a gravidade junta o gás e acende estrelas gigantes. As que explodem espalham carbono, oxigênio e ferro.' },
-  { id: 'web', dur: 9, kicker: '~1 bilhão de anos', title: 'A teia cósmica', sub: 'A matéria escura puxa o gás para filamentos enormes. Nos cruzamentos nascem as galáxias, em aglomerados.' },
-  { id: 'mw', dur: 9, kicker: '~13,6 bilhões de anos atrás até hoje', title: 'A Via Láctea', sub: '100 a 400 bilhões de estrelas numa espiral barrada. O Sol fica num braço, a 26 mil anos-luz do centro.' },
-  { id: 'sol', dur: 9, kicker: '4,6 bilhões de anos atrás', title: 'Nasce o Sistema Solar', sub: 'Uma nuvem de gás e poeira colapsa. O Sol acende no centro, e os planetas crescem no disco em volta dele.' },
-  { id: 'earth', dur: 9, kicker: '4,54 bilhões de anos atrás até hoje', title: 'A Terra', sub: 'Começa como uma bola de lava. Esfria, ganha oceanos e atmosfera, e hoje abriga cerca de 8 bilhões de pessoas.' },
+  { id: 'bang', dur: 11, kicker: '13,8 bilhões de anos atrás · 10⁻³² s', title: 'O Big Bang', sub: 'Não foi uma explosão no espaço: foi o próprio espaço que começou a crescer. Na inflação, ele se esticou mais de 10²⁶ vezes numa fração de segundo.' },
+  { id: 'qgp', dur: 7, kicker: 'Primeiro milionésimo de segundo', title: 'A sopa de quarks', sub: 'Tão quente que nem prótons existiam: quarks e glúons livres, como o plasma recriado no acelerador LHC, do CERN.' },
+  { id: 'nuc', dur: 7, kicker: 'Os 3 primeiros minutos', title: 'Nascem os primeiros núcleos', sub: 'Prótons (vermelho) e nêutrons (cinza) se juntam. O universo sai com cerca de 75% de hidrogênio e 25% de hélio, em massa.' },
+  { id: 'cmb', dur: 10, kicker: '380 mil anos depois', title: 'A primeira luz', sub: 'O universo esfria a ~3.000 °C, os átomos se formam e a luz escapa. Ela chega até hoje como micro-ondas a 2,7 K, mapeadas pelo satélite Planck.' },
+  { id: 'dark', dur: 6, kicker: 'De 380 mil a 100 milhões de anos', title: 'A Idade das Trevas', sub: 'Nenhuma estrela brilha. A matéria escura junta o gás, devagar, em fios e nós.' },
+  { id: 'stars', dur: 9, kicker: '~200 milhões de anos', title: 'As primeiras estrelas', sub: 'Estrelas gigantes e azuis acendem. A luz delas abre bolhas no gás (a reionização) e, ao explodir, espalham carbono, oxigênio e ferro.' },
+  { id: 'web', dur: 9, kicker: '~1 bilhão de anos', title: 'A teia cósmica', sub: 'Como nas simulações Millennium e IllustrisTNG: a matéria escura forma filamentos enormes, e as galáxias nascem nos cruzamentos.' },
+  { id: 'mw', dur: 9, kicker: '~13,6 bilhões de anos atrás até hoje', title: 'A Via Láctea', sub: '100 a 400 bilhões de estrelas numa espiral barrada, com faixas de poeira e berçários de estrelas. O Sol fica num braço, a 26 mil anos-luz do centro.' },
+  { id: 'sol', dur: 10, kicker: '4,6 bilhões de anos atrás', title: 'Nasce o Sistema Solar', sub: 'Uma nuvem de gás colapsa e o Sol acende. No disco em volta, anéis e lacunas, como os que o telescópio ALMA fotografou no HL Tau, mostram planetas se formando.' },
+  { id: 'earth', dur: 13, kicker: '4,5 bilhões de anos atrás até hoje', title: 'A Terra', sub: 'Uma bola de lava. Um planeta do tamanho de Marte, Theia, bate nela, e os destroços formam a Lua. A Terra esfria, ganha oceanos, atmosfera e vida.' },
   { id: 'zoom', dur: 16, kicker: 'Hoje', title: 'Brasil · São Paulo · Iracemápolis', sub: 'Do espaço até o interior paulista: 22,58° S, 47,50° O.' },
-  { id: 'senai', dur: 12, kicker: 'Rua Camilo Ferrari, 765 · Distrito Industrial II', title: 'SENAI Iracemápolis', sub: 'Escola SENAI "João Guilherme Sabino Ometto". Reconstruída em 3D a partir de imagens de satélite e do OpenStreetMap.' }
+  { id: 'senai', dur: 16, kicker: 'Rua Camilo Ferrari, 765 · Distrito Industrial II', title: 'SENAI Iracemápolis', sub: 'Escola SENAI "João Guilherme Sabino Ometto", reconstruída em 3D a partir de imagens de satélite, do OpenStreetMap e do Street View.' }
 ];
 let T_ACT = []; { let a = 0; ACTS.forEach(c => { T_ACT.push(a); a += c.dur; }); }
 const TOTAL = ACTS.reduce((s, c) => s + c.dur, 0);
@@ -63,6 +67,7 @@ function init() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.setClearColor(0x000000, 1);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate = false;
   const view = $('.cos-view');
 
   /* ---------- Pontos (partículas) com brilho suave ---------- */
@@ -118,43 +123,132 @@ function init() {
   const cams = {};
   const mkCam = (fov = 55, near = 0.01, far = 5000) => new THREE.PerspectiveCamera(fov, 16 / 9, near, far);
 
-  // 1) Big Bang: partículas que se afastam, esfriando (branco → amarelo → laranja → vermelho)
+  /* ---------- Volumes: ruído 3D em textura (o filtro da GPU faz a interpolação: muito mais barato que ruído calculado) ---------- */
+  const NOISE3 = (() => {
+    const S = 64, d = new Uint8Array(S * S * S * 4);
+    for (let i = 0; i < d.length; i++) d[i] = (rand() * 256) | 0;
+    const tx = new THREE.Data3DTexture(d, S, S, S); tx.format = THREE.RGBAFormat; tx.minFilter = tx.magFilter = THREE.LinearFilter;
+    tx.wrapS = tx.wrapT = tx.wrapR = THREE.RepeatWrapping; tx.unpackAlignment = 1; tx.needsUpdate = true; return tx;
+  })();
+  const VOL = /* glsl */`
+    uniform sampler3D tN; uniform mat4 uIP, uCW; uniform float uT, uQ, uAsp;
+    float tn(vec3 p){ return texture(tN, p * 0.015625).r; }
+    vec4 tn4(vec3 p){ return texture(tN, p * 0.015625); }
+    float fbmT(vec3 p){ return 0.5 * tn(p) + 0.25 * tn(p * 2.07 + 0.13) + 0.125 * tn(p * 4.11 + 0.37) + 0.0625 * tn(p * 8.13 + 0.71); }
+    float h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+    vec3 rayDir(vec2 uv){ vec4 p = uIP * vec4(uv * 2.0 - 1.0, 1.0, 1.0); return normalize((uCW * vec4(p.xyz / p.w, 0.0)).xyz); }`;
+  const FS_VS = `varying vec2 vUv; void main(){ vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.99999, 1.0); }`;
+  // fundo de tela inteira que conhece a câmera (os raios acompanham o movimento, como num volume de verdade)
+  function bgQuad(frag, extra = {}) {
+    const u = Object.assign({ tN: { value: NOISE3 }, uIP: { value: new THREE.Matrix4() }, uCW: { value: new THREE.Matrix4() }, uT: { value: 0 }, uQ: { value: 0 }, uAsp: { value: 16 / 9 } }, extra);
+    const m = new THREE.ShaderMaterial({ uniforms: u, vertexShader: FS_VS, fragmentShader: VOL + frag, depthTest: false, depthWrite: false });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m); mesh.frustumCulled = false; mesh.renderOrder = -10;
+    mesh.onBeforeRender = (r, s, cam) => { u.uIP.value.copy(cam.projectionMatrixInverse); u.uCW.value.copy(cam.matrixWorld); u.uAsp.value = cam.aspect; };
+    return { mesh, u };
+  }
+  // brilho com raio anamórfico (lente de cinema) para estrelas e clarões
+  const flareTex = (() => {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
+    let gr = g.createRadialGradient(256, 64, 0, 256, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,255,255,.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(192, 0, 128, 128);
+    gr = g.createLinearGradient(0, 0, 512, 0); gr.addColorStop(0, 'rgba(140,180,255,0)'); gr.addColorStop(0.5, 'rgba(200,225,255,.9)'); gr.addColorStop(1, 'rgba(140,180,255,0)');
+    g.globalCompositeOperation = 'lighter'; g.fillStyle = gr; g.fillRect(0, 61, 512, 6); g.fillRect(96, 63, 320, 2);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const flare = (col, s, op = 1) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false })); m.scale.set(s * 4, s, 1); return m; };
+
+  // 1) Big Bang: um ponto, o clarão e a bola de fogo que é o próprio espaço se esticando (inflação)
   {
-    const s = new THREE.Scene(), N = small ? 14000 : 26000, p = mkPoints(N, 1);
-    const dir = new Float32Array(N * 3), spd = new Float32Array(N);
-    for (let i = 0; i < N; i++) {
-      const v = new THREE.Vector3(gauss(), gauss(), gauss()).normalize();
-      dir.set([v.x, v.y, v.z], i * 3); spd[i] = 0.25 + Math.pow(rand(), 0.6) * 1.0;
-      p.geometry.attributes.aSize.setX(i, 0.012 + Math.pow(rand(), 5) * 0.03);
-    }
-    const flash = sprite(0xffffff, 1, 1), halo = sprite(0xffd7a0, 1, 0.8);
-    s.add(p, flash, halo);
-    scenes.bang = s; cams.bang = mkCam(55);
-    const col = new THREE.Color(), hot = new THREE.Color(1.6, 1.6, 1.8), warm = new THREE.Color(1.4, 1.05, 0.55), cool = new THREE.Color(0.9, 0.32, 0.12), dim = new THREE.Color(0.25, 0.08, 0.05);
+    const s = new THREE.Scene();
+    const bg = bgQuad(/* glsl */`
+      varying vec2 vUv;
+      void main(){
+        vec3 rd = rayDir(vUv), ro = cameraPosition;
+        float R = 0.02 + 3.4 * (1.0 - exp(-uQ * 9.0)) + 1.4 * uQ;     // inflação: quase tudo no primeiro instante
+        float b = dot(ro, rd), c = dot(ro, ro) - R * R, h = b * b - c;
+        vec3 col = vec3(0.0); float T = 1.0;
+        if (h > 0.0) {
+          h = sqrt(h); float t0 = max(-b - h, 0.0), t1 = -b + h, dt = (t1 - t0) / 22.0, tt = t0 + dt * h12(gl_FragCoord.xy + uT);
+          for (int i = 0; i < 22; i++) {
+            vec3 p = ro + rd * tt; float r = length(p) / R;
+            vec3 q = p / R * 2.6; q += (tn4(q * 1.7 + vec3(0.0, uT * 0.35, 0.0)).gba - 0.5) * 2.2;   // dobra o espaço (domain warp)
+            float n = fbmT(q * 2.2 - vec3(uT * 0.25, 0.0, 0.0));
+            float dens = smoothstep(0.45, 0.8, n) * (1.0 - smoothstep(0.7, 1.0, r)) * (0.35 + 1.2 * exp(-r * 4.0));
+            float temp = clamp(1.15 - r * 0.9 - uQ * 0.55 + (n - 0.5) * 0.8, 0.0, 1.0);
+            vec3 e = mix(vec3(0.42, 0.25, 1.0), vec3(0.75, 0.88, 1.25), smoothstep(0.25, 0.6, temp));
+            e = mix(e, vec3(1.5, 1.4, 1.3), smoothstep(0.6, 0.95, temp)) * (0.35 + 1.4 * temp * temp);
+            float a = dens * dt * 2.4; col += T * e * a; T *= exp(-a * 2.2); if (T < 0.03) break; tt += dt;
+          }
+        }
+        vec2 uv = (vUv - 0.5) * vec2(uAsp, 1.0); float d = length(uv);
+        float pre = 1.0 - smoothstep(0.0, 0.025, uQ), fl = exp(-uQ * 14.0) * smoothstep(0.0, 0.02, uQ);
+        col += vec3(1.0, 0.97, 0.92) * (pre * 0.6 * exp(-d * 260.0) + fl * (2.2 * exp(-d * 2.2) + 6.0 * exp(-d * 18.0)));
+        col += vec3(0.45, 0.65, 1.3) * fl * 2.5 * exp(-abs(uv.y) * 80.0) * exp(-abs(uv.x) * 1.2);   // raio anamórfico
+        gl_FragColor = vec4(col, 1.0);
+      }`);
+    // fagulhas: matéria que voa junto com o espaço, esfriando
+    const N = small ? 6000 : 12000, p = mkPoints(N, 1), dir = new Float32Array(N * 3), spd = new Float32Array(N);
+    for (let i = 0; i < N; i++) { const v = new THREE.Vector3(gauss(), gauss(), gauss()).normalize(); dir.set([v.x, v.y, v.z], i * 3); spd[i] = 0.3 + Math.pow(rand(), 0.6); p.geometry.attributes.aSize.setX(i, 0.01 + Math.pow(rand(), 6) * 0.025); }
+    s.add(bg.mesh, p); scenes.bang = s; cams.bang = mkCam(55);
+    const col = new THREE.Color(), hot = new THREE.Color(1.5, 1.5, 1.8), cool = new THREE.Color(0.9, 0.4, 0.2);
     scenes.bang.update = (q, t) => {
-      // inflação (subida muito rápida) e depois expansão desacelerando
-      const a = 3.2 * (1 - Math.exp(-q * 14)) + 1.6 * q;
-      const pa = p.geometry.attributes.position, ca = p.geometry.attributes.aColor;
-      for (let i = 0; i < N; i++) {
-        const r = a * spd[i] * (1 + 0.04 * Math.sin(t * 2 + i));
-        pa.setXYZ(i, dir[i * 3] * r, dir[i * 3 + 1] * r, dir[i * 3 + 2] * r);
-        const k = clamp(q * 1.25 + (spd[i] - 0.6) * 0.25, 0, 1);
-        col.copy(hot).lerp(warm, sstep(0.0, 0.35, k)).lerp(cool, sstep(0.35, 0.75, k)).lerp(dim, sstep(0.75, 1.0, k));
-        ca.setXYZ(i, col.r, col.g, col.b);
-      }
+      bg.u.uQ.value = q; bg.u.uT.value = t;
+      const a = 3.6 * (1 - Math.exp(-q * 9)) + 1.6 * q, pa = p.geometry.attributes.position, ca = p.geometry.attributes.aColor;
+      for (let i = 0; i < N; i++) { const r = a * spd[i]; pa.setXYZ(i, dir[i * 3] * r, dir[i * 3 + 1] * r, dir[i * 3 + 2] * r); col.copy(hot).lerp(cool, clamp(q * 1.3, 0, 1)).multiplyScalar(sstep(0.02, 0.08, q) * 0.8); ca.setXYZ(i, col.r, col.g, col.b); }
       pa.needsUpdate = ca.needsUpdate = true;
-      const f = Math.exp(-q * 9);
-      flash.scale.setScalar(0.3 + 9 * (1 - f)); flash.material.opacity = f;
-      halo.scale.setScalar(2 + 10 * q); halo.material.opacity = 0.7 * Math.exp(-q * 3);
-      cams.bang.position.set(Math.sin(t * 0.08) * 0.6, 0.4, 7.5 - q * 1.8); cams.bang.lookAt(0, 0, 0);
+      // câmera: puxa para trás no clarão (como nos documentários) e depois flutua dentro da expansão
+      const pull = 6.5 + 2.5 * sstep(0.0, 0.25, q) - 3.0 * sstep(0.3, 1, q);
+      cams.bang.position.set(Math.sin(t * 0.09) * 0.5, 0.35 + Math.sin(t * 0.13) * 0.1, pull); cams.bang.lookAt(0, 0, 0);
+      hud(q < 0.05 ? 'Tudo o que existe, menor que um átomo' : 'Inflação: o espaço cresce 10²⁶ vezes em 10⁻³² s', sstep(0, 0.3, q));
     };
   }
 
-  // 2) Nucleossíntese: prótons e nêutrons que se juntam em núcleos de hélio (2p + 2n)
+  // 2) Sopa de quarks e glúons: plasma turbulento com quarks de três "cores" (carga de cor)
+  {
+    const s = new THREE.Scene();
+    const bg = bgQuad(/* glsl */`
+      varying vec2 vUv;
+      void main(){
+        vec3 rd = rayDir(vUv), ro = cameraPosition; vec3 col = vec3(0.0); float T = 1.0, dt = 0.32, tt = dt * h12(gl_FragCoord.xy + uT);
+        for (int i = 0; i < 18; i++) {
+          vec3 p = ro + rd * tt;
+          vec3 w = (tn4(p * 0.55 + vec3(uT * 0.3, 0.0, uT * 0.2)).gba - 0.5) * 3.0;
+          float n = fbmT(p * 0.9 + w + vec3(0.0, uT * 0.5, 0.0));
+          float d = smoothstep(0.45, 0.85, n);
+          vec3 e = mix(vec3(1.0, 0.38, 0.08), vec3(1.5, 1.25, 0.75), smoothstep(0.55, 0.9, n));
+          e = mix(e, vec3(0.9, 0.25, 0.6), smoothstep(0.75, 0.95, tn(p * 3.0 + uT))) * mix(0.75, 0.45, uQ);
+          float a = d * 0.22; col += T * e * a; T *= 1.0 - a; tt += dt;
+        }
+        gl_FragColor = vec4(col + vec3(0.06, 0.012, 0.004) * T, 1.0);
+      }`);
+    const N = small ? 3000 : 6000, p = mkPoints(N, 1), pa = p.geometry.attributes, P = new Float32Array(N * 3), PH = new Float32Array(N);
+    const QC = [[1.6, 0.25, 0.2], [0.3, 1.5, 0.35], [0.35, 0.5, 1.7]];
+    for (let i = 0; i < N; i++) { P.set([gauss() * 2.2, gauss() * 1.4, gauss() * 2.2], i * 3); PH[i] = rand() * 100; const c = QC[i % 3]; pa.aColor.setXYZ(i, c[0], c[1], c[2]); pa.aSize.setX(i, 0.025 + Math.pow(rand(), 5) * 0.03); }
+    s.add(bg.mesh, p); scenes.qgp = s; cams.qgp = mkCam(55);
+    scenes.qgp.update = (q, t) => {
+      bg.u.uQ.value = q; bg.u.uT.value = t;
+      const bind = sstep(0.55, 1, q);                                     // no fim, os quarks se prendem em trios (prótons e nêutrons)
+      for (let i = 0; i < N; i++) {
+        const j = i - (i % 3), k = PH[i] + t * 2.2, tr = 0.18 * (1 - bind) + 0.025;
+        const cx = P[j * 3], cy = P[j * 3 + 1], cz = P[j * 3 + 2];
+        pa.position.setXYZ(i, lerp(P[i * 3], cx, bind) + Math.sin(k * 1.3) * tr, lerp(P[i * 3 + 1], cy, bind) + Math.cos(k * 1.7) * tr, lerp(P[i * 3 + 2], cz, bind) + Math.sin(k * 0.9) * tr);
+      }
+      pa.position.needsUpdate = true;
+      cams.qgp.position.set(Math.sin(t * 0.06) * 4.2, 0.6, Math.cos(t * 0.06) * 4.2 - q * 1.5); cams.qgp.lookAt(0, 0, 0);
+      hud(q < 0.55 ? 'Quarks livres a ~4 trilhões de °C' : 'Esfriou: três quarks formam cada próton e nêutron', sstep(0, 1, q));
+    };
+  }
+
+  // 3) Nucleossíntese: prótons e nêutrons que se juntam em núcleos de hélio (2p + 2n), no meio da névoa que esfria
   {
     const s = new THREE.Scene(), N = small ? 900 : 1600;
-    const geo = new THREE.SphereGeometry(0.05, 12, 8);
-    const mat = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.0, emissive: 0x000000 });
+    const bg = bgQuad(/* glsl */`
+      varying vec2 vUv;
+      void main(){ vec3 d = rayDir(vUv); float n = fbmT(d * 3.0 + vec3(uT * 0.05, 0.0, 0.0) + 11.0);
+        vec3 c = mix(vec3(0.55, 0.16, 0.03), vec3(0.95, 0.5, 0.16), smoothstep(0.3, 0.8, n)) * mix(0.9, 0.45, uQ);
+        gl_FragColor = vec4(c, 1.0); }`);
+    const geo = new THREE.SphereGeometry(0.05, 14, 10);
+    const mat = new THREE.MeshPhysicalMaterial({ roughness: 0.3, metalness: 0.0, clearcoat: 0.6, sheen: 0.4 });
     const im = new THREE.InstancedMesh(geo, mat, N);
     const P = [], G = [], KIND = [];
     const groups = Math.floor(N * 0.07);
@@ -162,14 +256,14 @@ function init() {
     const tet = [new THREE.Vector3(1, 1, 1), new THREE.Vector3(-1, -1, 1), new THREE.Vector3(-1, 1, -1), new THREE.Vector3(1, -1, -1)].map(v => v.multiplyScalar(0.045));
     const centers = [];
     for (let g = 0; g < groups; g++) { centers.push(new THREE.Vector3(gauss(), gauss(), gauss()).multiplyScalar(1.4)); for (let k = 0; k < 4; k++) { const i = g * 4 + k; G[i] = g; KIND[i] = k < 2 ? 0 : 1; } }
-    const cP = new THREE.Color(1.0, 0.32, 0.28), cN = new THREE.Color(0.35, 0.55, 1.0);
+    const cP = new THREE.Color(0.95, 0.27, 0.24), cN = new THREE.Color(0.56, 0.64, 0.72);
     for (let i = 0; i < N; i++) im.setColorAt(i, KIND[i] ? cN : cP);
-    s.add(im, new THREE.AmbientLight(0x6070a0, 0.6));
+    s.add(bg.mesh, im, new THREE.AmbientLight(0x6070a0, 0.5), new THREE.HemisphereLight(0xffb070, 0x301008, 1.2));
     const L = new THREE.PointLight(0xffe0b0, 40, 0, 1.6); L.position.set(2, 2, 3); s.add(L);
-    const glow = sprite(0xffb070, 9, 0.35); s.add(glow);
     scenes.nuc = s; cams.nuc = mkCam(50);
     const m4 = new THREE.Matrix4(), v = new THREE.Vector3(), q4 = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
     scenes.nuc.update = (q, t) => {
+      bg.u.uQ.value = q; bg.u.uT.value = t;
       const bind = sstep(0.25, 0.8, q);
       for (let i = 0; i < N; i++) {
         const j = Math.sin(t * 3 + i * 1.7) * 0.03;
@@ -178,113 +272,161 @@ function init() {
         m4.compose(v, q4, one); im.setMatrixAt(i, m4);
       }
       im.instanceMatrix.needsUpdate = true;
-      glow.material.opacity = 0.35 * (1 - q * 0.7);
       cams.nuc.position.set(Math.cos(t * 0.15) * 5.2, 1.2, Math.sin(t * 0.15) * 5.2); cams.nuc.lookAt(0, 0, 0);
       hud(`Hidrogênio ${Math.round(100 - 25 * bind)}% · Hélio ${Math.round(25 * bind)}% (em massa)`, bind);
     };
   }
 
-  // 3) Fundo cósmico de micro-ondas: o plasma opaco clareia e mostra as pequenas diferenças de temperatura
+  // 4) Recombinação: a névoa laranja de 3.000 K clareia e o céu vira o mapa do satélite Planck, que "desenrola" em elipse (Mollweide)
   {
     const s = new THREE.Scene();
-    const m = new THREE.ShaderMaterial({
-      uniforms: { uFog: { value: 1 }, uT: { value: 0 } }, side: THREE.BackSide, depthWrite: false,
-      vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `${NOISE} uniform float uFog, uT; varying vec3 vP;
-        vec3 planck(float x){ // escala de cores parecida com o mapa do satélite Planck
-          vec3 a = vec3(0.0, 0.05, 0.4), b = vec3(0.2, 0.6, 1.0), c = vec3(1.0, 0.98, 0.9), d = vec3(1.0, 0.6, 0.15), e = vec3(0.75, 0.1, 0.05);
-          return x < 0.25 ? mix(a, b, x / 0.25) : x < 0.5 ? mix(b, c, (x - 0.25) / 0.25) : x < 0.75 ? mix(c, d, (x - 0.5) / 0.25) : mix(d, e, (x - 0.75) / 0.25); }
-        void main(){ vec3 d = normalize(vP);
-          float n = fbm(d * 6.0 + 3.0) * 0.65 + fbm(d * 18.0) * 0.35;
-          vec3 cmb = planck(clamp((n - 0.28) * 2.4, 0.0, 1.0)) * 0.42;
-          vec3 plasma = vec3(0.95, 0.42, 0.14) * (0.35 + 0.35 * fbm(d * 3.0 + uT * 0.3));
-          gl_FragColor = vec4(mix(cmb, plasma, uFog), 1.0); }`
-    });
-    const sph = new THREE.Mesh(new THREE.SphereGeometry(50, 64, 32), m);
-    s.add(sph); scenes.cmb = s; cams.cmb = mkCam(70, 0.1, 200);
+    const bg = bgQuad(/* glsl */`
+      uniform float uFog, uMap; varying vec2 vUv;
+      vec3 planck(float x){
+        vec3 a = vec3(0.0, 0.03, 0.35), b = vec3(0.1, 0.45, 0.95), c = vec3(0.95, 0.9, 0.78), d = vec3(1.0, 0.55, 0.12), e = vec3(0.71, 0.2, 0.16);
+        return x < 0.25 ? mix(a, b, x / 0.25) : x < 0.5 ? mix(b, c, (x - 0.25) / 0.25) : x < 0.75 ? mix(c, d, (x - 0.5) / 0.25) : mix(d, e, (x - 0.75) / 0.25); }
+      float cmb(vec3 d){ return fbmT(d * 9.0 + 3.0) * 0.55 + fbmT(d * 26.0 + 17.0) * 0.45; }
+      void main(){
+        vec3 d = rayDir(vUv);
+        vec3 sky = planck(clamp((cmb(d) - 0.47) * 4.5 + 0.5, 0.0, 1.0)) * 0.55;
+        vec3 plasma = vec3(1.0, 0.62, 0.3) * (0.55 + 0.35 * fbmT(d * 3.0 + uT * 0.15));
+        vec3 col = mix(sky, plasma, uFog);
+        if (uMap > 0.0) {                                   // projeção de Mollweide do céu inteiro, como na imagem da ESA
+          vec2 m = (vUv - 0.5) * 2.0 * vec2(uAsp, 1.0) / mix(3.2, 1.0, uMap);
+          float X = m.x / 1.6 * 2.8284, Y = m.y / 0.8 * 1.4142;
+          vec3 mapc = vec3(0.0);
+          if (X * X / 8.0 + Y * Y / 2.0 <= 1.0) {
+            float th = asin(clamp(Y / 1.4142, -1.0, 1.0)), lat = asin(clamp((2.0 * th + sin(2.0 * th)) / 3.14159, -1.0, 1.0)), lon = 3.14159 * X / (2.8284 * cos(th)) + uT * 0.02;
+            vec3 dd = vec3(cos(lat) * cos(lon), sin(lat), cos(lat) * sin(lon));
+            mapc = planck(clamp((cmb(dd) - 0.47) * 4.5 + 0.5, 0.0, 1.0)) * 0.42;
+          } else { float e = X * X / 8.0 + Y * Y / 2.0; mapc = vec3(0.03, 0.035, 0.05) * smoothstep(1.06, 1.0, e); }
+          col = mix(col, mapc, smoothstep(0.0, 0.6, uMap));
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`, { uFog: { value: 1 }, uMap: { value: 0 } });
+    s.add(bg.mesh); scenes.cmb = s; cams.cmb = mkCam(70, 0.1, 200);
     scenes.cmb.update = (q, t) => {
-      m.uniforms.uFog.value = 1 - sstep(0.1, 0.45, q); m.uniforms.uT.value = t;
-      sph.scale.setScalar(1 + sstep(0.65, 1, q) * 2);
-      cams.cmb.position.set(0, 0, 0); cams.cmb.rotation.set(0.1 * Math.sin(t * 0.2), t * 0.05, 0);
-      hud(q < 0.4 ? 'Plasma quente e opaco: a luz fica presa' : 'Pontos azuis: mais frios · vermelhos: mais quentes (diferença de 0,00001 grau)', sstep(0.1, 0.45, q));
+      bg.u.uT.value = t; bg.u.uFog.value = 1 - sstep(0.08, 0.4, q); bg.u.uMap.value = sstep(0.5, 0.92, q);
+      cams.cmb.position.set(0, 0, 0); cams.cmb.rotation.set(0.1 * Math.sin(t * 0.2), t * 0.05, 0); cams.cmb.updateMatrixWorld();
+      hud(q < 0.4 ? 'Plasma a 3.000 °C: a luz fica presa' : q < 0.55 ? 'Os átomos se formam e a luz escapa' : 'O céu inteiro visto pelo satélite Planck (ESA): azul mais frio, vermelho mais quente', sstep(0.08, 0.9, q));
     };
   }
 
-  // 4) Idade das trevas → primeiras estrelas (e supernovas)
-  {
-    const s = new THREE.Scene(), N = 420;
-    const gas = new THREE.Mesh(new THREE.SphereGeometry(60, 48, 24), new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false, uniforms: { uK: { value: 0 } },
-      vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `${NOISE} uniform float uK; varying vec3 vP; void main(){ vec3 d = normalize(vP); float n = fbm(d * 4.0 + 9.0);
-        gl_FragColor = vec4(vec3(0.05, 0.07, 0.16) * smoothstep(0.35, 0.8, n) * (0.6 + uK), 1.0); }`
-    }));
-    const st = mkPoints(N, 1), pa = st.geometry.attributes, born = new Float32Array(N), P = [];
-    for (let i = 0; i < N; i++) { const v = new THREE.Vector3(gauss(), gauss() * 0.6, gauss()).multiplyScalar(6); P.push(v); pa.position.setXYZ(i, v.x, v.y, v.z); born[i] = 0.1 + rand() * 0.75; }
-    const sn = [0, 1, 2].map(() => { const sp = sprite(0xbfd8ff, 1, 0); s.add(sp); return { sp, at: 0.55 + rand() * 0.35, p: P[(rand() * N) | 0] }; });
-    s.add(gas, st); scenes.stars = s; cams.stars = mkCam(60, 0.05, 300);
-    scenes.stars.update = (q, t) => {
-      for (let i = 0; i < N; i++) {
-        const k = sstep(born[i], born[i] + 0.05, q), pop = Math.exp(-Math.max(0, q - born[i]) * 30) * 4;
-        const b = k * (0.8 + pop);
-        pa.aColor.setXYZ(i, 0.55 * b, 0.7 * b, 1.3 * b); pa.aSize.setX(i, 0.05 + pop * 0.05);
+  // 5) Idade das Trevas e 6) primeiras estrelas + reionização: o mesmo gás, primeiro escuro, depois furado por bolhas de luz
+  const darkFrag = /* glsl */`
+    uniform vec4 uS[10]; uniform float uOn; varying vec2 vUv;
+    float web(vec3 p){ float n = fbmT(p * 0.6); return pow(1.0 - abs(2.0 * n - 1.0), 6.0); }     // filamentos (ruído "ridged")
+    void main(){
+      vec3 rd = rayDir(vUv), ro = cameraPosition; vec3 col = vec3(0.0); float T = 1.0, dt = 0.9, tt = dt * h12(gl_FragCoord.xy + uT);
+      for (int i = 0; i < 20; i++) {
+        vec3 p = ro + rd * tt;
+        float f = web(p + vec3(0.0, 0.0, uT * 0.05)), neut = 0.25 + 0.75 * f;
+        vec3 e = mix(vec3(0.05, 0.035, 0.03), vec3(0.23, 0.16, 0.11), f) * (0.07 + 0.25 * uOn);
+        float ion = 0.0; vec3 rim = vec3(0.0);
+        for (int k = 0; k < 10; k++) {
+          float r = uS[k].w; if (r <= 0.0) continue;
+          float dd = length(p - uS[k].xyz) + (fbmT(p * 1.3) - 0.5) * r * 0.6;
+          ion = max(ion, smoothstep(r, r * 0.8, dd));
+          rim += vec3(0.6, 0.78, 1.25) * exp(-abs(dd - r) * 4.0) * 0.12;
+        }
+        float a = neut * (1.0 - ion) * 0.16 * dt;
+        col += T * (e * (1.0 - ion) + rim * neut * uOn) * a * 4.0;
+        T *= exp(-a); tt += dt;
       }
-      pa.aColor.needsUpdate = pa.aSize.needsUpdate = true;
-      sn.forEach(o => { const e = q - o.at; o.sp.position.copy(o.p); o.sp.material.opacity = e > 0 ? Math.exp(-e * 8) : 0; o.sp.scale.setScalar(e > 0 ? 0.5 + e * 12 : 0.01); });
-      gas.material.uniforms.uK.value = q;
-      cams.stars.position.set(Math.sin(t * 0.07) * 12, 2.5, Math.cos(t * 0.07) * 12 - q * 3); cams.stars.lookAt(0, 0, 0);
-      hud(`Estrelas acesas: ${Math.round(N * sstep(0.1, 0.9, q))}`, sstep(0.1, 0.9, q));
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+  {
+    const s = new THREE.Scene(), bg = bgQuad(darkFrag, { uS: { value: Array.from({ length: 10 }, () => new THREE.Vector4()) }, uOn: { value: 0 } });
+    s.add(bg.mesh); scenes.dark = s; cams.dark = mkCam(60, 0.05, 300);
+    scenes.dark.update = (q, t) => {
+      bg.u.uT.value = t; bg.u.uOn.value = 0;
+      cams.dark.position.set(Math.sin(t * 0.03) * 2, 0.5, 14 - q * 5); cams.dark.lookAt(0, 0, -20);
+      hud('Nenhuma estrela ainda: só hidrogênio, hélio e matéria escura', sstep(0, 1, q));
+    };
+  }
+  {
+    const s = new THREE.Scene(), SP = [];
+    for (let k = 0; k < 10; k++) SP.push({ p: new THREE.Vector3(gauss() * 5, gauss() * 2.5, -4 - rand() * 18), at: 0.08 + k * 0.06 + rand() * 0.03 });
+    const bg = bgQuad(darkFrag, { uS: { value: SP.map(() => new THREE.Vector4()) }, uOn: { value: 1 } });
+    const fl = SP.map(o => { const f = flare(0xa8c4ff, 1, 0); f.position.copy(o.p); s.add(f); const c = sprite(0xd8e6ff, 1, 0); c.position.copy(o.p); s.add(c); return { f, c }; });
+    s.add(bg.mesh); scenes.stars = s; cams.stars = mkCam(60, 0.05, 300);
+    scenes.stars.update = (q, t) => {
+      bg.u.uT.value = t;
+      SP.forEach((o, k) => {
+        const e = q - o.at, on = e > 0 ? 1 : 0, r = on ? (0.6 + Math.pow(e, 0.8) * 13) : 0;
+        bg.u.uS.value[k].set(o.p.x, o.p.y, o.p.z, r);
+        const pop = e > 0 ? Math.exp(-e * 9) * 3 : 0;
+        fl[k].f.material.opacity = on * (0.35 + pop * 0.3); fl[k].f.scale.set((1.4 + pop * 3) * 4, 1.4 + pop * 3, 1);
+        fl[k].c.material.opacity = on * 0.8; fl[k].c.scale.setScalar(0.5 + pop * 1.2);
+      });
+      cams.stars.position.set(Math.sin(t * 0.03) * 2, 0.5, 9 - q * 4); cams.stars.lookAt(0, 0, -20);
+      hud(q < 0.45 ? 'Estrelas de até 300 vezes a massa do Sol, azuis e quentíssimas' : 'Reionização: a luz delas abre bolhas no gás neutro', sstep(0.05, 1, q));
     };
   }
 
-  // 5) Teia cósmica: filamentos de matéria e galáxias nos cruzamentos
+  // 7) Teia cósmica (paleta das simulações IllustrisTNG/Millennium): vazios escuros, filamentos azul-esverdeados, nós brancos
   {
-    const s = new THREE.Scene(), NODES = 46, NP = small ? 26000 : 46000, BOX = 9;
+    const s = new THREE.Scene(), NODES = 52, NP = small ? 30000 : 60000, BOX = 9;
     const nodes = []; for (let i = 0; i < NODES; i++) nodes.push(new THREE.Vector3((rand() - 0.5) * 2 * BOX, (rand() - 0.5) * 2 * BOX, (rand() - 0.5) * 2 * BOX));
     const edges = [];
     nodes.forEach((a, i) => { nodes.map((b, j) => [a.distanceTo(b), j]).sort((x, y) => x[0] - y[0]).slice(1, 4).forEach(([, j]) => { if (i < j) edges.push([i, j]); }); });
     const p = mkPoints(NP, 1), pa = p.geometry.attributes, base = new Float32Array(NP);
-    const c1 = new THREE.Color(0.5, 0.35, 1.0), c2 = new THREE.Color(1.0, 0.75, 0.55), c = new THREE.Color();
+    const cVoid = new THREE.Color(0.12, 0.2, 0.55), cFil = new THREE.Color(0.25, 0.65, 0.63), cWarm = new THREE.Color(0.9, 0.83, 0.35), cNode = new THREE.Color(1.3, 1.25, 1.15), c = new THREE.Color();
     for (let i = 0; i < NP; i++) {
-      let v;
-      if (rand() < 0.22) { const n = nodes[(rand() * NODES) | 0]; v = n.clone().add(new THREE.Vector3(gauss(), gauss(), gauss()).multiplyScalar(0.35)); c.copy(c2); }
-      else { const [a, b] = edges[(rand() * edges.length) | 0], u = rand(); v = nodes[a].clone().lerp(nodes[b], u).add(new THREE.Vector3(gauss(), gauss(), gauss()).multiplyScalar(0.12 + 0.1 * Math.sin(u * Math.PI))); c.copy(c1).lerp(c2, rand() * 0.3); }
-      pa.position.setXYZ(i, v.x, v.y, v.z); base[i] = 0.2 + Math.pow(rand(), 3); pa.aColor.setXYZ(i, c.r, c.g, c.b); pa.aSize.setX(i, 0.025 + Math.pow(rand(), 6) * 0.08);
+      let v; const u = rand();
+      if (u < 0.2) { const n = nodes[(rand() * NODES) | 0], r = Math.abs(gauss()) * 0.32; v = n.clone().add(new THREE.Vector3(gauss(), gauss(), gauss()).normalize().multiplyScalar(r)); c.copy(cWarm).lerp(cNode, Math.exp(-r * 6)); }
+      else if (u < 0.9) { const [a, b] = edges[(rand() * edges.length) | 0], w = rand(), sp = 0.08 + 0.12 * Math.sin(w * Math.PI); v = nodes[a].clone().lerp(nodes[b], w).add(new THREE.Vector3(gauss(), gauss(), gauss()).multiplyScalar(sp)); c.copy(cFil).lerp(cWarm, Math.pow(1 - Math.sin(w * Math.PI), 3) * 0.8); }
+      else { v = new THREE.Vector3((rand() - 0.5) * 2 * BOX, (rand() - 0.5) * 2 * BOX, (rand() - 0.5) * 2 * BOX); c.copy(cVoid).multiplyScalar(0.35); }
+      pa.position.setXYZ(i, v.x, v.y, v.z); base[i] = 0.25 + Math.pow(rand(), 3); pa.aColor.setXYZ(i, c.r, c.g, c.b); pa.aSize.setX(i, 0.02 + Math.pow(rand(), 7) * 0.08);
     }
     const cols = Float32Array.from(pa.aColor.array);
-    s.add(p); nodes.forEach(n => { const g = sprite(0xffd9b0, 0.9, 0.5); g.position.copy(n); s.add(g); });
-    scenes.web = s; cams.web = mkCam(60, 0.05, 400);
+    s.add(p); nodes.forEach(n => { const g = sprite(0xffe9c8, 0.7, 0.45); g.position.copy(n); s.add(g); });
+    const tgt = nodes.reduce((best, n) => n.length() < best.length() ? n : best, nodes[0]);
+    scenes.web = s; cams.web = mkCam(60, 0.01, 400);
     scenes.web.update = (q, t) => {
-      const k = sstep(0, 0.6, q);
-      for (let i = 0; i < NP; i++) { const b = base[i] * (0.3 + 1.2 * k); pa.aColor.setXYZ(i, cols[i * 3] * b, cols[i * 3 + 1] * b, cols[i * 3 + 2] * b); }
+      const k = sstep(0, 0.5, q);
+      for (let i = 0; i < NP; i++) { const b = base[i] * (0.25 + 1.15 * k); pa.aColor.setXYZ(i, cols[i * 3] * b, cols[i * 3 + 1] * b, cols[i * 3 + 2] * b); }
       pa.aColor.needsUpdate = true;
-      const a = t * 0.05 + 0.6;
-      cams.web.position.set(Math.cos(a) * (16 - q * 6), 3 * Math.sin(t * 0.1), Math.sin(a) * (16 - q * 6)); cams.web.lookAt(0, 0, 0);
+      // zoom contínuo e exponencial até um nó (como o "Millennium Run")
+      const dist = Math.exp(lerp(Math.log(22), Math.log(1.6), ease(q))), a = t * 0.04 + 0.6;
+      cams.web.position.set(tgt.x + Math.cos(a) * dist, tgt.y + dist * 0.25, tgt.z + Math.sin(a) * dist); cams.web.lookAt(tgt);
       hud('Cada ponto claro é uma galáxia inteira', k);
     };
   }
 
-  // 6) Via Láctea: espiral barrada vista de fora, com o "você está aqui"
+  // 8) Via Láctea: espiral barrada com faixas de poeira, berçários rosados e o "você está aqui"
   {
     const s = new THREE.Scene(), N = small ? 50000 : 90000, p = mkPoints(N, 1), pa = p.geometry.attributes;
-    const cB = new THREE.Color(1.0, 0.82, 0.58), cA = new THREE.Color(0.55, 0.68, 1.0), cH = new THREE.Color(1.0, 0.4, 0.55), c = new THREE.Color();
+    const cB = new THREE.Color(1.0, 0.86, 0.62), cA = new THREE.Color(0.62, 0.77, 1.0), cH = new THREE.Color(1.0, 0.43, 0.66), c = new THREE.Color();
     for (let i = 0; i < N; i++) {
-      const u = rand(); let x, y, z;
+      const u = rand(); let x, y, z, sz = 0.03 + Math.pow(rand(), 8) * 0.1;
       if (u < 0.22) { const r = Math.abs(gauss()) * 0.9; const a = rand() * TAU; x = Math.cos(a) * r * 1.6; z = Math.sin(a) * r * 0.7; y = gauss() * 0.25 * Math.exp(-r); c.copy(cB); }
       else {
         const k = rand() < 0.5 ? 0 : Math.PI, r = 1.4 + Math.pow(rand(), 0.8) * 8.5, th = k + 3.6 * Math.log(r / 1.4) + gauss() * (0.12 + 0.03 * r);
-        x = Math.cos(th) * r; z = Math.sin(th) * r; y = gauss() * 0.06; c.copy(cA).lerp(cB, Math.exp(-r / 2.5)); if (rand() < 0.03) c.copy(cH);
+        x = Math.cos(th) * r; z = Math.sin(th) * r; y = gauss() * 0.06; c.copy(cA).lerp(cB, Math.exp(-r / 2.5)); if (rand() < 0.05 && r > 3) { c.copy(cH); sz *= 2.2; }
       }
-      pa.position.setXYZ(i, x, y, z); const b = 0.25 + Math.pow(rand(), 3) * 0.9; pa.aColor.setXYZ(i, c.r * b, c.g * b, c.b * b); pa.aSize.setX(i, 0.03 + Math.pow(rand(), 8) * 0.1);
+      pa.position.setXYZ(i, x, y, z); const b = 0.25 + Math.pow(rand(), 3) * 0.9; pa.aColor.setXYZ(i, c.r * b, c.g * b, c.b * b); pa.aSize.setX(i, sz);
     }
-    const core = sprite(0xffe2b5, 5, 0.6), sun = sprite(0xfff1c0, 0.5, 1);
+    // poeira: multiplica (escurece) o que já foi desenhado, seguindo os braços um pouco por dentro
+    const dust = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), new THREE.ShaderMaterial({
+      uniforms: { tN: { value: NOISE3 } }, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+      blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.ZeroFactor, blendDst: THREE.SrcColorFactor,
+      vertexShader: `varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform sampler3D tN; varying vec2 vP;
+        void main(){ float r = length(vP), th = atan(vP.y, vP.x);
+          float arm = 0.5 + 0.5 * cos(2.0 * (th - 3.6 * log(max(r, 0.3) / 1.4)) - 0.55);
+          float n = texture(tN, vec3(vP * 0.06, 0.3)).r * 0.6 + texture(tN, vec3(vP * 0.17, 0.7)).r * 0.4;
+          float dd = pow(arm, 5.0) * smoothstep(1.2, 2.2, r) * smoothstep(10.5, 6.0, r) * smoothstep(0.35, 0.7, n);
+          gl_FragColor = vec4(mix(vec3(1.0), vec3(0.32, 0.22, 0.16), dd * 0.85), 1.0); }`
+    }));
+    dust.rotation.x = -Math.PI / 2; dust.renderOrder = 5; p.add(dust);
+    const core = sprite(0xffe2b5, 5.5, 0.65), sun = sprite(0xfff1c0, 0.5, 1);
     const sunR = 5.6, sunA = 3.6 * Math.log(sunR / 1.4) + 0.35; sun.position.set(Math.cos(sunA) * sunR, 0, Math.sin(sunA) * sunR);
     s.add(p, core, sun, starfield(2500, 300, 0.6)); scenes.mw = s; cams.mw = mkCam(50, 0.05, 900);
-    scenes.mw.sunPos = sun.position;
     scenes.mw.update = (q, t) => {
-      p.rotation.y = t * 0.03; sun.position.set(Math.cos(sunA + t * 0.03) * sunR, 0, Math.sin(sunA + t * 0.03) * sunR).applyAxisAngle(new THREE.Vector3(0, 1, 0), 0);
-      const sp = sun.position.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -t * 0.03 * 0);
-      const far = new THREE.Vector3(0, 13, 17), near = sp.clone().add(new THREE.Vector3(0, 1.4, 2.2));
+      p.rotation.y = t * 0.03; sun.position.set(Math.cos(sunA + t * 0.03) * sunR, 0, Math.sin(sunA + t * 0.03) * sunR);
+      const sp = sun.position.clone();
+      const far = new THREE.Vector3(0, 15, 9), near = sp.clone().add(new THREE.Vector3(0, 1.4, 2.2));
       const k = ease(sstep(0.35, 1, q));
       cams.mw.position.copy(far).lerp(near, k); cams.mw.lookAt(new THREE.Vector3().lerp(sp, k));
       sun.scale.setScalar(0.4 + 0.3 * Math.sin(t * 4) ** 2);
@@ -293,33 +435,52 @@ function init() {
     };
   }
 
-  // 7) Sistema Solar: disco protoplanetário, o Sol acende e os planetas surgem nas lacunas
+  // 9) Sistema Solar: nuvem que colapsa, protoestrela com jatos e o disco com anéis e lacunas (como o HL Tau visto pelo ALMA)
   {
-    const s = new THREE.Scene(), N = small ? 20000 : 36000, p = mkPoints(N, 1), pa = p.geometry.attributes;
-    const R = new Float32Array(N), A = new Float32Array(N), Y = new Float32Array(N);
+    const s = new THREE.Scene(), N = small ? 16000 : 30000, p = mkPoints(N, 1), pa = p.geometry.attributes;
+    const R = new Float32Array(N), A = new Float32Array(N), Y = new Float32Array(N), R0 = new Float32Array(N);
     const gaps = [1.0, 1.5, 2.1, 2.9, 4.4, 5.8, 7.1, 8.4];
-    for (let i = 0; i < N; i++) { R[i] = 0.5 + Math.pow(rand(), 0.7) * 9; A[i] = rand() * TAU; Y[i] = gauss() * 0.04 * R[i]; const w = 0.4 + Math.pow(rand(), 2); pa.aColor.setXYZ(i, w, w * 0.7, w * 0.45); pa.aSize.setX(i, 0.02 + Math.pow(rand(), 6) * 0.05); }
+    for (let i = 0; i < N; i++) { R[i] = 0.5 + Math.pow(rand(), 0.7) * 9; R0[i] = 6 + rand() * 14; A[i] = rand() * TAU; Y[i] = gauss() * 0.04 * R[i]; const w = 0.4 + Math.pow(rand(), 2); pa.aColor.setXYZ(i, w, w * 0.62, w * 0.36); pa.aSize.setX(i, 0.02 + Math.pow(rand(), 6) * 0.05); }
+    const disk = new THREE.Mesh(new THREE.RingGeometry(0.3, 9.5, 160, 1), new THREE.ShaderMaterial({
+      uniforms: { tN: { value: NOISE3 }, uT: { value: 0 }, uA: { value: 0 } }, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
+      vertexShader: `varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform sampler3D tN; uniform float uT, uA; varying vec2 vP;
+        void main(){ float r = length(vP), th = atan(vP.y, vP.x) + uT * 0.6 / pow(max(r, 0.4), 1.5);     // rotação de Kepler: dentro gira mais rápido
+          float g = 1.0;
+          g *= 1.0 - 0.85 * exp(-pow((r - 1.5) / 0.12, 2.0)); g *= 1.0 - 0.8 * exp(-pow((r - 2.9) / 0.16, 2.0)); g *= 1.0 - 0.85 * exp(-pow((r - 4.4) / 0.2, 2.0));
+          g *= 1.0 - 0.7 * exp(-pow((r - 5.8) / 0.18, 2.0)); g *= 1.0 - 0.75 * exp(-pow((r - 7.1) / 0.2, 2.0));
+          float n = texture(tN, vec3(cos(th) * r * 0.12, sin(th) * r * 0.12, r * 0.05)).r;
+          float I = exp(-r / 3.2) * g * (0.75 + 0.5 * n) * smoothstep(0.3, 0.8, r) * smoothstep(9.5, 7.5, r);
+          vec3 c = mix(vec3(1.0, 0.42, 0.1), vec3(1.4, 1.0, 0.6), exp(-r / 1.2));
+          gl_FragColor = vec4(c * I * 2.2 * uA, 1.0); }`
+    }));
+    disk.rotation.x = -Math.PI / 2;
     const sunM = new THREE.Mesh(new THREE.SphereGeometry(0.35, 48, 32), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, 2.2, 1.2) }));
-    const sunG = sprite(0xffcf80, 4, 0.9);
+    const sunG = sprite(0xffcf80, 4, 0.9), sunF = flare(0xffe0b0, 2.2, 0);
+    const jets = [1, -1].map(sg => { const j = sprite(0x9fc4ff, 1, 0); j.center.set(0.5, sg > 0 ? 0 : 1); s.add(j); return j; });
     const PL = [[0.10, 0x9f9f9f], [0.13, 0xe8c48f], [0.14, 0x4f8fff], [0.11, 0xc65a3a], [0.4, 0xd8b48a], [0.34, 0xe6d3a2], [0.22, 0x9fe3ec], [0.21, 0x5b7cff]];
     const planets = PL.map(([r, c], i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 20), new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })); s.add(m); return { m, a: rand() * TAU, R: gaps[i] }; });
     const L = new THREE.PointLight(0xfff0d8, 60, 0, 1.2);
-    s.add(p, sunM, sunG, L, new THREE.AmbientLight(0x202030, 1), starfield(2500, 300, 0.7));
+    s.add(p, disk, sunM, sunG, sunF, L, new THREE.AmbientLight(0x202030, 1), starfield(2500, 300, 0.7));
     scenes.sol = s; cams.sol = mkCam(50, 0.05, 900);
     scenes.sol.update = (q, t) => {
-      const clear = sstep(0.45, 1, q);
+      const fall = sstep(0.0, 0.35, q), clear = sstep(0.62, 1, q);
       for (let i = 0; i < N; i++) {
-        const w = 0.5 / Math.pow(R[i], 1.5), a = A[i] + t * w * 2;
-        let r = R[i]; gaps.forEach(gp => { const d = r - gp; r += clear * 0.25 * Math.sign(d) * Math.exp(-d * d / 0.05) * 0.4; });
-        pa.position.setXYZ(i, Math.cos(a) * r, Y[i] * (1 - 0.5 * clear), Math.sin(a) * r);
+        const r1 = lerp(R0[i], R[i], fall), w = 0.5 / Math.pow(r1, 1.5), a = A[i] + t * w * 2 + (1 - fall) * 2.5 / r1;
+        let r = r1; gaps.forEach(gp => { const d = r - gp; r += clear * 0.25 * Math.sign(d) * Math.exp(-d * d / 0.05) * 0.4; });
+        pa.position.setXYZ(i, Math.cos(a) * r, Y[i] * (1 - 0.5 * clear) * (1 + (1 - fall) * 20), Math.sin(a) * r);
       }
-      pa.position.needsUpdate = true; p.material.uniforms.uAlpha.value = 1 - 0.75 * clear;
-      const on = sstep(0.15, 0.4, q); sunM.scale.setScalar(0.2 + on); sunG.material.opacity = on; L.intensity = 60 * on;
-      planets.forEach((o, i) => { const g = sstep(0.45 + i * 0.04, 0.6 + i * 0.04, q); o.m.scale.setScalar(Math.max(g, 0.001)); const a = o.a + t * 0.4 / Math.pow(o.R, 1.5); o.m.position.set(Math.cos(a) * o.R, 0, Math.sin(a) * o.R); });
+      pa.position.needsUpdate = true; p.material.uniforms.uAlpha.value = (1 - 0.8 * clear) * (0.5 + 0.5 * (1 - sstep(0.35, 0.6, q)));
+      const on = sstep(0.22, 0.42, q); sunM.scale.setScalar(0.2 + on); sunG.material.opacity = on; sunF.material.opacity = on * 0.8; L.intensity = 60 * on;
+      disk.material.uniforms.uT.value = t; disk.material.uniforms.uA.value = sstep(0.3, 0.5, q) * (1 - 0.7 * clear);
+      const jt = sstep(0.25, 0.4, q) * (1 - sstep(0.6, 0.8, q));
+      jets.forEach((j, k) => { j.material.opacity = jt * 0.8; j.scale.set(0.35, 5 * jt + 0.01, 1); j.position.set(0, 0, 0); });
+      planets.forEach((o, i) => { const g = sstep(0.6 + i * 0.03, 0.72 + i * 0.03, q); o.m.scale.setScalar(Math.max(g, 0.001)); const a = o.a + t * 0.4 / Math.pow(o.R, 1.5); o.m.position.set(Math.cos(a) * o.R, 0, Math.sin(a) * o.R); });
       const e = planets[2].m.position;
-      cams.sol.position.set(0, 7 - 2 * q, 12 - 3 * q); cams.sol.lookAt(0, 0, 0);
-      label('sol', e, cams.sol, q > 0.65 ? 'Terra' : '');
-      hud(q < 0.4 ? 'Nuvem de gás e poeira girando' : 'O Sol acende; os planetas varrem o disco', sstep(0.1, 1, q));
+      const tilt = lerp(0.12, 0.55, ease(sstep(0.0, 0.7, q))), d = lerp(15, 12, q);
+      cams.sol.position.set(Math.sin(t * 0.02) * 2, Math.sin(tilt) * d, Math.cos(tilt) * d); cams.sol.lookAt(0, 0, 0);
+      label('sol', e, cams.sol, q > 0.75 ? 'Terra' : '');
+      hud(q < 0.25 ? 'Uma nuvem de gás e poeira colapsa' : q < 0.62 ? 'O Sol nasce; no disco, os anéis e lacunas mostram planetas se formando' : 'Os planetas varrem o disco', sstep(0.05, 1, q));
     };
   }
 
@@ -371,7 +532,7 @@ function init() {
         vec3 H = normalize(uSun + V);
         vec3 lit = col * (0.04 + 1.05 * max(dl, 0.0)) + vec3(1.0, 0.92, 0.8) * pow(max(dot(n, H), 0.0), 60.0) * spec * 0.6 * day;
         vec3 night = texture2D(tNight, vUv).rgb * vec3(1.0, 0.78, 0.45) * 1.4 * (1.0 - day);
-        float cl = texture2D(tClouds, vUv + vec2(uT * 0.0004, 0.0)).r;
+        vec4 ct = texture2D(tClouds, vUv + vec2(uT * 0.0004, 0.0)); float cl = ct.r * ct.a;   // o PNG guarda lixo no RGB onde é transparente
         lit = mix(lit + night, vec3(1.0) * (0.03 + max(dl, 0.0)), cl * 0.75 * uCloud);
         float rim = pow(1.0 - max(dot(n, V), 0.0), 3.0);
         lit += vec3(0.3, 0.55, 1.0) * rim * 0.6 * smoothstep(-0.3, 0.4, dl);
@@ -447,6 +608,36 @@ function init() {
 
   /* ---------- Distrito Industrial II e a Escola SENAI em 3D (metros → km) ---------- */
   const site = new THREE.Group(); site.scale.setScalar(0.001); site.visible = false; local.add(site);
+  // céu físico (espalhamento Rayleigh + Mie) com o "para cima" de Iracemápolis, e o mesmo céu como luz ambiente (PMREM)
+  const sky = new Sky(); sky.scale.setScalar(40); sky.visible = false; sky.renderOrder = -5; sky.frustumCulled = false;
+  sky.material.uniforms.turbidity.value = 5.5; sky.material.uniforms.rayleigh.value = 1.4;
+  sky.material.uniforms.mieCoefficient.value = 0.004; sky.material.uniforms.mieDirectionalG.value = 0.8; sky.material.uniforms.sunPosition.value.copy(SUN); sky.material.uniforms.up.value.copy(N0);
+  es.add(sky);
+  let envTex = null;
+  function makeEnv() {
+    if (envTex) return; const ps = new THREE.Scene(), sk = new Sky(); sk.scale.setScalar(100); Object.keys(sky.material.uniforms).forEach(k => sk.material.uniforms[k].value = sky.material.uniforms[k].value);
+    ps.add(sk); const pm = new THREE.PMREMGenerator(renderer); envTex = pm.fromScene(ps, 0, 0.1, 1000).texture; pm.dispose();
+  }
+  es.fog = new THREE.Fog(0xa9c1dc, 1e8, 1e9);                // só "liga" no capítulo da escola (sem recompilar shaders)
+  // Sol com sombras só no lote: calculadas uma vez (a cena é parada), custo zero por quadro
+  const SUNL = new THREE.Vector3(SUN.dot(EAST) * 1.7, SUN.dot(N0), -SUN.dot(NORTH) * 1.7).normalize();   // sol de meio da manhã: sombras mais longas
+  const sunS = new THREE.DirectionalLight(0xfff0dc, 0); sunS.castShadow = true;
+  sunS.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048);
+  Object.assign(sunS.shadow.camera, { left: -0.26, right: 0.26, top: 0.26, bottom: -0.26, near: 0.05, far: 1.6 }); sunS.shadow.camera.updateProjectionMatrix();
+  sunS.shadow.bias = -0.0004; sunS.shadow.normalBias = 0.0004;
+  local.add(sunS, sunS.target);
+  let shadowDirty = true;
+  // "Obrigado!" gigante que sobe atrás da escola (o prédio fica na frente: teste de profundidade)
+  const thanks = (() => {
+    const c = document.createElement('canvas'); c.width = 2048; c.height = 560; const g = c.getContext('2d');
+    g.font = '800 330px "Inter Tight", "Inter", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = 'rgba(20,10,40,.55)'; g.shadowBlur = 50;
+    const gr = g.createLinearGradient(0, 80, 0, 480); gr.addColorStop(0, '#ff9a3d'); gr.addColorStop(0.55, '#ff5a1f'); gr.addColorStop(1, '#d61f2c');
+    g.fillStyle = gr; g.fillText('Obrigado!', 1024, 290); g.shadowBlur = 0; g.lineWidth = 10; g.strokeStyle = 'rgba(255,255,255,.9)'; g.strokeText('Obrigado!', 1024, 290); g.fillText('Obrigado!', 1024, 290);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.082), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthWrite: false, fog: false, toneMapped: false, side: THREE.DoubleSide, color: new THREE.Color(1.1, 1.1, 1.1) }));
+    m.renderOrder = 2; m.visible = false; local.add(m); return m;
+  })();
   const hot = [];                                           // partes clicáveis do SENAI
   let siteData = null;
   fetch('assets/data/senai-iracemapolis.json').then(r => r.json()).then(d => { siteData = d; buildSite(d); }).catch(() => {});
@@ -461,6 +652,28 @@ function init() {
     for (let i = 0; i < 64; i += 4) { g.fillStyle = `rgba(0,0,0,${0.06 + 0.04 * Math.sin(i + seed)})`; g.fillRect(i, 0, 1.5, 256); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
   }
+  // texturas reais (Poly Haven, CC0) reduzidas para a web; projeção triplanar: não depende de UV, o tamanho fica certo em qualquer prédio
+  const TXL = new THREE.TextureLoader(), TXC = {};
+  const tx = n => TXC[n] || (TXC[n] = (() => { const t = TXL.load(`assets/tex/${n}_diff.jpg`); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t; })());
+  function triMat(tex, tile, color, rough = 0.9, metal = 0, o = {}) {
+    const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, map: tx(tex), ...(o.mat || {}) });
+    const U = { uTile: { value: tile }, uGray: { value: o.gray || 0 }, uGain: { value: o.gain || 1 }, uEdge: { value: o.edge || 0 } };
+    m.onBeforeCompile = sh => {
+      Object.assign(sh.uniforms, U);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vTP, vTN;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvTP = position; vTN = normal;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vTP, vTN; uniform float uTile, uGray, uGain, uEdge;').replace('#include <map_fragment>', `
+        vec3 bw = pow(abs(normalize(vTN)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+        vec3 P = vTP / uTile;
+        vec4 tc = texture2D(map, P.zy) * bw.x + texture2D(map, P.xz) * bw.y + texture2D(map, P.xy) * bw.z;
+        vec4 tc2 = texture2D(map, P.xz * 0.13 + 0.37) * bw.y + texture2D(map, P.xy * 0.13 + 0.37) * bw.z + texture2D(map, P.zy * 0.13) * bw.x;
+        tc.rgb *= 0.8 + 0.4 * dot(tc2.rgb, vec3(0.333));          // quebra a repetição da textura
+        tc.rgb = mix(tc.rgb, vec3(dot(tc.rgb, vec3(0.3, 0.59, 0.11))), uGray) * uGain;
+        diffuseColor *= tc;
+        if (uEdge > 0.0) diffuseColor.a *= smoothstep(uEdge, uEdge * 0.55, length(vTP.xy));`);
+    };
+    m.customProgramCacheKey = () => 'tri';
+    return m;
+  }
   function buildSite(d) {
     const M = (c, r = 0.85, m = 0, ex) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, ...ex });
     // desempenho: tudo o que é estático vai para um lote por material e vira UMA malha (poucas chamadas de desenho)
@@ -474,13 +687,13 @@ function init() {
     const B = (w, h, dd) => new THREE.BoxGeometry(w, h, dd), PL = (w, h) => new THREE.PlaneGeometry(w, h);
     const flat = (mat, w, dd, x, y, z, ry = 0) => put(mat, PL(w, dd), x, y, z, -Math.PI / 2, 0, ry);
     // chão: terra, campos, mata e o asfalto das ruas (o chão de satélite fica embaixo, um pouco visível)
-    const ground = new THREE.Mesh(PL(2400, 2000), M(0x8b6f4e, 1, 0, { transparent: true, opacity: 0.1 }));
+    const ground = new THREE.Mesh(PL(2400, 2000), triMat('leafy_grass', 4, 0xa8a874, 1, 0, { gray: 0.25, edge: 1150, mat: { transparent: true, depthWrite: false } }));
     ground.rotation.x = -Math.PI / 2; ground.position.y = 0.05; site.add(ground);
-    const AREA = { lot: [0xb9b4aa, 0.25], garden: [0x4f8a3a, 0.35], parking: [0x55585e, 0.3], forest: [0x2f5a2a, 0.0], field: [0x7f8f45, 0.0], dirt: [0xa86a3e, 0.0] };
+    const AREA = { lot: [0xb9b4aa, 0.25, 'concrete_floor_02', 5, 0xe4e2dc], garden: [0x4f8a3a, 0.35, 'leafy_grass', 3, 0x8fae70], parking: [0x55585e, 0.3, 'asphalt_02', 6, 0xb8b8b8], forest: [0x2f5a2a, 0.0, 'leafy_grass', 5, 0x7f9a66], field: [0x7f8f45, 0.0, 'leafy_grass', 4, 0xb8b27a], dirt: [0xa86a3e, 0.0, 'red_laterite_soil_stones', 8, 0xd8b8a8] };
     const areaMat = {}, trees = [];
     d.areas.forEach(a => {
-      const [c, hgt] = AREA[a.t] || [0x888888, 0], w = a.x1 - a.x0, dd = a.z1 - a.z0;
-      const mt = areaMat[a.t] || (areaMat[a.t] = M(c, 1, 0, { transparent: true, opacity: a.t === 'field' || a.t === 'dirt' ? 0.3 : a.t === 'forest' ? 0.6 : 0.85 }));
+      const [c, hgt, tn, tl, tc] = AREA[a.t] || [0x888888, 0], w = a.x1 - a.x0, dd = a.z1 - a.z0;
+      const mt = areaMat[a.t] || (areaMat[a.t] = tn ? triMat(tn, tl, tc, 0.95) : M(c, 1));
       const m = new THREE.Mesh(PL(w, dd), mt); m.rotation.x = -Math.PI / 2; m.position.set((a.x0 + a.x1) / 2, 0.12 + hgt, (a.z0 + a.z1) / 2); site.add(m);
       if (a.t === 'forest') { const n = Math.min(900, Math.round(w * dd / 70)); for (let i = 0; i < n; i++) trees.push([a.x0 + rand() * w, a.z0 + rand() * dd, 6 + rand() * 7]); }
     });
@@ -488,7 +701,7 @@ function init() {
     trees.forEach(([x, z, h], i) => { m4.compose(new THREE.Vector3(x, h * 0.7, z), qq, new THREE.Vector3(h * 0.42, h * 0.38, h * 0.42)); crowns.setMatrixAt(i, m4); crowns.setColorAt(i, new THREE.Color().setHSL(0.27 + rand() * 0.06, 0.45, 0.22 + rand() * 0.1)); });
     site.add(crowns);
     // ruas (OpenStreetMap) com faixa central na rodovia
-    const asphalt = M(0x3d3f44, 0.95), line = new THREE.MeshBasicMaterial({ color: 0xf2d06b });
+    const asphalt = triMat('asphalt_02', 6, 0xa4a6aa, 0.92), line = new THREE.MeshBasicMaterial({ color: 0xf2d06b });
     d.ruas.forEach(r => {
       for (let i = 0; i < r.p.length - 1; i++) {
         const [x0, z0] = r.p[i], [x1, z1] = r.p[i + 1], L = Math.hypot(x1 - x0, z1 - z0); if (L < 0.5) continue;
@@ -498,10 +711,10 @@ function init() {
       }
     });
     // prédios. Cores do SENAI conferidas no Street View (jul/2025): paredes brancas e faixa azul no topo
-    const wallV = M(0xe9e6df, 0.9), wallS = M(0xf6f6f3, 0.75), blue = M(0x1f4fa8, 0.5), red = M(0xc8232c, 0.6), glass = M(0x5c7590, 0.15, 0.6), steel = M(0x8d949c, 0.4, 0.8), solar = M(0x1d2a4a, 0.25, 0.4);
-    const white = M(0xf4f4f2, 0.6), concrete = M(0xa9a7a1, 0.9), lawn = M(0x5d8f3a, 1), walk = M(0xc4bfb6, 0.95), paver = M(0x8f8076, 1);
-    const roofV = M(0xc9ccd0, 0.55, 0.35); roofV.map = roofTex(1, '#d4d7da');
-    const roofS = M(0xd8dadd, 0.5, 0.45); roofS.map = roofTex(3, '#e2e4e6');
+    const wallV = triMat('concrete_wall_008', 4, 0xe6e2da, 0.92), wallS = triMat('white_plaster_02', 3, 0xffffff, 0.8, 0, { gray: 0.8, gain: 1.15 }), blue = M(0x1f4fa8, 0.5), red = M(0xc8232c, 0.6), glass = M(0x5c7590, 0.15, 0.6), steel = M(0x8d949c, 0.4, 0.8), solar = M(0x1d2a4a, 0.25, 0.4);
+    const white = M(0xf4f4f2, 0.6), concrete = triMat('concrete_wall_008', 4, 0xd0cdc6, 0.9), lawn = triMat('leafy_grass', 3, 0x93b072, 1), walk = triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), paver = triMat('hexagonal_concrete_paving', 1.6, 0xd8ccc4, 1);
+    const roofV = triMat('box_profile_metal_sheet', 2.5, 0xd8dce2, 0.45, 0.7, { gray: 1, gain: 1.9 });
+    const roofS = triMat('box_profile_metal_sheet', 2.5, 0xe4e7ec, 0.4, 0.75, { gray: 1, gain: 2.1 });
     const gableGeo = (b, wh) => {
       const along = b.w >= b.d, Lr = along ? b.w : b.d, Wr = along ? b.d : b.w, rh = b.h - wh;
       const sh = new THREE.Shape(); sh.moveTo(-Wr / 2, 0); sh.lineTo(Wr / 2, 0); sh.lineTo(0, rh); sh.closePath();
@@ -605,7 +818,8 @@ function init() {
     // rótulos: primeiro os pontos que mais chamam atenção
     const pri = ['senai-oficinas', 'senai-bloco-l', 'senai-torre', 'senai-bloco-o1'], rk = o => (pri.indexOf(o.b.id) + 1) || 9;
     hot.sort((a, b) => rk(a) - rk(b));
-    site.userData.ready = true;
+    site.traverse(o => { if (o.isMesh) { o.castShadow = o !== ground; o.receiveShadow = true; } });
+    site.userData.ready = true; shadowDirty = true;
   }
 
   /* ---------- Rótulos e HUD ---------- */
@@ -627,21 +841,60 @@ function init() {
   const tmp = new THREE.Vector3(), tgtW = N0.clone().multiplyScalar(RE);
   const BR = toVec(-12, -52), SP = toVec(-22.3, -48.6), IRA = toVec(-22.5869, -47.5161);
   const orbitAz = () => { /* ângulo da câmera em volta do SENAI */ };
+  // Terra primitiva: Theia (do tamanho de Marte) bate de raspão, os destroços formam um anel e o anel vira a Lua (Kegerreis et al., 2022)
+  const MOON0 = moon.position.clone(), Y = new THREE.Vector3(0, 1, 0);
+  const camDir = q => tmp.copy(N0).applyAxisAngle(Y, lerp(-2.2, 0, ease(q))).normalize().clone();
+  const Cimp = camDir(0.22), sideV = new THREE.Vector3().crossVectors(Cimp, Y).normalize();
+  const HIT = Cimp.clone().multiplyScalar(0.3).addScaledVector(sideV, 0.95).normalize(), VDIR = new THREE.Vector3().crossVectors(Y, HIT).normalize();
+  const e1 = HIT.clone().projectOnPlane(Y).normalize(), e2 = new THREE.Vector3().crossVectors(Y, e1);
+  const theiaMat = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 } }, vertexShader: 'varying vec3 vO, vN, vW; void main(){ vO = normalize(position); vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `${NOISE} uniform float uT; varying vec3 vO, vN, vW; void main(){ float n = fbm(vO * 4.0 + 7.0); vec3 c = mix(vec3(1.3, 0.38, 0.06), vec3(0.09, 0.05, 0.04), smoothstep(0.42, 0.58, n)); float rim = pow(1.0 - max(dot(normalize(vN), normalize(cameraPosition - vW)), 0.0), 2.0); gl_FragColor = vec4(c * (0.7 + 0.5 * rim), 1.0); }` });
+  const theia = new THREE.Mesh(new THREE.SphereGeometry(3390, 64, 40), theiaMat);
+  const ND = small ? 4000 : 8000, debris = mkPoints(ND, 1), dpa = debris.geometry.attributes, DR = new Float32Array(ND), DA = new Float32Array(ND), DY = new Float32Array(ND), DS = new Float32Array(ND * 3);
+  for (let i = 0; i < ND; i++) { DR[i] = RE * (1.3 + Math.pow(rand(), 0.7) * 3.4); DA[i] = rand() * TAU; DY[i] = gauss() * 300; const v = new THREE.Vector3(gauss(), gauss(), gauss()).multiplyScalar(1400); DS.set([v.x, v.y, v.z], i * 3); const w = 0.6 + rand(); dpa.aColor.setXYZ(i, 1.5 * w, 0.62 * w, 0.22 * w); dpa.aSize.setX(i, 70 + Math.pow(rand(), 5) * 160); }
+  const impact = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffc890, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+  const impactF = flare(0xffe2c0, RE * 1.4, 0);
+  const MA = Math.atan2(HIT.dot(e2), HIT.dot(e1)) + 2.2, MR = RE * 3.8;
+  es.add(theia, debris, impact, impactF);
+  const _v = new THREE.Vector3(), HP = HIT.clone().multiplyScalar(RE * 1.02);
   scenes.earth.updateEarth = (q, t) => {
-    earthU.uLava.value = 1 - sstep(0.2, 0.55, q); earthU.uT.value = t; earthU.uCloud.value = 1; atmo.material.uniforms.uA.value = sstep(0.3, 0.6, q);
-    // a câmera dá a volta na Terra e termina em cima do Brasil
-    const a = lerp(-2.2, 0, ease(q)), d = RE * 3.4;
-    tmp.copy(N0).applyAxisAngle(NORTH, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), a).normalize();
-    ecam.position.copy(tmp).multiplyScalar(d).addScaledVector(NORTH, RE * 0.35 * (1 - q));
+    theia.visible = debris.visible = true; groundLook(false); thanks.visible = false; root.classList.remove('ended');
+    earthU.uLava.value = 1 - sstep(0.5, 0.78, q); earthU.uT.value = t; earthU.uCloud.value = sstep(0.7, 0.9, q); atmo.material.uniforms.uA.value = sstep(0.55, 0.85, q);
+    // 1) Theia chega de lado e bate de raspão
+    const hitQ = 0.2, pre = q < hitQ;
+    theia.position.copy(HIT).multiplyScalar(RE + 2600).addScaledVector(VDIR, -(hitQ - q) * RE * 20);
+    theia.scale.setScalar(pre ? 1 : Math.max(0.001, 1 - (q - hitQ) / 0.06)); theia.visible = theia.scale.x > 0.002;
+    const fl = q >= hitQ ? Math.exp(-(q - hitQ) * 30) : 0;
+    impact.position.copy(HP); impact.scale.setScalar(RE * (1.5 + 6 * (1 - fl))); impact.material.opacity = fl * 1.2;
+    impactF.position.copy(HP); impactF.material.opacity = fl; impactF.scale.set(RE * 14 * (0.5 + fl), RE * 3.5 * (0.5 + fl), 1);
+    // 2) os destroços abrem um anel e depois se juntam na Lua
+    const sp = sstep(hitQ, 0.32, q), co = sstep(0.36, 0.58, q);
+    debris.visible = q > hitQ && co < 1;
+    debris.material.uniforms.uAlpha.value = (1 - co) * sstep(hitQ, hitQ + 0.02, q);
+    for (let i = 0; i < ND; i++) {
+      const r = lerp(DR[i], MR, co * co), a = lerp(DA[i] + t * 1.6 * Math.pow(RE / DR[i], 1.5), MA, co * co);
+      _v.copy(e1).multiplyScalar(Math.cos(a) * r).addScaledVector(e2, Math.sin(a) * r).addScaledVector(Y, DY[i] * (1 - co));
+      _v.lerp(tmp.copy(HP).add(new THREE.Vector3(DS[i * 3], DS[i * 3 + 1], DS[i * 3 + 2]).multiplyScalar(1 + sp * 2)), 1 - sp);
+      dpa.position.setXYZ(i, _v.x, _v.y, _v.z);
+    }
+    dpa.position.needsUpdate = true;
+    // 3) a Lua nasce perto e se afasta (até hoje se afasta 3,8 cm por ano)
+    const mg = sstep(0.42, 0.6, q), away = sstep(0.6, 1, q);
+    moon.scale.setScalar(Math.max(mg, 0.001)); moon.visible = mg > 0.002;
+    _v.copy(e1).multiplyScalar(Math.cos(MA + t * 0.05) * MR).addScaledVector(e2, Math.sin(MA + t * 0.05) * MR);
+    moon.position.copy(_v).lerp(MOON0, ease(away));
+    // a câmera abre para ver o choque e o anel, depois dá a volta e para em cima do Brasil
+    const d = lerp(RE * 8.5, RE * 3.4, ease(sstep(0.5, 1, q)));
+    ecam.position.copy(camDir(q)).multiplyScalar(d).addScaledVector(NORTH, RE * 0.35 * (1 - q));
     ecam.up.copy(NORTH); ecam.lookAt(0, 0, 0);
-    setNearFar(d - RE);
-    hud(q < 0.35 ? 'Terra primitiva: oceano de magma' : q < 0.6 ? 'Esfria: crosta, oceanos e atmosfera' : 'Hoje: 71% da superfície é água', sstep(0, 1, q));
+    setNearFar(d - RE * 5.5 > 0 ? d - RE * 5.5 : RE);
+    hud(q < hitQ ? 'Terra primitiva: oceano de magma. Theia se aproxima' : q < 0.42 ? 'O impacto lança rocha derretida em órbita' : q < 0.62 ? 'O anel de destroços se junta: nasce a Lua' : q < 0.82 ? 'A Terra esfria: crosta, oceanos e atmosfera' : 'Hoje: 71% da superfície é água', sstep(0, 1, q));
     clearLabels();
   };
   const hKm = q => Math.exp(lerp(Math.log(RE * 2.4), Math.log(0.55), q));
   scenes.zoom.updateZoom = (q, t) => {
     const k = ease(q), h = hKm(k);
-    earthU.uLava.value = 0; atmo.material.uniforms.uA.value = 1; earthU.uCloud.value = sstep(5000, 13000, h);
+    earthU.uLava.value = 0; atmo.material.uniforms.uA.value = 1; theia.visible = debris.visible = false; impact.material.opacity = impactF.material.opacity = 0; moon.visible = true; moon.scale.setScalar(1); moon.position.copy(MOON0); earthU.uCloud.value = sstep(5000, 13000, h);
     // inclina a câmera aos poucos no fim (vista oblíqua, como num drone)
     const tilt = sstep(0.75, 1, q) * 0.9;
     const up = N0.clone(), back = NORTH.clone().negate();
@@ -650,6 +903,8 @@ function init() {
     ecam.up.copy(NORTH); ecam.lookAt(target);
     setNearFar(h);
     tileFade(h);
+    if (h < 6) { makeEnv(); groundLook(true, sstep(6, 0.6, h)); sky.position.copy(ecam.position); } else groundLook(false);
+    thanks.visible = false; root.classList.remove('ended');
     label('z-br', BR, ecam, h > 2500 && h < 15000 ? 'Brasil' : '');
     label('z-sp', SP, ecam, h > 250 && h < 2500 ? 'Estado de São Paulo' : '');
     label('z-ira', IRA, ecam, h > 3 && h < 250 ? 'Iracemápolis' : '');
@@ -658,18 +913,33 @@ function init() {
     hud(h > 2500 ? 'América do Sul' : h > 250 ? 'Interior de São Paulo, a 160 km da capital' : h > 3 ? 'Iracemápolis · cerca de 24 mil habitantes' : 'Distrito Industrial II', 1 - Math.log(h / 0.55) / Math.log(RE * 2.4 / 0.55));
   };
   let orbit = null;
+  function groundLook(on, k = 1) {
+    sky.visible = on; es.environment = on ? envTex : null; es.environmentIntensity = 0.55;
+    es.fog.near = on ? lerp(6, 0.9, k) : 1e8; es.fog.far = on ? lerp(60, 9, k) : 1e9;
+    sunS.intensity = on ? 3.4 * k : 0; sunLight.intensity = on ? 3.2 * (1 - k) : 3.2;   // perto do chão, só o sol que faz sombra
+  }
   scenes.senai.updateSenai = (q, t) => {
     tileFade(0.5);
+    theia.visible = debris.visible = false;
+    makeEnv(); groundLook(true, 1); sky.position.copy(ecam.position);
+    if (shadowDirty && site.userData.ready) { renderer.shadowMap.needsUpdate = true; shadowDirty = false; }
     site.visible = !!site.userData.ready;
     const of = siteData && siteData.predios.find(b => b.id === 'senai-oficinas');
     const c = new THREE.Vector3(of ? of.x : 0, 0, of ? of.z + 40 : 0).multiplyScalar(0.001);
     const cw = local.localToWorld(c.clone());
     if (!orbit || !orbit.enabled) {
-      const a = -Math.PI / 2 + lerp(0, 1.6, ease(q)) + (q >= 1 ? t * 0.03 : 0), dist = lerp(0.42, 0.2, ease(q)), hgt = lerp(0.42, 0.11, ease(q));
+      const a = -Math.PI / 2 + lerp(0, 1.6, ease(q)) + (q >= 1 ? t * 0.03 : 0), dist = lerp(0.42, 0.17, ease(q)), hgt = lerp(0.42, 0.045, ease(q));
       const lp = c.clone().add(new THREE.Vector3(Math.cos(a) * dist, hgt, Math.sin(a) * dist));
       ecam.position.copy(local.localToWorld(lp)); ecam.up.copy(N0); ecam.lookAt(cw);
     }
     setNearFar(0.15);
+    sunS.target.position.copy(c); sunS.position.copy(c).addScaledVector(SUNL, 0.8); sunS.target.updateMatrixWorld(); sunS.updateMatrixWorld();
+    // "Obrigado!" sobe ao fundo, sempre atrás da escola em relação à câmera
+    const k = sstep(0.5, 0.82, q), cl = local.worldToLocal(ecam.position.clone()), dir = c.clone().sub(cl).setY(0).normalize();
+    thanks.visible = k > 0; thanks.material.opacity = k;
+    thanks.position.copy(c).addScaledVector(dir, 0.38).setY(lerp(-0.04, 0.042, ease(k)));
+    thanks.lookAt(local.localToWorld(new THREE.Vector3(cl.x, thanks.position.y, cl.z)));
+    root.classList.toggle('ended', q > 0.88);
     $('#cos-alt').textContent = 'Rua Camilo Ferrari, 765';
     hot.forEach((o, i) => label('s-' + i, local.localToWorld(new THREE.Vector3(o.b.x, o.b.h + 4, o.b.z).multiplyScalar(0.001)), ecam, q > 0.5 && (i < 4 || hoverIdx === i) ? short(o.b.desc) : ''));
     label('z-se', cw, ecam, '');
@@ -693,12 +963,34 @@ function init() {
   const rp = new RenderPass(scenes.bang, cams.bang); comp.addPass(rp);
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.7, 0.5, 0.75); comp.addPass(bloom);
   comp.addPass(new OutputPass());
+  // lente de cinema: grão de filme, vinheta e aberração cromática nas bordas (uma passada só, barata)
+  const film = new ShaderPass({
+    uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uGrain: { value: 0.05 }, uCA: { value: 0.0015 }, uVig: { value: 0.35 } },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uGrain, uCA, uVig; varying vec2 vUv;
+      float h(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+      void main(){ vec2 d = vUv - 0.5; float r2 = dot(d, d);
+        vec2 o = d * r2 * uCA * 40.0;
+        vec3 c = vec3(texture2D(tDiffuse, vUv + o).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - o).b);
+        c *= 1.0 - uVig * smoothstep(0.12, 0.62, r2 * 1.6);
+        float g = h(vUv * 1024.0 + fract(uT * 7.13) * 91.0) - 0.5; c += g * uGrain * (1.0 - 0.6 * dot(c, vec3(0.333)));
+        gl_FragColor = vec4(c, 1.0); }`
+  });
+  comp.addPass(film);
+  // resolução adaptativa: se o quadro passar de ~25 ms, baixa a resolução interna; se sobrar tempo, sobe de novo
+  let rs = 1, ema = 1 / 60, adaptT = 0, settle = 0;
+  function adapt(dt) {
+    ema = ema * 0.92 + dt * 0.08; adaptT += dt; settle -= dt;
+    if (adaptT < 0.8 || settle > 0) return; adaptT = 0;
+    const nrs = ema > 1 / 40 ? Math.max(0.5, rs * 0.85) : ema < 1 / 56 ? Math.min(1, rs * 1.08) : rs;
+    if (Math.abs(nrs - rs) > 0.02) { rs = nrs; resize(); }
+  }
   let W = 1, H = 1;
   function resize() {
     W = Math.max(1, view.clientWidth); H = Math.max(1, view.clientHeight);
-    renderer.setSize(W, H, false); comp.setPixelRatio(PR); comp.setSize(W, H);
+    renderer.setSize(W, H, false); renderer.setPixelRatio(PR * rs); comp.setPixelRatio(PR * rs); comp.setSize(W, H);
     Object.values(cams).forEach(c => { c.aspect = W / H; c.updateProjectionMatrix(); });
-    allPtsMats.forEach(m => (m.uniforms.uPx.value = H * PR / (2 * Math.tan(THREE.MathUtils.degToRad(27)))));
+    allPtsMats.forEach(m => (m.uniforms.uPx.value = H * PR * rs / (2 * Math.tan(THREE.MathUtils.degToRad(27)))));
   }
   let t = 0, playing = true, on = false, raf = 0, last = 0, actIdx = -1, hoverIdx = -1;
   const range = $('#cos-time'), playBtn = $('#cos-play'), chips = $('#cos-chips'), fade = $('.cos-fade');
@@ -711,6 +1003,7 @@ function init() {
   const capK = $('#cos-kicker'), capT = $('#cos-title'), capS = $('#cos-sub');
   function setAct(i) {
     if (i === actIdx) return;
+    settle = 2;                                    // troca de cena: dá tempo de compilar antes de medir
     const prev = actIdx; actIdx = i;
     const a = ACTS[i];
     capK.textContent = a.kicker; capT.textContent = a.title; capS.textContent = a.sub;
@@ -721,9 +1014,9 @@ function init() {
     // corte de cinema entre cenas diferentes: um clarão no Big Bang, um fade nos outros
     const sameScene = prev >= 0 && scenes[ACTS[prev].id] === scenes[a.id];
     if (!sameScene && prev >= 0) { fade.classList.remove('go'); void fade.offsetWidth; fade.classList.add('go'); }
-    if (i >= 6) loadEarth();
-    bloom.strength = i >= 7 ? 0.35 : 0.8; bloom.threshold = i >= 7 ? 0.85 : 0.6;
-    renderer.toneMappingExposure = i >= 8 ? 1.1 : 1.0;
+    if (i >= ACTS.findIndex(x => x.id === 'sol')) loadEarth();
+    const ground = ['earth', 'zoom', 'senai'].includes(a.id); bloom.strength = ground ? 0.35 : a.id === 'bang' ? 1.1 : 0.85; bloom.threshold = ground ? 0.85 : 0.55;
+    renderer.toneMappingExposure = a.id === 'zoom' || a.id === 'senai' ? 1.1 : 1.0;
     $('#cos-alt').textContent = '';
     if (orbit) orbit.enabled = false;
     root.classList.toggle('free', false);
@@ -740,6 +1033,7 @@ function init() {
     else sc.update(q, t);
     if (a.id !== 'senai') site.visible = a.id === 'zoom' && q > 0.8 && !!site.userData.ready;
     if (a.id === 'earth') tileFade(1e9);
+    film.uniforms.uT.value = t; const deep = !['zoom', 'senai'].includes(a.id); film.uniforms.uGrain.value = deep ? 0.06 : 0.035; film.uniforms.uCA.value = deep ? 0.0009 : 0.0005;
     comp.render(dt);
     range.value = Math.round(t * 10);
     $('#cos-clock').textContent = `${String(Math.floor(t / 60)).padStart(1, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')} / ${Math.floor(TOTAL / 60)}:${String(Math.round(TOTAL % 60)).padStart(2, '0')}`;
@@ -753,7 +1047,7 @@ function init() {
       if (t >= TOTAL) { t = TOTAL; setPlay(false); freeOrbit(); }
     }
     if (orbit && orbit.enabled) orbit.update();
-    draw(dt);
+    draw(dt); adapt(dt);
   }
   // no fim: a câmera fica livre para girar em volta do SENAI
   function freeOrbit() {
@@ -778,11 +1072,26 @@ function init() {
     box.classList.add('on');
   });
   addEventListener('resize', () => { if (on) resize(); });
-  $('#cos-fs')?.addEventListener('click', () => { const v = $('.cos-view'); (document.fullscreenElement ? document.exitFullscreen() : v.requestFullscreen?.())?.catch?.(() => {}); });
-  document.addEventListener('fullscreenchange', () => setTimeout(resize, 60));
+  // modo cinema: ao chegar no fim da apresentação a viagem ocupa a tela inteira, com faixas pretas de cinema
+  let weFS = false, uiT = 0;
+  const home = document.createComment('cos');
+  function cinema(onC) {
+    if (onC && root.parentNode !== document.body) { root.before(home); document.body.append(root); }
+    if (!onC && home.parentNode) home.replaceWith(root);
+    root.classList.toggle('cinema', onC);
+    if (onC && !document.fullscreenElement && !TEST) document.documentElement.requestFullscreen?.().then(() => { weFS = true; }).catch(() => {});
+    if (!onC && weFS && document.fullscreenElement) { weFS = false; document.exitFullscreen().catch(() => {}); }
+    setTimeout(resize, 60);
+  }
+  $('#cos-fs')?.addEventListener('click', () => cinema(!root.classList.contains('cinema')));
+  $('#cos-exit')?.addEventListener('click', () => cinema(false));
+  $('#cos-replay')?.addEventListener('click', () => { t = 0; if (orbit) orbit.enabled = false; root.classList.remove('ended', 'free'); setPlay(true); });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && weFS) { weFS = false; root.classList.remove('cinema'); } setTimeout(resize, 60); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && on && root.classList.contains('cinema')) cinema(false); });
+  root.addEventListener('pointermove', () => { root.classList.add('ui'); clearTimeout(uiT); uiT = setTimeout(() => root.classList.remove('ui'), 2200); });
   demos.cosmos = {
-    enter() { on = true; resize(); last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); if (t >= TOTAL) t = 0; setPlay(true); },
-    leave() { on = false; cancelAnimationFrame(raf); }
+    enter() { on = true; cinema(true); last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); if (t >= TOTAL) t = 0; setPlay(true); },
+    leave() { on = false; cancelAnimationFrame(raf); cinema(false); root.classList.remove('ended'); }
   };
   if ($('.slide[data-id="cosmos"]')?.classList.contains('active')) demos.cosmos.enter();
   if (TEST) window.IACosmos = { seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; }, acts: ACTS.map((a, i) => ({ id: a.id, t0: T_ACT[i], dur: a.dur })), total: TOTAL, state: () => ({ t, act: ACTS[actIdx]?.id, tiles: levels.reduce((s, L) => s + L.mats.filter(m => m.userData.ok).length, 0), site: !!site.userData.ready, siteMeshes: (() => { let n = 0; site.traverse(o => { if (o.isMesh) n++; }); return n; })(), hi: earthU.uHiOn.value }) };
