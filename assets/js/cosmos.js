@@ -17,6 +17,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const root = $('.cos');
@@ -461,24 +462,29 @@ function init() {
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t;
   }
   function buildSite(d) {
-    const M = (c, r = 0.85, m = 0) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m });
+    const M = (c, r = 0.85, m = 0, ex) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, ...ex });
+    // desempenho: tudo o que é estático vai para um lote por material e vira UMA malha (poucas chamadas de desenho)
+    const lots = new Map(), _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _p = new THREE.Vector3(), _s = new THREE.Vector3();
+    const put = (mat, geo, x, y, z, rx = 0, ry = 0, rz = 0) => {
+      _m.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz)), _s.set(1, 1, 1));
+      let g = geo.index ? geo.toNonIndexed() : geo.clone(); g.applyMatrix4(_m); g.clearGroups();
+      for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+      (lots.get(mat) || lots.set(mat, []).get(mat)).push(g);
+    };
+    const B = (w, h, dd) => new THREE.BoxGeometry(w, h, dd), PL = (w, h) => new THREE.PlaneGeometry(w, h);
+    const flat = (mat, w, dd, x, y, z, ry = 0) => put(mat, PL(w, dd), x, y, z, -Math.PI / 2, 0, ry);
     // chão: terra, campos, mata e o asfalto das ruas (o chão de satélite fica embaixo, um pouco visível)
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2000), new THREE.MeshStandardMaterial({ color: 0x8b6f4e, roughness: 1, transparent: true, opacity: 0.1 }));
+    const ground = new THREE.Mesh(PL(2400, 2000), M(0x8b6f4e, 1, 0, { transparent: true, opacity: 0.1 }));
     ground.rotation.x = -Math.PI / 2; ground.position.y = 0.05; site.add(ground);
     const AREA = { lot: [0xb9b4aa, 0.25], garden: [0x4f8a3a, 0.35], parking: [0x55585e, 0.3], forest: [0x2f5a2a, 0.0], field: [0x7f8f45, 0.0], dirt: [0xa86a3e, 0.0] };
-    const treeGeo = new THREE.ConeGeometry(1, 1, 7), crownGeo = new THREE.IcosahedronGeometry(1, 1);
-    const trees = [];
+    const areaMat = {}, trees = [];
     d.areas.forEach(a => {
-      const [c, hgt] = AREA[a.t] || [0x888888, 0];
-      const w = a.x1 - a.x0, dd = a.z1 - a.z0;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, dd), new THREE.MeshStandardMaterial({ color: c, roughness: 1, transparent: true, opacity: a.t === 'field' || a.t === 'dirt' ? 0.3 : a.t === 'forest' ? 0.6 : 0.85 }));
-      m.rotation.x = -Math.PI / 2; m.position.set((a.x0 + a.x1) / 2, 0.12 + hgt, (a.z0 + a.z1) / 2); site.add(m);
-      if (a.t === 'forest' || a.t === 'garden') {
-        const n = a.t === 'forest' ? Math.min(900, Math.round(w * dd / 70)) : 10;
-        for (let i = 0; i < n; i++) trees.push([a.x0 + rand() * w, a.z0 + rand() * dd, a.t === 'forest' ? 6 + rand() * 7 : 5 + rand() * 2]);
-      }
+      const [c, hgt] = AREA[a.t] || [0x888888, 0], w = a.x1 - a.x0, dd = a.z1 - a.z0;
+      const mt = areaMat[a.t] || (areaMat[a.t] = M(c, 1, 0, { transparent: true, opacity: a.t === 'field' || a.t === 'dirt' ? 0.3 : a.t === 'forest' ? 0.6 : 0.85 }));
+      const m = new THREE.Mesh(PL(w, dd), mt); m.rotation.x = -Math.PI / 2; m.position.set((a.x0 + a.x1) / 2, 0.12 + hgt, (a.z0 + a.z1) / 2); site.add(m);
+      if (a.t === 'forest') { const n = Math.min(900, Math.round(w * dd / 70)); for (let i = 0; i < n; i++) trees.push([a.x0 + rand() * w, a.z0 + rand() * dd, 6 + rand() * 7]); }
     });
-    const crowns = new THREE.InstancedMesh(crownGeo, M(0x3c6e33, 0.95), trees.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion();
+    const crowns = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), M(0x3c6e33, 0.95), trees.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion();
     trees.forEach(([x, z, h], i) => { m4.compose(new THREE.Vector3(x, h * 0.7, z), qq, new THREE.Vector3(h * 0.42, h * 0.38, h * 0.42)); crowns.setMatrixAt(i, m4); crowns.setColorAt(i, new THREE.Color().setHSL(0.27 + rand() * 0.06, 0.45, 0.22 + rand() * 0.1)); });
     site.add(crowns);
     // ruas (OpenStreetMap) com faixa central na rodovia
@@ -486,60 +492,119 @@ function init() {
     d.ruas.forEach(r => {
       for (let i = 0; i < r.p.length - 1; i++) {
         const [x0, z0] = r.p[i], [x1, z1] = r.p[i + 1], L = Math.hypot(x1 - x0, z1 - z0); if (L < 0.5) continue;
-        const seg = new THREE.Mesh(new THREE.PlaneGeometry(L + r.w * 0.5, r.w), asphalt);
-        seg.rotation.set(-Math.PI / 2, 0, -Math.atan2(z1 - z0, x1 - x0)); seg.position.set((x0 + x1) / 2, 0.25, (z0 + z1) / 2); site.add(seg);
-        if (r.w >= 14) { const ln = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.3), line); ln.rotation.copy(seg.rotation); ln.position.set(seg.position.x, 0.3, seg.position.z); site.add(ln); }
+        const rz = -Math.atan2(z1 - z0, x1 - x0);
+        put(asphalt, PL(L + r.w * 0.5, r.w), (x0 + x1) / 2, 0.25, (z0 + z1) / 2, -Math.PI / 2, 0, rz);
+        if (r.w >= 14) put(line, PL(L, 0.3), (x0 + x1) / 2, 0.3, (z0 + z1) / 2, -Math.PI / 2, 0, rz);
       }
     });
-    // prédios
-    const wallV = M(0xe9e6df, 0.9), wallS = M(0xf6f6f3, 0.75), blue = M(0x1f4fa8, 0.5), red = M(0xd9282f, 0.6), glass = M(0x5c7590, 0.15, 0.6), steel = M(0x8d949c, 0.4, 0.8), solar = M(0x1d2a4a, 0.25, 0.4);
+    // prédios. Cores do SENAI conferidas no Street View (jul/2025): paredes brancas e faixa azul no topo
+    const wallV = M(0xe9e6df, 0.9), wallS = M(0xf6f6f3, 0.75), blue = M(0x1f4fa8, 0.5), red = M(0xc8232c, 0.6), glass = M(0x5c7590, 0.15, 0.6), steel = M(0x8d949c, 0.4, 0.8), solar = M(0x1d2a4a, 0.25, 0.4);
+    const white = M(0xf4f4f2, 0.6), concrete = M(0xa9a7a1, 0.9), lawn = M(0x5d8f3a, 1), walk = M(0xc4bfb6, 0.95), paver = M(0x8f8076, 1);
     const roofV = M(0xc9ccd0, 0.55, 0.35); roofV.map = roofTex(1, '#d4d7da');
     const roofS = M(0xd8dadd, 0.5, 0.45); roofS.map = roofTex(3, '#e2e4e6');
+    const gableGeo = (b, wh) => {
+      const along = b.w >= b.d, Lr = along ? b.w : b.d, Wr = along ? b.d : b.w, rh = b.h - wh;
+      const sh = new THREE.Shape(); sh.moveTo(-Wr / 2, 0); sh.lineTo(Wr / 2, 0); sh.lineTo(0, rh); sh.closePath();
+      const rg = new THREE.ExtrudeGeometry(sh, { depth: Lr, bevelEnabled: false }); rg.translate(0, 0, -Lr / 2); if (along) rg.rotateY(Math.PI / 2); return rg;
+    };
     d.predios.forEach(b => {
-      const isS = b.id.startsWith('senai'), g = new THREE.Group(); g.position.set(b.x, 0, b.z);
-      if (b.roof === 'solar') {
-        for (let k = 0; k < 6; k++) { const pnl = new THREE.Mesh(new THREE.BoxGeometry(b.w / 6 - 0.6, 0.12, b.d), solar); pnl.position.set(-b.w / 2 + (k + 0.5) * b.w / 6, 1.3, 0); pnl.rotation.x = -0.3; g.add(pnl); }
-      } else if (b.roof === 'frame') {
-        for (let i = 0; i <= 6; i++) for (const sx of [-1, 1]) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.4, b.h, 0.4), steel); c.position.set(sx * b.w / 2, b.h / 2, -b.d / 2 + i * b.d / 6); g.add(c); }
-        for (let i = 0; i <= 6; i++) { const beam = new THREE.Mesh(new THREE.BoxGeometry(b.w, 0.4, 0.4), steel); beam.position.set(0, b.h, -b.d / 2 + i * b.d / 6); g.add(beam); }
-      } else {
-        const wh = b.roof === 'gable' ? b.h * 0.72 : b.h;
-        const body = new THREE.Mesh(new THREE.BoxGeometry(b.w, wh, b.d), isS ? wallS : wallV); body.position.y = wh / 2; g.add(body);
-        if (b.roof === 'gable') {
-          const along = b.w >= b.d, Lr = along ? b.w : b.d, Wr = along ? b.d : b.w, rh = b.h - wh;
-          const sh = new THREE.Shape(); sh.moveTo(-Wr / 2, 0); sh.lineTo(Wr / 2, 0); sh.lineTo(0, rh); sh.closePath();
-          const rg = new THREE.ExtrudeGeometry(sh, { depth: Lr, bevelEnabled: false }); rg.translate(0, 0, -Lr / 2);
-          const roof = new THREE.Mesh(rg, isS ? roofS : roofV); roof.position.y = wh; if (along) roof.rotation.y = Math.PI / 2; g.add(roof);
-        } else {
-          const roof = new THREE.Mesh(new THREE.BoxGeometry(b.w - 0.6, 0.3, b.d - 0.6), isS ? roofS : roofV); roof.position.y = b.h + 0.05; g.add(roof);
-          const par = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.2, 0.7, b.d + 0.2), isS ? wallS : wallV); par.position.y = b.h - 0.2; g.add(par);
-        }
-        if (isS) {
-          // identidade: faixa azul, janelas em fita, detalhe vermelho
-          const band = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.25, 0.8, b.d + 0.25), blue); band.position.y = Math.min(wh - 0.6, 3.4); g.add(band);
-          if (b.h >= 7) for (const fy of [1.9, 5.0]) { const win = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.15, 1.1, b.d + 0.15), glass); win.position.y = fy; g.add(win); }
-          const red1 = new THREE.Mesh(new THREE.BoxGeometry(b.w + 0.3, 0.25, b.d + 0.3), red); red1.position.y = 0.3; g.add(red1);
-        }
+      if (b.id === 'senai-portaria') return;                 // montada abaixo, com a marquise
+      const isS = b.id.startsWith('senai');
+      if (b.roof === 'solar') { for (let k = 0; k < 6; k++) put(solar, B(b.w / 6 - 0.6, 0.12, b.d), b.x - b.w / 2 + (k + 0.5) * b.w / 6, 1.3, b.z, -0.3); return; }
+      if (b.roof === 'frame') {
+        for (let i = 0; i <= 6; i++) { for (const sx of [-1, 1]) put(steel, B(0.4, b.h, 0.4), b.x + sx * b.w / 2, b.h / 2, b.z - b.d / 2 + i * b.d / 6); put(steel, B(b.w, 0.4, 0.4), b.x, b.h, b.z - b.d / 2 + i * b.d / 6); }
+        return;
       }
+      const wh = b.roof === 'gable' ? b.h * 0.72 : b.h;
+      if (!isS) {                                          // vizinhos: tudo no lote (sem clique)
+        put(wallV, B(b.w, wh, b.d), b.x, wh / 2, b.z);
+        if (b.roof === 'gable') put(roofV, gableGeo(b, wh), b.x, wh, b.z);
+        else { put(roofV, B(b.w - 0.6, 0.3, b.d - 0.6), b.x, b.h + 0.05, b.z); put(wallV, B(b.w + 0.2, 0.7, b.d + 0.2), b.x, b.h - 0.2, b.z); }
+        return;
+      }
+      const g = new THREE.Group(); g.position.set(b.x, 0, b.z);
+      const add = (geo, mat, y) => { const o = new THREE.Mesh(geo, mat); o.position.y = y; g.add(o); };
+      add(B(b.w, wh, b.d), wallS, wh / 2);
+      if (b.roof === 'gable') { const o = new THREE.Mesh(gableGeo(b, wh), roofS); o.position.y = wh; g.add(o); }
+      else add(B(b.w - 0.4, 0.3, b.d - 0.4), roofS, b.h + 0.05);
+      const top = b.roof === 'gable' ? wh : b.h;
+      add(B(b.w + 0.35, 1.3, b.d + 0.35), blue, top - 0.65);
+      if (b.h >= 7) for (const fy of [1.9, 5.0]) add(B(b.w + 0.15, 1.1, b.d + 0.15), glass, fy);
+      else if (b.h >= 4) add(B(b.w + 0.15, 1.0, b.d + 0.15), glass, 1.8);
       site.add(g);
-      if (isS && b.desc) hot.push({ b, g });
+      if (b.desc) hot.push({ b, g });
     });
-    // letreiro SENAI na frente da portaria (de frente para a Rua Camilo Ferrari)
+    // portaria de pedestres: paredes vermelhas sob marquise branca, catracas, escadaria e rampa
     const por = d.predios.find(b => b.id === 'senai-portaria');
     if (por) {
-      const sg = new THREE.Mesh(new THREE.PlaneGeometry(14, 3.5), new THREE.MeshBasicMaterial({ map: signTex('SENAI', '#1f4fa8', '#ffffff') }));
-      sg.position.set(por.x, 6.4, por.z + por.d / 2 + 0.3); site.add(sg);
-      const post = new THREE.Mesh(new THREE.BoxGeometry(0.4, 6.4, 0.4), steel); post.position.set(por.x - 6, 3.2, por.z + por.d / 2 + 0.2); site.add(post);
-      const post2 = post.clone(); post2.position.x = por.x + 6; site.add(post2);
-      const sgTop = new THREE.Mesh(new THREE.PlaneGeometry(26, 6.5), new THREE.MeshBasicMaterial({ map: signTex('SENAI', '#1f4fa8', '#ffffff'), side: THREE.DoubleSide }));
-      const of = d.predios.find(b => b.id === 'senai-oficinas'); if (of) { sgTop.position.set(of.x, of.h + 0.5, of.z); sgTop.rotation.x = -Math.PI / 2; site.add(sgTop); }
+      const g = new THREE.Group(); g.position.set(por.x, 0, por.z);
+      const add = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); g.add(o); };
+      add(B(por.w, 3.0, por.d), red, 0, 1.5, 0); add(B(por.w + 0.1, 1.0, por.d + 0.1), glass, 0, 1.7, 0);
+      const mx0 = -por.w / 2 - 0.8, mx1 = por.w / 2 + 6, mz0 = -por.d / 2 - 1.5, mz1 = por.d / 2 + 2;
+      add(B(mx1 - mx0, 0.45, mz1 - mz0), white, (mx0 + mx1) / 2, 3.8, (mz0 + mz1) / 2);
+      for (const cz of [mz0 + 0.4, mz1 - 0.4]) add(new THREE.CylinderGeometry(0.15, 0.15, 3.6, 8), white, mx1 - 0.4, 1.8, cz);
+      site.add(g); hot.push({ b: por, g });
+      for (let k = 0; k < 4; k++) put(steel, B(0.25, 1.0, 1.2), por.x + por.w / 2 + 1.2 + k * 1.3, 0.5, por.z);
+      for (let k = 0; k < 4; k++) put(walk, B(8, 0.18 * (k + 1), 0.9), -15, 0.09 * (k + 1), por.z - 1 - k * 0.9);
+      flat(walk, 2.2, 10.5, -21.5, 0.52, -20);
     }
-    // carros no estacionamento e os ônibus parados na rua (como na imagem)
-    const carGeo = new THREE.BoxGeometry(4.3, 1.5, 1.8), carCols = [0xf2f2f2, 0x9aa1aa, 0x22262c, 0xc0392b, 0x2e5c9e, 0xd8d8d8];
+    // torre da caixa d'água: dois prismas de concreto (26 m e 23 m) com "SENAI" em vermelho no alto
+    const TX = 9.8, TZ = -6.3, tower = new THREE.Group(); tower.position.set(TX, 0, TZ);
+    for (const [dx, h] of [[-1.75, 26], [1.75, 23]]) { const o = new THREE.Mesh(B(3.0, h, 3.4), concrete); o.position.set(dx, h / 2, 0); tower.add(o); }
+    { const o = new THREE.Mesh(B(0.6, 3, 2.4), concrete); o.position.y = 20.5; tower.add(o); }
+    const tSign = new THREE.Mesh(PL(2.8, 0.75), new THREE.MeshBasicMaterial({ map: signTex('SENAI', '#a9a7a1', '#c8232c'), transparent: true }));
+    tSign.position.set(-1.75, 24.2, 1.72); tower.add(tSign);
+    const tSign2 = tSign.clone(); tSign2.position.set(3.27, 21.4, 0); tSign2.rotation.y = Math.PI / 2; tower.add(tSign2);
+    site.add(tower); hot.push({ b: { id: 'senai-torre', x: TX, z: TZ, w: 6.5, d: 3.4, h: 26, desc: "Torre da caixa d'água (dois prismas de concreto)" }, g: tower });
+    // totem vermelho levemente inclinado, com "SENAI" na vertical
+    const totem = new THREE.Group(); totem.position.set(-23, 0, -2); totem.rotation.x = -0.07;
+    { const o = new THREE.Mesh(B(1.3, 6.6, 0.55), red); o.position.y = 3.3; totem.add(o); }
+    const vs = new THREE.Mesh(PL(4.6, 1.0), new THREE.MeshBasicMaterial({ map: signTex('SENAI', '#c8232c', '#ffffff') }));
+    vs.rotation.z = Math.PI / 2; vs.position.set(0, 3.4, 0.29); totem.add(vs); site.add(totem);
+    // cinco mastros com bandeiras, gramado, calçada, acesso de veículos em bloquete e gradil branco
+    const flagCols = [0x009c3b, 0xffffff, 0xc8232c, 0xffffff, 0x1f4fa8].map(c => M(c, 0.8, 0, { side: THREE.DoubleSide }));
+    flagCols.forEach((fm, k) => { const fx = -12.5 + k * 2.4; put(steel, new THREE.CylinderGeometry(0.05, 0.06, 10, 6), fx, 5, -9.5); put(fm, PL(1.6, 1.1), fx + 0.85, 9.2, -9.5); });
+    flat(lawn, 50, 11, 0, 0.5, -7.5); flat(walk, 92, 2.4, 5, 0.5, -0.2); flat(paver, 6.5, 26, 27.2, 0.52, -12.5);
+    const posts = [];
+    for (let gx = -41; gx < 51; gx += 2.5) if (!(gx > -31 && gx < -12) && !(gx > 23.5 && gx < 31)) { posts.push(gx); put(white, B(2.5, 0.06, 0.04), gx + 1.25, 1.75, -1.6); put(white, B(2.5, 0.06, 0.04), gx + 1.25, 0.25, -1.6); }
+    const fence = new THREE.InstancedMesh(B(0.08, 1.9, 0.08), white, posts.length * 6);
+    let fi = 0; posts.forEach(gx => { for (let k = 0; k < 6; k++) { m4.makeTranslation(gx + k * 0.42, 0.95, -1.6); fence.setMatrixAt(fi++, m4); } });
+    site.add(fence);
+    for (const sx of [23.6, 30.9]) put(white, B(0.5, 2.4, 0.5), sx, 1.2, -1.6);
+    for (const [x, z] of [[-6, -4], [14, -3], [34, -20], [-36, -18]]) { put(steel, new THREE.CylinderGeometry(0.08, 0.1, 9, 6), x, 4.5, z); put(steel, B(1.4, 0.2, 0.4), x + 0.6, 9, z); }
+    // palmeiras (pátio interno e frente): troncos e folhas instanciados
+    const palms = [];
+    const pt = d.areas.find(a => a.id === 'patio');
+    if (pt) for (let k = 0; k < 9; k++) palms.push([pt.x0 + 2 + (k % 2) * (pt.x1 - pt.x0 - 4), pt.z0 + 4 + Math.floor(k / 2) * 10, 7 + rand() * 4]);
+    [[-8, -14], [-3, -6], [3, -13], [18, -16], [-34, -6], [40, -4]].forEach(([x, z]) => palms.push([x, z, 8 + rand() * 4]));
+    const trunks = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.17, 0.24, 1, 7), M(0x8a7a63, 0.9), palms.length);
+    const leafGeo = new THREE.PlaneGeometry(4, 0.8); leafGeo.translate(2, 0, 0); leafGeo.rotateX(-Math.PI / 2);
+    const leaves = new THREE.InstancedMesh(leafGeo, M(0x3f7a2c, 0.85, 0, { side: THREE.DoubleSide }), palms.length * 9);
+    const eu = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1);
+    palms.forEach(([x, z, h], i) => {
+      m4.compose(new THREE.Vector3(x, h / 2, z), qq, new THREE.Vector3(1, h, 1)); trunks.setMatrixAt(i, m4);
+      for (let k = 0; k < 9; k++) { eu.set(0, k * 2 * Math.PI / 9 + i, -0.5, 'YXZ'); m4.compose(new THREE.Vector3(x, h, z), new THREE.Quaternion().setFromEuler(eu), one); leaves.setMatrixAt(i * 9 + k, m4); }
+    });
+    site.add(trunks, leaves);
+    // carros (estacionamentos e junto ao meio-fio, como no Street View) e ônibus: instanciados, cor por instância
+    const cars = [];
     const est = d.areas.find(a => a.id === 'estac');
-    if (est) for (let i = 0; i < 18; i++) { const c = new THREE.Mesh(carGeo, M(carCols[i % 6], 0.35, 0.5)); c.position.set(est.x0 + 3 + (i % 3) * 6.2, 0.9, est.z0 + 3 + Math.floor(i / 3) * 3.4); c.rotation.y = Math.PI / 2; site.add(c); }
-    const busGeo = new THREE.BoxGeometry(12.5, 3.2, 2.6);
-    [[30, 0xf0c419], [44, 0xf0c419], [-62, 0xffffff], [-84, 0xd9282f], [-110, 0xffffff], [-190, 0xffffff], [-210, 0xd9282f]].forEach(([x, c]) => { const b = new THREE.Mesh(busGeo, M(c, 0.4, 0.3)); b.position.set(x, 1.7, 6.5); site.add(b); });
+    if (est) for (let i = 0; i < 18; i++) cars.push([est.x0 + 3 + (i % 3) * 6.2, est.z0 + 3 + Math.floor(i / 3) * 3.4, Math.PI / 2]);
+    const ef = d.areas.find(a => a.id === 'estac-frente');
+    if (ef) { [0, 1, 3, 4, 6].forEach(s => cars.push([ef.x0 + 2.2 + s * 2.5, ef.z0 + 3, Math.PI / 2])); for (let k = 0; k < 8; k++) flat(white, 0.15, 5, ef.x0 + 1 + k * 2.5, 0.46, ef.z0 + 3); }
+    [-38, -31, -9, -3, 3, 15, 20].forEach(x => cars.push([x, 2.4, 0]));
+    const carCols = [0xf2f2f2, 0x9aa1aa, 0x22262c, 0xc0392b, 0x2e5c9e, 0xd8d8d8];
+    const carMesh = new THREE.InstancedMesh(B(4.3, 1.5, 1.8), M(0xffffff, 0.35, 0.5), cars.length), col = new THREE.Color();
+    cars.forEach(([x, z, ry], i) => { m4.compose(new THREE.Vector3(x, 0.9, z), new THREE.Quaternion().setFromEuler(eu.set(0, ry, 0)), one); carMesh.setMatrixAt(i, m4); carMesh.setColorAt(i, col.set(carCols[i % 6])); });
+    const buses = [[30, 0xf0c419], [44, 0xf0c419], [-62, 0xffffff], [-84, 0xd9282f], [-110, 0xffffff], [-190, 0xffffff], [-210, 0xd9282f]];
+    const busMesh = new THREE.InstancedMesh(B(12.5, 3.2, 2.6), M(0xffffff, 0.4, 0.3), buses.length);
+    buses.forEach(([x, c], i) => { busMesh.setMatrixAt(i, m4.makeTranslation(x, 1.7, 6.5)); busMesh.setColorAt(i, col.set(c)); });
+    site.add(carMesh, busMesh);
+    // junta cada lote numa malha só
+    lots.forEach((gs, mat) => { const g = mergeGeometries(gs, false); gs.forEach(x => x.dispose()); if (g) site.add(new THREE.Mesh(g, mat)); });
+    // rótulos: primeiro os pontos que mais chamam atenção
+    const pri = ['senai-oficinas', 'senai-bloco-l', 'senai-torre', 'senai-bloco-o1'], rk = o => (pri.indexOf(o.b.id) + 1) || 9;
+    hot.sort((a, b) => rk(a) - rk(b));
     site.userData.ready = true;
   }
 
@@ -606,7 +671,7 @@ function init() {
     }
     setNearFar(0.15);
     $('#cos-alt').textContent = 'Rua Camilo Ferrari, 765';
-    hot.forEach((o, i) => label('s-' + i, local.localToWorld(new THREE.Vector3(o.b.x, o.b.h + 4, o.b.z).multiplyScalar(0.001)), ecam, q > 0.5 && (i < 5 || hoverIdx === i) ? short(o.b.desc) : ''));
+    hot.forEach((o, i) => label('s-' + i, local.localToWorld(new THREE.Vector3(o.b.x, o.b.h + 4, o.b.z).multiplyScalar(0.001)), ecam, q > 0.5 && (i < 4 || hoverIdx === i) ? short(o.b.desc) : ''));
     label('z-se', cw, ecam, '');
     hud('Escola SENAI "João Guilherme Sabino Ometto"', 1);
   };
@@ -720,5 +785,5 @@ function init() {
     leave() { on = false; cancelAnimationFrame(raf); }
   };
   if ($('.slide[data-id="cosmos"]')?.classList.contains('active')) demos.cosmos.enter();
-  if (TEST) window.IACosmos = { seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; }, acts: ACTS.map((a, i) => ({ id: a.id, t0: T_ACT[i], dur: a.dur })), total: TOTAL, state: () => ({ t, act: ACTS[actIdx]?.id, tiles: levels.reduce((s, L) => s + L.mats.filter(m => m.userData.ok).length, 0), site: !!site.userData.ready, hi: earthU.uHiOn.value }) };
+  if (TEST) window.IACosmos = { seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; }, acts: ACTS.map((a, i) => ({ id: a.id, t0: T_ACT[i], dur: a.dur })), total: TOTAL, state: () => ({ t, act: ACTS[actIdx]?.id, tiles: levels.reduce((s, L) => s + L.mats.filter(m => m.userData.ok).length, 0), site: !!site.userData.ready, siteMeshes: (() => { let n = 0; site.traverse(o => { if (o.isMesh) n++; }); return n; })(), hi: earthU.uHiOn.value }) };
 }
