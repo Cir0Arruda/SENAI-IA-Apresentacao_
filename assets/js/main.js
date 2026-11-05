@@ -216,7 +216,7 @@
   let cur = -1;
   slides.forEach(s => $$('[data-anim]', s).forEach((el, i) => el.style.setProperty('--i', i)));
 
-  const secOf = i => (i >= 19 ? 'fontes' : i === 16 ? 'video' : i >= 12 && i <= 15 ? 'agentes' : i === 11 ? 'prompt' : i >= 6 && i <= 10 ? 'ferr' : i >= 2 && i <= 5 ? 'fund' : null);
+  const secOf = i => (i >= 25 ? 'fontes' : i >= 16 && i <= 22 ? 'video' : i >= 12 && i <= 15 ? 'agentes' : i === 11 ? 'prompt' : i >= 6 && i <= 10 ? 'ferr' : i >= 2 && i <= 5 ? 'fund' : null);
 
   let titleJob = 0, bubTimer = 0;
   async function typeTitle(text) {
@@ -253,7 +253,7 @@
   }
   window.addEventListener('resize', () => { if (slides[cur]) fit(slides[cur], true); });
 
-  const demos = {};
+  const demos = (window.IADemos = window.IADemos || {});   // studio.js e studio3d.js também registram demos aqui
   function go(i) {
     i = Math.max(0, Math.min(total - 1, i));
     if (i === cur) return;

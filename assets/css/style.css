@@ -167,7 +167,9 @@ kbd { display: inline-block; padding: 2px 7px; border-radius: 7px; background: #
   opacity: 0; visibility: hidden; transform: translateY(18px) scale(.99);
   transition: opacity .5s var(--ease), transform .7s var(--ease), visibility 0s linear .7s;
 }
-.slide.active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.slide.active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; z-index: 1; }
+/* o slide que está saindo some aos poucos, mas não pode "roubar" cliques do novo */
+.slide:not(.active) { pointer-events: none; }
 .slide [data-anim] { opacity: 0; }
 .slide.active [data-anim] { animation: rise .8s var(--ease) both; animation-delay: calc(var(--i, 0) * 70ms + 80ms); }
 @keyframes rise {

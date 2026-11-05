@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/studio.css">
   <link rel="stylesheet" href="assets/css/galaxy.css">
   <script>
     /* A abertura (galáxia) aparece quando o site é aberto sem um slide no endereço */
@@ -71,6 +72,7 @@
       <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
       <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></symbol>
       <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></symbol>
       <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
       <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
       <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
@@ -234,8 +236,8 @@
       <button class="rail-btn" data-goto="6" data-sec="ferr" title="Ferramentas de IA" aria-label="Ferramentas de IA"><svg class="i"><use href="#i-languages"/></svg></button>
       <button class="rail-btn" data-goto="11" data-sec="prompt" title="Elaboração de prompts" aria-label="Elaboração de prompts"><svg class="i"><use href="#i-sparkles"/></svg></button>
       <button class="rail-btn" data-goto="12" data-sec="agentes" title="Agentes e automação" aria-label="Agentes e automação"><svg class="i"><use href="#i-bot"/></svg></button>
-      <button class="rail-btn" data-goto="16" data-sec="video" title="Bônus: vídeos" aria-label="Bônus: vídeos"><svg class="i"><use href="#i-film"/></svg></button>
-      <button class="rail-btn" data-goto="19" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
+      <button class="rail-btn" data-goto="16" data-sec="video" title="Estúdio de vídeo" aria-label="Estúdio de vídeo"><svg class="i"><use href="#i-film"/></svg></button>
+      <button class="rail-btn" data-goto="25" data-sec="fontes" title="Fontes" aria-label="Fontes"><svg class="i"><use href="#i-book"/></svg></button>
       <button class="rail-btn gx-rail" id="gx-open" title="Voltar para a galáxia" aria-label="Voltar para a galáxia"><svg class="i"><use href="#i-spiral"/></svg></button>
       <span class="rail-logo" aria-hidden="true">IA</span>
     </nav>
@@ -317,7 +319,7 @@
               <button class="glass ag" data-goto="10" data-anim><b>1.5</b><span>Resumo de texto</span><svg class="i ag-i"><use href="#i-file-text"/></svg></button>
               <button class="glass ag" data-goto="11" data-anim><b>1.6</b><span>Elaboração de prompts</span><svg class="i ag-i"><use href="#i-sparkles"/></svg></button>
               <button class="glass ag accent" data-goto="12" data-anim><b>Extra</b><span>Agentes e automação no Excel</span><svg class="i ag-i"><use href="#i-table"/></svg></button>
-              <button class="glass ag dark" data-goto="16" data-anim><b>Bônus</b><span>Criar e editar vídeos com o Claude Code</span><svg class="i ag-i"><use href="#i-film"/></svg></button>
+              <button class="glass ag dark" data-goto="16" data-anim><b>Estúdio</b><span>Vídeos com o Claude: do simples ao 3D e automação</span><svg class="i ag-i"><use href="#i-film"/></svg></button>
             </div>
           </div>
         </section>
@@ -936,7 +938,7 @@ codex</pre>
         <section class="slide" data-id="video" data-title="Ensine a criar e editar vídeos com o Claude Code" data-bubble="Luz, câmera… prompt!">
           <div class="wrap">
             <header class="s-head" data-anim>
-              <span class="tag dark">Bônus</span>
+              <span class="tag dark">Estúdio de vídeo · início</span>
               <h2>Criando vídeos com o Claude Code</h2>
               <p>Com o <b>HyperFrames</b>, o vídeo é uma página HTML animada, e o programa "filma" quadro a quadro até virar um MP4. Você pede e ajusta tudo <b>conversando</b>. Teste os botões de edição abaixo.</p>
             </header>
@@ -974,12 +976,273 @@ codex</pre>
                   <li><b>Revise</b><code>npx hyperframes check</code></li>
                   <li><b>Exporte o MP4</b><code>npx hyperframes render</code></li>
                 </ol>
+                <button class="pill dark sm mt-sm" data-goto="17">Ver o fluxo completo, 3D e automação <svg class="i sm"><use href="#i-arrow-right"/></svg></button>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 17 · ÉTICA -->
+        <!-- 17 · ESTÚDIO: O FLUXO COMPLETO -->
+        <section class="slide" data-id="vflow" data-title="Mostre todo o caminho de um vídeo, do pedido ao MP4" data-bubble="Do chat ao MP4 em 6 passos">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 1 de 6</span>
+              <h2>Do pedido ao <em class="serif">MP4</em>: o fluxo completo</h2>
+              <p>Veja o que acontece no computador em cada etapa. O vídeo é uma página HTML; o HyperFrames abre essa página num Chrome invisível, <b>tira uma foto de cada quadro</b> e o FFmpeg junta tudo num MP4.</p>
+            </header>
+            <div class="vf-grid" data-anim>
+              <div class="pc" id="vf-pc" aria-live="polite">
+                <div class="pc-screen">
+                  <div class="pc-win" data-w="1"><div class="pc-bar"><i></i><i></i><i></i><span>Claude Code</span></div>
+                    <div class="pc-body chat"><p class="me" id="vf-ask"></p><p class="bot" id="vf-plan"></p></div></div>
+                  <div class="pc-win" data-w="2"><div class="pc-bar"><i></i><i></i><i></i><span>compositions/abertura.html</span></div>
+                    <pre class="pc-body code-ed" id="vf-code"></pre></div>
+                  <div class="pc-win" data-w="3"><div class="pc-bar"><i></i><i></i><i></i><span>localhost:3002 · prévia</span></div>
+                    <div class="pc-body pv"><div class="pv-stage" id="vf-pv"><b>SENAI</b><span>Iracemápolis</span><i class="pv-bar"></i></div>
+                      <div class="pv-scrub"><span id="vf-tc">00:00.0</span><div class="pv-track"><i id="vf-head"></i></div><span>00:05.0</span></div></div></div>
+                  <div class="pc-win" data-w="4"><div class="pc-bar"><i></i><i></i><i></i><span>Terminal</span></div>
+                    <div class="pc-body term-body" id="vf-check"></div></div>
+                  <div class="pc-win" data-w="5"><div class="pc-bar"><i></i><i></i><i></i><span>npx hyperframes render</span></div>
+                    <div class="pc-body rd"><div class="rd-frames" id="vf-frames"></div>
+                      <div class="rd-meta"><span id="vf-fn">quadro 0 / 150</span><span>Chrome sem janela → FFmpeg</span></div>
+                      <div class="rd-prog"><i id="vf-prog"></i></div></div></div>
+                  <div class="pc-win" data-w="6"><div class="pc-bar"><i></i><i></i><i></i><span>Explorador · meu-video/renders</span></div>
+                    <div class="pc-body files"><div class="file mp4"><svg class="i"><use href="#i-video"/></svg><b>abertura.mp4</b><small>1920×1080 · 30 fps · 5 s · 2,1 MB</small></div>
+                      <div class="file"><svg class="i"><use href="#i-code"/></svg><b>index.html</b><small>a composição principal</small></div>
+                      <div class="file"><svg class="i"><use href="#i-folder"/></svg><b>compositions/</b><small>uma cena por arquivo</small></div></div></div>
+                </div>
+                <div class="pc-task" id="vf-task">
+                  <span data-t="1" title="Claude Code"><svg class="i sm"><use href="#i-sparkles"/></svg></span>
+                  <span data-t="2" title="Editor"><svg class="i sm"><use href="#i-code"/></svg></span>
+                  <span data-t="3" title="Navegador"><svg class="i sm"><use href="#i-eye"/></svg></span>
+                  <span data-t="4" title="Terminal"><svg class="i sm"><use href="#i-check-circle"/></svg></span>
+                  <span data-t="5" title="Render"><svg class="i sm"><use href="#i-film"/></svg></span>
+                  <span data-t="6" title="Arquivos"><svg class="i sm"><use href="#i-folder"/></svg></span>
+                  <small class="pc-clock">14:05</small>
+                </div>
+              </div>
+              <div class="glass card vf-side">
+                <div class="card-k">As 6 etapas <button class="pill ghost sm" id="vf-replay"><svg class="i sm"><use href="#i-refresh"/></svg>Repetir</button></div>
+                <ol class="vf-steps" id="vf-steps">
+                  <li><button data-s="1"><b>Pedido</b><span>Você descreve o vídeo no chat</span></button></li>
+                  <li><button data-s="2"><b>Código</b><span>O Claude escreve HTML, CSS e GSAP</span></button></li>
+                  <li><button data-s="3"><b>Prévia</b><span><code>npx hyperframes preview</code></span></button></li>
+                  <li><button data-s="4"><b>Revisão</b><span><code>npx hyperframes check</code></span></button></li>
+                  <li><button data-s="5"><b>Render</b><span><code>npx hyperframes render</code></span></button></li>
+                  <li><button data-s="6"><b>MP4 pronto</b><span>Arquivo final na pasta renders/</span></button></li>
+                </ol>
+                <p class="vf-exp" id="vf-exp"></p>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-repeat"/></svg>Sempre igual</b>Tudo depende só do tempo: sem relógio nem sorteio. Renderizar duas vezes dá o mesmo vídeo.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-film"/></svg>Quadro a quadro</b>30 fps × 5 s = 150 fotos. Uma cena pesada não "trava" o vídeo: só demora mais para gravar.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-pen"/></svg>Sempre editável</b>Textos, cores e mídias são variáveis no HTML. Você muda conversando ou no editor visual.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 18 · ESTÚDIO: DO SIMPLES AO COMPLEXO -->
+        <section class="slide" data-id="vlevels" data-title="Mostre vídeos do mais simples ao mais complexo" data-bubble="Comece pelo nível 1 e vá subindo">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 2 de 6</span>
+              <h2>Do simples ao complexo: <em class="serif">5 níveis</em></h2>
+              <p>Cada nível acrescenta uma ideia nova. Escolha um nível para ver a prévia, o pedido para o Claude e o que ele cria.</p>
+            </header>
+            <div class="seg lv-tabs" id="lv-tabs" role="tablist" data-anim>
+              <button class="on" data-l="0">1 · Título animado</button>
+              <button data-l="1">2 · Legendas</button>
+              <button data-l="2">3 · Gráfico da planilha</button>
+              <button data-l="3">4 · Cena 3D</button>
+              <button data-l="4">5 · Vídeos em lote</button>
+            </div>
+            <div class="g2 wide-left" data-anim>
+              <div class="glass card demo lv-demo">
+                <div class="lv-stage" id="lv-stage">
+                  <div class="lv-scene" data-l="0"><div class="k1"><span>Inteligência</span><span>Artificial</span><em>na prática</em></div></div>
+                  <div class="lv-scene" data-l="1"><div class="k2-video"><i class="k2-face"></i><i class="k2-wave"></i></div><p class="k2-cap" id="lv-cap"></p></div>
+                  <div class="lv-scene" data-l="2"><div class="k3"><b id="lv-num">0</b><small>matrículas em 2026</small><div class="k3-bars" id="lv-bars"></div><span class="k3-src">Fonte: planilha matriculas.xlsx</span></div></div>
+                  <div class="lv-scene" data-l="3"><canvas class="k4" id="lv-3d" width="640" height="360"></canvas></div>
+                  <div class="lv-scene" data-l="4"><div class="k5" id="lv-batch"></div></div>
+                </div>
+                <div class="pv-scrub"><span id="lv-tc">00:00</span><div class="pv-track"><i id="lv-head"></i></div><span id="lv-dur">00:05</span></div>
+                <div class="lv-badges" id="lv-badges"></div>
+              </div>
+              <div class="glass card lv-info">
+                <div class="card-k">Peça para o Claude <button class="pill ghost sm copy-btn" id="lv-copy"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+                <p class="lv-prompt" id="lv-prompt"></p>
+                <div class="card-k mt">O que ele cria</div>
+                <pre class="code sm lv-code" id="lv-code"></pre>
+                <p class="lv-learn" id="lv-learn"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 19 · ESTÚDIO: 3D -->
+        <section class="slide" data-id="v3d" data-title="Mostre como uma cena 3D vira vídeo, quadro a quadro" data-bubble="Arraste o tempo e veja o 3D obedecer">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 3 de 6</span>
+              <h2>Cenas <em class="serif">3D</em> no vídeo</h2>
+              <p>Esta cena é <b>three.js de verdade</b>, rodando aqui. No vídeo, cada quadro é desenhado a partir do tempo: arraste a linha do tempo e veja que o mesmo instante sempre gera a mesma imagem.</p>
+            </header>
+            <div class="g2 wide-left" data-anim>
+              <div class="glass card demo t3-demo">
+                <div class="t3-view"><canvas id="t3-canvas"></canvas><span class="t3-hud" id="t3-hud">t = 0,00 s · quadro 0</span></div>
+                <div class="t3-ctrl">
+                  <button class="circle dark sm" id="t3-play" aria-label="Tocar ou pausar"><svg class="i sm"><use href="#i-play"/></svg></button>
+                  <input type="range" id="t3-time" min="0" max="600" value="0" aria-label="Tempo da cena">
+                  <span class="t3-dur">6,0 s</span>
+                </div>
+                <div class="t3-opts">
+                  <div class="seg" id="t3-shot"><button class="on" data-c="orbit">Câmera orbitando</button><button data-c="dive">Mergulho</button><button data-c="top">Vista de cima</button></div>
+                  <button class="pill ghost sm" id="t3-snap"><svg class="i sm"><use href="#i-film"/></svg>Gravar 3 quadros</button>
+                </div>
+                <div class="t3-thumbs" id="t3-thumbs"></div>
+              </div>
+              <div class="term light t3-code" data-anim>
+                <div class="term-bar"><i></i><i></i><i></i><span>compositions/cena3d.html</span></div>
+                <pre class="term-body md"><span class="fm">// 1. monta a cena uma vez</span>
+const cena = new THREE.Scene();
+const planeta = criarPlaneta();
+cena.add(planeta, luzQuente, luzFria);
+
+<span class="fm">// 2. desenha o quadro do tempo t (sem relógio)</span>
+<span class="key">function</span> desenhar(t) {
+  planeta.rotation.y = t * 0.6;
+  camera.position.copy(caminho.getPointAt(t / 6));
+  camera.lookAt(planeta.position);
+  renderer.render(cena, camera);
+}
+
+<span class="fm">// 3. o HyperFrames pede cada quadro</span>
+window.addEventListener(<span class="key">"hf-seek"</span>,
+  e =&gt; desenhar(e.detail.time));
+desenhar(0);</pre>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-sun"/></svg>Luz de estúdio</b>Luz quente na frente, luz fria na borda e fundo escuro: o objeto "salta" da tela.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-target"/></svg>Um herói só</b>Um objeto bem iluminado vale mais que muitos. Mergulhe nele em vez de só girar.</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-alert"/></svg>Sem sorteio</b>Nada de <code>Math.random()</code> solto: use uma semente, senão cada render sai diferente.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 20 · ESTÚDIO: PLANILHA → VÍDEO -->
+        <section class="slide" data-id="vsheet" data-title="Automatize: transforme uma planilha em vários vídeos" data-bubble="Uma planilha, quatro vídeos, zero cliques">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 4 de 6</span>
+              <h2>Da <em class="serif">planilha</em> ao vídeo, automático</h2>
+              <p>Um script em Python lê a planilha, gera um arquivo de dados para cada região e manda renderizar. Mudou a planilha? Rode de novo e os vídeos saem atualizados.</p>
+            </header>
+            <div class="sv-flow" data-anim>
+              <div class="glass card sv-col">
+                <div class="card-k"><svg class="i sm"><use href="#i-table"/></svg>vendas.xlsx</div>
+                <table class="sv-table" id="sv-table"></table>
+              </div>
+              <span class="sv-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-right"/></svg></span>
+              <div class="term sv-col sv-term">
+                <div class="term-bar"><i></i><i></i><i></i><span>gerar_videos.py</span></div>
+                <pre class="term-body" id="sv-code"></pre>
+              </div>
+              <span class="sv-arrow" aria-hidden="true"><svg class="i"><use href="#i-arrow-right"/></svg></span>
+              <div class="glass card sv-col">
+                <div class="card-k"><svg class="i sm"><use href="#i-film"/></svg>renders/ <button class="pill ghost sm" id="sv-run"><svg class="i sm"><use href="#i-play"/></svg>Rodar</button></div>
+                <div class="sv-out" id="sv-out"></div>
+              </div>
+            </div>
+            <div class="g3 mini">
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-code"/></svg>openpyxl</b>Biblioteca Python que lê e escreve arquivos .xlsx, com fórmulas e gráficos.<code>pip install openpyxl</code></div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-database"/></svg>Um dado, um lugar</b>Os números ficam num só arquivo de dados. O vídeo nunca tem número "digitado à mão".</div>
+              <div class="glass card sm" data-anim><b><svg class="i"><use href="#i-repeat"/></svg>Em lote</b>Cada linha do arquivo vira um vídeo:<code>npx hyperframes render --batch linhas.json --output "renders/{regiao}.mp4"</code></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 21 · ESTÚDIO: WORKFLOW COM AGENTE -->
+        <section class="slide" data-id="vauto" data-title="Mostre um workflow em que o agente trabalha sozinho" data-bubble="Chegou planilha nova? Eu cuido do resto">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 5 de 6</span>
+              <h2>Workflow: o agente <em class="serif">trabalhando sozinho</em></h2>
+              <p>No modo sem janela (<code>claude -p</code>), o Claude Code roda dentro de um script: um gatilho chama o agente, ele atualiza o vídeo, confere, renderiza e <b>uma pessoa revisa antes de publicar</b>.</p>
+            </header>
+            <div class="wf-grid" data-anim>
+              <div class="pc wf-pc">
+                <div class="pc-screen wf-screen">
+                  <div class="pc-win wf-files"><div class="pc-bar"><i></i><i></i><i></i><span>entrada/</span></div><div class="pc-body files" id="wf-in"></div></div>
+                  <div class="pc-win wf-term"><div class="pc-bar"><i></i><i></i><i></i><span>Terminal · agendado toda segunda, 7h</span></div><div class="pc-body term-body" id="wf-log"></div></div>
+                  <div class="pc-win wf-files"><div class="pc-bar"><i></i><i></i><i></i><span>prontos/</span></div><div class="pc-body files" id="wf-out"></div></div>
+                  <div class="wf-toast" id="wf-toast"><svg class="i sm"><use href="#i-check-circle"/></svg><div><b>4 vídeos prontos para revisar</b><small>prontos/ · agora</small></div></div>
+                </div>
+                <div class="pc-task"><span class="on"><svg class="i sm"><use href="#i-folder"/></svg></span><span class="on"><svg class="i sm"><use href="#i-sparkles"/></svg></span><span><svg class="i sm"><use href="#i-film"/></svg></span><small class="pc-clock">07:00</small></div>
+              </div>
+              <div class="glass card wf-side">
+                <div class="card-k">O caminho <button class="pill ghost sm" id="wf-run"><svg class="i sm"><use href="#i-play"/></svg>Simular</button></div>
+                <ol class="wf-nodes" id="wf-nodes">
+                  <li data-n="0"><b>Gatilho</b><span>planilha nova na pasta, ou um horário fixo</span></li>
+                  <li data-n="1"><b>Agente</b><span><code>claude -p</code> atualiza dados e textos</span></li>
+                  <li data-n="2"><b>Conferência</b><span><code>hyperframes check</code> + teste dos números</span></li>
+                  <li data-n="3"><b>Render</b><span>um MP4 por região</span></li>
+                  <li data-n="4"><b>Revisão humana</b><span>alguém assiste antes de publicar</span></li>
+                </ol>
+                <pre class="code sm wf-sh">claude -p "Atualize os vídeos com a planilha nova
+  e rode o check" \
+  --allowedTools "Read,Edit,Bash(npx hyperframes:*)" \
+  --output-format json</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 22 · ESTÚDIO: MÃO NA MASSA -->
+        <section class="slide" data-id="vlab" data-title="Proponha exercícios de vídeo para fazer em aula" data-bubble="Bora criar? Copie um pedido e teste">
+          <div class="wrap">
+            <header class="s-head compact" data-anim>
+              <span class="tag dark">Estúdio de vídeo · 6 de 6</span>
+              <h2>Mão na massa: <em class="serif">4 desafios</em> para a aula</h2>
+              <p>Cada desafio usa o anterior. Copie o pedido, cole no Claude Code dentro de uma pasta nova e ajuste conversando.</p>
+            </header>
+            <div class="lab-grid" id="lab-grid">
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">1</span><div><b>Vinheta do curso</b><small>15 min · iniciante</small></div><span class="lab-lv"><i class="on"></i><i></i><i></i><i></i></span></div>
+                <p class="lab-p">Crie um vídeo de 6 segundos, 1920×1080, com o nome do meu curso técnico entrando letra por letra, fundo escuro e um traço laranja que cresce embaixo.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">2</span><div><b>Dica com legenda</b><small>25 min · básico</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+                <p class="lab-p">Grave um áudio de 20 s com uma dica de segurança (NR-10). Transcreva e faça um vídeo vertical 9:16 com legendas palavra por palavra e ícones que aparecem quando cito cada EPI.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">3</span><div><b>Gráfico que conta história</b><small>40 min · intermediário</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+                <p class="lab-p">Leia a planilha consumo.xlsx (kWh por mês da oficina). Faça um vídeo de 15 s: o número do mês com maior consumo cresce na tela, depois vira um gráfico de barras com a fonte embaixo.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+              <article class="glass card lab" data-anim>
+                <div class="lab-h"><span class="lab-n">4</span><div><b>Peça 3D da oficina</b><small>60 min · avançado</small></div><span class="lab-lv"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+                <p class="lab-p">Monte em three.js uma engrenagem 3D metálica com luz de estúdio. Faça a câmera mergulhar até os dentes da engrenagem e mostre 3 legendas com o nome de cada parte. Desenhe cada quadro a partir do tempo.</p>
+                <button class="pill ghost sm copy-btn"><svg class="i sm"><use href="#i-copy"/></svg>Copiar pedido</button>
+              </article>
+            </div>
+            <div class="glass card lab-check" data-anim>
+              <div class="card-k">Antes de entregar o vídeo</div>
+              <ul class="lab-list">
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Texto legível: no máximo 2 linhas por vez, dentro da área segura (80% do centro)</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Números com fonte na tela, tirados da planilha</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Música e imagens com licença de uso</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Voz ou rosto de alguém só com autorização</li>
+                <li><svg class="i sm yes"><use href="#i-check"/></svg>Avise que o vídeo foi feito com IA</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- 23 · ÉTICA -->
         <section class="slide" data-id="ethics" data-title="Mostre como usar a IA com responsabilidade" data-bubble="Eu posso errar. Confere comigo?">
           <div class="wrap">
             <header class="s-head" data-anim>
@@ -1059,6 +1322,13 @@ codex</pre>
               <a class="glass ref" href="https://github.com/openai/codex" target="_blank" rel="noopener"><b>OpenAI</b>Codex CLI: repositório oficial</a>
               <a class="glass ref" href="https://ai.google.dev/gemini-api/docs" target="_blank" rel="noopener"><b>Google</b>Documentação da API do Gemini</a>
               <a class="glass ref" href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm" target="_blank" rel="noopener"><b>Brasil (2018)</b>Lei Geral de Proteção de Dados: Lei 13.709</a>
+              <a class="glass ref" href="https://github.com/heygen-com/hyperframes" target="_blank" rel="noopener"><b>HeyGen (2026)</b>HyperFrames: vídeo feito com HTML, código aberto</a>
+              <a class="glass ref" href="https://docs.claude.com/en/docs/claude-code/headless" target="_blank" rel="noopener"><b>Anthropic</b>Claude Code sem janela (claude -p) em scripts e automação</a>
+              <a class="glass ref" href="https://gsap.com/docs/v3/GSAP/Timeline/" target="_blank" rel="noopener"><b>GSAP</b>Linha do tempo (Timeline): documentação oficial</a>
+              <a class="glass ref" href="https://threejs.org/docs/" target="_blank" rel="noopener"><b>three.js</b>Documentação: cenas, câmeras, luzes e materiais</a>
+              <a class="glass ref" href="https://openpyxl.readthedocs.io/en/stable/charts/introduction.html" target="_blank" rel="noopener"><b>openpyxl</b>Ler planilhas .xlsx e criar gráficos com Python</a>
+              <a class="glass ref" href="https://ffmpeg.org/documentation.html" target="_blank" rel="noopener"><b>FFmpeg</b>Documentação: juntar quadros e codificar vídeo</a>
+              <a class="glass ref" href="https://www.remotion.dev/docs/renderer/render-media" target="_blank" rel="noopener"><b>Remotion</b>Outra opção: vídeos em React com renderMedia()</a>
             </div>
           </div>
         </section>
@@ -1112,7 +1382,7 @@ codex</pre>
             <button class="pill dark sm" data-goto="11"><svg class="i sm"><use href="#i-sparkles"/></svg>Prompts</button>
             <button class="pill dark sm" data-goto="13"><svg class="i sm"><use href="#i-table"/></svg>Automação</button>
             <button class="pill dark sm" data-goto="16"><svg class="i sm"><use href="#i-film"/></svg>Vídeo</button>
-            <button class="pill dark sm" data-goto="18"><svg class="i sm"><use href="#i-help"/></svg>Quiz</button>
+            <button class="pill dark sm" data-goto="24"><svg class="i sm"><use href="#i-help"/></svg>Quiz</button>
           </div>
           <button class="circle gem" id="ask-open" aria-label="Pergunte ao Gemini sobre este slide" title="Pergunte ao Gemini"><svg class="i"><use href="#i-gem"/></svg></button>
           <button class="circle ghost" id="btn-prev" aria-label="Slide anterior"><svg class="i"><use href="#i-arrow-left"/></svg></button>
@@ -1150,7 +1420,9 @@ codex</pre>
     </div>
   </div>
 
+  <script src="assets/js/studio.js"></script>
   <script src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/studio3d.js"></script>
   <script type="module" src="assets/js/galaxy.js"></script>
 </body>
 </html>
