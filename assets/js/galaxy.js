@@ -105,16 +105,23 @@ function init() {
   /* =========================================================
      Galáxia espiral barrada (como a NGC 1300)
      Uma barra de estrelas velhas atravessa o centro; os dois braços
-     nascem nas pontas da barra e seguem uma espiral logarítmica:
-       ângulo = k·π + K·ln(r / R0)   (k = braço 0 ou 1, R0 = ponta da barra)
+     nascem nas pontas da barra, abraçam a barra bem fechados (o "anel
+     interno" das fotos) e depois se abrem para fora, cada vez mais fracos:
+       ângulo = k·π + K_OUT·ln(r/R0) + (K_IN − K_OUT)·(W/R0)·(1 − e^−(r−R0)/W)
+     (k = braço 0 ou 1, R0 = ponta da barra; perto da barra o passo é K_IN,
+     longe dela tende a K_OUT)
      A galáxia gira como um bloco (padrão de onda de densidade),
      então os braços não se enrolam com o tempo.
      ========================================================= */
-  const KS = 2.9, R0 = 3.1, R_MAX = 13;     // R0 = meio comprimento da barra
+  const R0 = 3.1, R_MAX = 13;               // R0 = meio comprimento da barra
+  const K_IN = 5.5, K_OUT = 1.25, KW = 1.8;  // enrolamento perto da barra, longe dela e a distância da troca
   const SPAN = 28;                         // o mapa cobre de -14 a 14
   const MAP_RES = lowEnd ? 1024 : 2048;
   const HE = 0.13, HD = 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira
-  const armAngle = (r, k) => k * Math.PI + KS * Math.log(r / R0);
+  const spiral = r => K_OUT * Math.log(r / R0) + (K_IN - K_OUT) * (KW / R0) * (1 - Math.exp(-(r - R0) / KW));
+  const armAngle = (r, k) => k * Math.PI + spiral(r);
+  // seno do ângulo de abertura: converte distância angular em distância real até o braço
+  const armSin = r => 1 / Math.hypot(1, K_OUT + (K_IN - K_OUT) * (r / R0) * Math.exp(-(r - R0) / KW));
   const galaxy = new THREE.Group();
   scene.add(galaxy);
 
@@ -151,7 +158,9 @@ function init() {
     fragmentShader: /* glsl */`
       uniform float uLDR; varying vec2 vUv;
       ${GLSL_NOISE}
-      const float KS = ${KS.toFixed(3)}, R0 = ${R0.toFixed(3)};
+      const float R0 = ${R0.toFixed(3)}, K_IN = ${K_IN.toFixed(3)}, K_OUT = ${K_OUT.toFixed(3)}, KW = ${KW.toFixed(3)};
+      float spiral(float r){ return K_OUT * log(r / R0) + (K_IN - K_OUT) * (KW / R0) * (1.0 - exp(-(r - R0) / KW)); }
+      float pitchG(float r){ return K_OUT + (K_IN - K_OUT) * (r / R0) * exp(-(r - R0) / KW); }
       void main(){
         vec2 p = (vUv - 0.5) * ${SPAN.toFixed(1)};
         float r0 = length(p);
@@ -159,33 +168,39 @@ function init() {
         vec2 wv = vec2(fb2(p * 0.38 + 3.1), fb2(p * 0.38 - 8.7)) - 0.5;
         vec2 q = p + wv * 0.55 * smoothstep(2.0, 5.0, r0);
         float r = max(length(q), 0.02), th = atan(q.y, q.x), lr = log(r / R0);
-        float phi = th - KS * lr;                       // coordenada da espiral (0 = crista do braço)
-        float armC = 0.5 + 0.5 * cos(2.0 * phi);
-        float inner = smoothstep(R0 * 0.8, R0 * 1.3, r0), outer = smoothstep(13.9, 10.2, r0);
+        float phi = th - spiral(r);                     // coordenada da espiral (0 = crista do braço)
+        // distância REAL até o braço mais próximo (+ = lado de dentro): mantém os braços finos
+        // também na parte de fora, onde a espiral se abre
+        float dph = mod(phi + 1.5708, 3.14159) - 1.5708;
+        float sd = r * dph / sqrt(1.0 + pow(pitchG(r), 2.0)), ad = abs(sd);
+        float inner = smoothstep(R0 * 0.85, R0 * 1.25, r0), outer = smoothstep(13.9, 10.4, r0);
         float env = inner * outer;
-        // braços finos: uma crista estreita e um corpo um pouco mais largo
-        float ridge = pow(armC, 14.0), body = pow(armC, 5.0), wide = pow(armC, 2.0);
-        // contas de estrelas: aglomerados brilhantes em fila ao longo do braço
-        float bead = smoothstep(0.44, 0.8, fb2(p * 2.4 + 5.0) * 0.75 + fb2(p * 6.5 - 2.0) * 0.25);
+        float tOut = smoothstep(5.0, 11.5, r0);           // 0 = anel interno, 1 = ponta dos braços
+        // braços finos: uma crista estreita, um corpo e um halo largo
+        float ridge = exp(-pow(ad / (0.26 + 0.14 * tOut), 2.0)), body = exp(-pow(ad / (0.62 + 0.3 * tOut), 2.0)), wide = exp(-pow(ad / 1.8, 2.0));
+        // contas de estrelas: aglomerados em fila, mais soltos e espaçados na parte de fora
+        float bead = smoothstep(0.44 + 0.08 * tOut, 0.8, fb2(p * 2.4 + 5.0) * 0.75 + fb2(p * 6.5 - 2.0) * 0.25);
         float fine = fb2(p * 9.0 + 1.3);
-        float br = mix(0.55, 1.0, smoothstep(R0, 5.0, r0)) * exp(-r0 / 14.0);
+        // brilho: forte no anel que abraça a barra e cada vez mais fraco para fora
+        float br = smoothstep(R0 * 0.9, R0 * 1.45, r0) * (0.16 + 0.6 * exp(-(r0 - R0) / 3.6));
         // barra: estrelas velhas, alongada no eixo x (os braços saem das suas pontas)
-        float bar = exp(-(p.x * p.x) / (R0 * R0 * 0.5) - (p.y * p.y) / 0.42);
-        float lens = exp(-r0 * r0 / 2.2);                 // brilho redondo em volta da barra
+        float bar = exp(-(p.x * p.x) / (R0 * R0 * 0.55) - (p.y * p.y) / 0.5);
+        float lens = exp(-r0 * r0 / 3.4);                 // brilho redondo em volta da barra
         // disco de estrelas velhas: forte no centro e quase nada entre os braços
-        float disk = exp(-r0 / 1.7) * 0.9 + 0.05 * exp(-r0 / 6.0) * (0.4 + 0.6 * wide) * outer;
-        // regiões HII (rosadas): poucas, pequenas, presas às contas do braço
+        float disk = exp(-r0 / 1.8) * 0.9 + 0.05 * exp(-r0 / 6.0) * (0.4 + 0.6 * wide) * outer;
+        // regiões HII (rosadas): presas às contas, logo depois da crista; mais comuns na parte de fora
         float kn = fb2(p * 3.6 + 11.0) * 0.7 + fine * 0.3;
-        float hii = smoothstep(0.57, 0.72, kn) * pow(0.5 + 0.5 * cos(2.0 * (phi + 0.1)), 8.0) * env;
+        float hii = smoothstep(0.58 - 0.05 * tOut, 0.72, kn) * exp(-pow((sd + 0.12) / 0.34, 2.0)) * env;
         vec3 OLD = vec3(1.0, 0.86, 0.66), BAR = vec3(1.0, 0.93, 0.78), YOUNG = vec3(0.5, 0.68, 1.0), HII = vec3(1.0, 0.34, 0.62);
-        vec3 E = OLD * disk * 0.3 + BAR * (bar * 0.36 + lens * 0.09)
-               + YOUNG * (ridge * (0.25 + 1.5 * bead) + body * 0.22 * (0.6 + 0.8 * bead)) * env * br
+        vec3 E = OLD * disk * 0.3 + BAR * (bar * 0.46 + lens * 0.13)
+               + vec3(0.32, 0.46, 1.0) * 0.09 * exp(-r0 / 4.5) * inner * outer       // névoa azul entre a barra e o anel
+               + YOUNG * (ridge * (0.06 + 1.55 * bead) + body * 0.16 * (0.4 + 1.0 * bead)) * env * br
                + vec3(0.78, 0.86, 1.0) * ridge * bead * fine * 0.5 * env * br      // estrelas azuis mais brilhantes
-               + vec3(0.24, 0.42, 1.0) * wide * 0.3 * env * exp(-r0 / 10.0)       // halo azul difuso
-               + HII * hii * 1.15;
+               + vec3(0.24, 0.42, 1.0) * wide * 0.34 * env * exp(-r0 / 12.0)       // halo azul difuso
+               + HII * hii * (1.0 + 0.5 * tOut);
         E *= smoothstep(14.0, 12.4, r0);
         // poeira: faixa fina na borda interna dos braços e duas faixas ao longo da barra
-        float lane = pow(0.5 + 0.5 * cos(2.0 * (phi - 0.32)), 22.0);
+        float lane = exp(-pow((sd - 0.42) / 0.17, 2.0));
         vec3 sp = vec3(cos(phi) * 3.4, sin(phi) * 3.4, lr * 2.6);
         float laneN = fb3(sp * 1.9 + 4.0, 4);
         float barLane = exp(-pow((abs(p.y) - 0.42) / 0.09, 2.0)) * smoothstep(R0 * 1.1, R0 * 0.4, abs(p.x)) * smoothstep(0.15, 0.6, abs(p.x));
@@ -358,7 +373,7 @@ function init() {
     const NC = [C('#ff4f8f'), C('#ff6a9e'), C('#4fd6cf'), C('#6f95ff'), C('#ff7a4a'), C('#c86bff')];
     for (let i = 0; i < n; i++) {
       const r = 2.6 + Math.pow(rand(), 0.8) * 9.6, k = rand() < 0.5 ? 0 : 1;
-      const a = armAngle(r, k) + 0.14 + gauss() * 0.16;
+      const a = armAngle(r, k) + (0.27 + gauss() * 0.3) / (r * armSin(r));   // ao lado do braço, em distância real
       pos.set([Math.cos(a) * r, gauss() * 0.03, Math.sin(a) * r], i * 3);
       const c = NC[rand() < 0.55 ? (rand() < 0.5 ? 0 : 1) : 2 + ((rand() * 4) | 0)];
       col.set([c.r, c.g, c.b], i * 3);
