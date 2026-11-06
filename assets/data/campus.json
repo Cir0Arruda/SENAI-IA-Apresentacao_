@@ -161,7 +161,8 @@
    "ridge": 5.3,
    "over": 2.4,
    "glass": "se",
-   "glass_mid": 0.25
+   "glass_mid": 0.25,
+   "glass_e_s": 0.45
   },
   {
    "t": "cube",
