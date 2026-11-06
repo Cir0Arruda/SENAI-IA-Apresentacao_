@@ -978,9 +978,14 @@ function init() {
         const xs = e.shafts.flatMap(s => [s[0], s[1]]), zs = e.shafts.flatMap(s => [s[2], s[3]]);
         addHot({ id: e.id, desc: e.desc }, [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)], h);
       } else if (t === 'totem') {
-        const { x, z, w, d: dd, h } = e; box(mt.vermelho, x - w / 2, x + w / 2, z - dd / 2, z + dd / 2, 0.15, h); box(mt.preto, x - w / 2 - 0.1, x + w / 2 + 0.1, z - dd / 2 - 0.1, z + dd / 2 + 0.1, 0, 0.15);
+        const { x, z, d: dd, h } = e, rot = e.rot === 90;          // rot: face larga voltada para leste (foto DSC_2025)
+        const hw = (rot ? dd : e.w) / 2, hd = (rot ? e.w : dd) / 2;
+        box(mt.vermelho, x - hw, x + hw, z - hd, z + hd, 0.15, h); box(mt.preto, x - hw - 0.1, x + hw + 0.1, z - hd - 0.1, z + hd + 0.1, 0, 0.15);
         for (const sg of [1, -1]) {
-          const s = sign('SENAI', '#ffffff', 3.6, 0.82, false); s.rotation.set(0, sg > 0 ? 0 : Math.PI, Math.PI / 2); s.position.set(x, h * 0.55, z + sg * (dd / 2 + 0.012)); s.material.alphaTest = 0.3; site.add(s);
+          const s = sign('SENAI', '#ffffff', 3.6, 0.82, false); s.material.alphaTest = 0.3;
+          if (rot) { s.rotation.set(0, sg * Math.PI / 2, Math.PI / 2); s.position.set(x + sg * (dd / 2 + 0.012), h * 0.55, z); }
+          else { s.rotation.set(0, sg > 0 ? 0 : Math.PI, Math.PI / 2); s.position.set(x, h * 0.55, z + sg * (dd / 2 + 0.012)); }
+          site.add(s);
         }
       } else if (t === 'flags') {
         for (let k = 0; k < e.n; k++) { const xx = e.x0 + k * (e.x1 - e.x0) / (e.n - 1); put(mt.galv, new THREE.CylinderGeometry(0.045, 0.06, e.h, 8), xx, e.h / 2 + 0.48, e.z); }
