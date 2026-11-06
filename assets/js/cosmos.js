@@ -1027,8 +1027,8 @@ function init() {
     // carros nos estacionamentos e no meio-fio (posições do Street View e do satélite)
     for (let j = 0; j < 7; j++) cars.push([30 + j * 2.6, -26.5, Math.PI / 2]);
     for (const j of [0, 2, 3, 5]) cars.push([30 + j * 2.6, -14.5, Math.PI / 2]);
-    for (const j of [0, 1, 3, 4, 6]) cars.push([1 + j * 2.6, -5, Math.PI / 2]);
-    for (const x of [-40, -33, -27, -9, -2, 6, 18]) cars.push([x, 2.6, 0]);
+    for (const j of [0, 1, 3, 4, 6]) cars.push([1 + j * 2.6, -3.1, Math.PI / 2]);      // vagas junto ao meio-fio (atrás delas, gramado com árvores)
+    for (const x of [-40, -34, -28, -21]) cars.push([x, 2.6, 0]);
     const carCols = [0xdedfe0, 0x8e939a, 0x18191b, 0x8a1418, 0xf0f0f0, 0x3a4554], col = new THREE.Color();
     // carros modelados no Blender (sedã, hatch e SUV: carroceria com caixas de roda, vidros, rodas, faróis), um InstancedMesh por material
     const carMats = { pintura: M(0xffffff, 0.3, 0.55), vidro: M(0x0b0f12, 0.05, 0.6, { envMapIntensity: 1.4 }), escuro: M(0x111112, 0.7, 0.1),
