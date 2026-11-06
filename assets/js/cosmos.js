@@ -801,7 +801,7 @@ function init() {
       gradil: M(0xc7cccc, 0.45, 0.7, { map: meshTex, alphaTest: 0.5, side: DS }), toldo: M(0x1f4fb4, 0.35, 0.2, { side: DS }),
       grama: triMat('leafy_grass', 2.5, 0x8db062, 1), terra_batida: triMat('red_laterite_soil_stones', 5, 0xe0aa90, 1),
       piso_concreto: triMat('concrete_pavement', 3, 0xe6e4de, 0.95, 0, { gray: 0.5 }), bloquete: triMat('hexagonal_concrete_paving', 1.4, 0xd8ccc4, 1),
-      calcada: triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), granito: M(0x55575b, 0.45, 0.1),
+      calcada: triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), piso_vermelho: triMat('concrete_pavement', 3, 0xc08a70, 0.9), granito: M(0x55575b, 0.45, 0.1),
     };
     const ribbon = (x0, x1, z0, z1, y0, y1, side, step = 1.25, rows = 1, gm = mt.vidro) => {   // faixa de janelas: vidro + montantes e travessas brancos
       const e = 0.06;
@@ -836,9 +836,7 @@ function init() {
         else { const x = sd === 'w' ? x0 : x1, n = Math.max(1, Math.round((z1 - z0) / sp)); for (let i = 0; i <= n; i++) pts.add(`${x},${(z0 + i * (z1 - z0) / n).toFixed(2)}`); }
       }
       pts.forEach(p => { const [x, z] = p.split(',').map(Number); const yt = typeof y1 === 'function' ? y1(x) : y1;
-        // pilar redondo (16 lados), como os de concreto das fotos
-        const V = [], F = [], n = 16; for (const y of [0, yt]) for (let k = 0; k < n; k++) { const a = k * Math.PI * 2 / n; V.push([x + Math.cos(a) * s / 2, y, z + Math.sin(a) * s / 2]); }
-        for (let k = 0; k < n; k++) F.push([k, n + k, n + (k + 1) % n, (k + 1) % n]); poly(mt.pilar, V, F); });
+        box(mt.pilar, x - s / 2, x + s / 2, z - s / 2, z + s / 2, 0, yt); });          // pilar quadrado de concreto, como nas fotos
     };
     const fascia = (x0, x1, z0, z1, y, hh = 0.45, t = 0.08) => {
       box(mt.testeira, x0 - t, x1 + t, z0 - t, z0, y - hh, y); box(mt.testeira, x0 - t, x1 + t, z1, z1 + t, y - hh, y);
