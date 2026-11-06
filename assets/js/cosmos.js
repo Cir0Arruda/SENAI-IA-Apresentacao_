@@ -722,6 +722,7 @@ function init() {
     const nbR = d.predios.filter(b => !b.id.startsWith('senai')).map(b => [b.x - b.w / 2, b.x + b.w / 2, b.z - b.d / 2, b.z + b.d / 2]);
     if (cov) cov.arvores.forEach(([x, z, r, h]) => { if (!inside(x, z, campusR) && !inside(x, z, nbR)) trees.push([x, z, h, r]); });
     const crownGeo = new THREE.IcosahedronGeometry(1, 2); { const p = crownGeo.attributes.position; for (let i = 0; i < p.count; i++) { const k = 0.82 + 0.3 * Math.abs(Math.sin(p.getX(i) * 7.1 + p.getY(i) * 5.3 + p.getZ(i) * 3.7)); p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k); } crownGeo.computeVertexNormals(); }
+    if (cd) cd.els.filter(e => e.t === 'trees' && e.keep).forEach(e => e.pts.forEach(([x, z]) => trees.push([x, z, e.h || 6, 0])));   // árvores vistas nas fotos (praça interna)
     const crowns = new THREE.InstancedMesh(crownGeo, M(0xffffff, 0.95), trees.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion();
     const trunkM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.16, 0.26, 1, 6), M(0x5a4a3a, 0.9), trees.length);
     trees.forEach(([x, z, h, r], i) => {
@@ -801,7 +802,7 @@ function init() {
       gradil: M(0xc7cccc, 0.45, 0.7, { map: meshTex, alphaTest: 0.5, side: DS }), toldo: M(0x1f4fb4, 0.35, 0.2, { side: DS }),
       grama: triMat('leafy_grass', 2.5, 0x8db062, 1), terra_batida: triMat('red_laterite_soil_stones', 5, 0xe0aa90, 1),
       piso_concreto: triMat('concrete_pavement', 3, 0xe6e4de, 0.95, 0, { gray: 0.5 }), bloquete: triMat('hexagonal_concrete_paving', 1.4, 0xd8ccc4, 1),
-      calcada: triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), piso_vermelho: triMat('concrete_pavement', 3, 0xc08a70, 0.9), granito: M(0x55575b, 0.45, 0.1),
+      calcada: triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), piso_vermelho: triMat('concrete_pavement', 3, 0xc08a70, 0.9), granito: M(0x55575b, 0.45, 0.1), sebe: M(0x1f3a12, 0.95), pingpong: M(0x1f4d52, 0.4),
     };
     const ribbon = (x0, x1, z0, z1, y0, y1, side, step = 1.25, rows = 1, gm = mt.vidro) => {   // faixa de janelas: vidro + montantes e travessas brancos
       const e = 0.06;
@@ -896,7 +897,13 @@ function init() {
         addHot(e, r, h);
       } else if (t === 'bluebox') {                         // cobertura alta plana sobre pilares, saia de telha azul só a leste/norte
         const [x0, x1, z0, z1] = r, h = e.h, bh = e.base, o = e.over, lx0 = x0 + o.w, lx1 = x1 - o.e, lz0 = z0 + o.n, lz1 = z1 - o.s;
-        box(mt.parede, lx0, lx1, lz0, lz1, 0, bh); for (const sd of 'nsew') ribbon(lx0, lx1, lz0, lz1, 1.0, 3.0, sd, 1.25, 2);
+        if (e.vao_n) {                                      // térreo com vão aberto na ponta norte (DSC_2084): sala fechada, vão com pingue-pongue, resto envidraçado
+          const vn = lz0 + (e.vao_n0 || 0), vz = lz0 + e.vao_n;
+          box(mt.parede, lx0, lx1, vz, lz1, 0, bh); for (const sd of 'nsew') ribbon(lx0, lx1, vz, lz1, 1.0, 3.0, sd, 1.25, 2);
+          if (vn > lz0) { box(mt.parede, lx0, lx1, lz0, vn, 0, bh); ribbon(lx0, lx1, lz0, vn, 1.0, 3.0, 'w', 1.25, 2); }
+          box(mt.granito, lx0, lx1 + 0.6, vn, vz, 0, 0.17);
+          for (let k = 0; k < 2; k++) { const xm = lx0 + 3 + k * 4, zm = (vn + vz) / 2; box(mt.pingpong, xm - 1.37, xm + 1.37, zm - 0.76, zm + 0.76, 0.74, 0.77); box(mt.preto, xm - 0.01, xm + 0.01, zm - 0.76, zm + 0.76, 0.77, 0.92); for (const dx of [-0.9, 0.9]) box(mt.galv, xm + dx - 0.04, xm + dx + 0.04, zm - 0.5, zm + 0.5, 0.17, 0.74); }
+        } else { box(mt.parede, lx0, lx1, lz0, lz1, 0, bh); for (const sd of 'nsew') ribbon(lx0, lx1, lz0, lz1, 1.0, 3.0, sd, 1.25, 2); }
         box(mt.telha, lx0 - 0.6, lx1 + 0.6, lz0 - 0.6, lz1 + 0.6, bh, bh + 0.18); fascia(lx0 - 0.6, lx1 + 0.6, lz0 - 0.6, lz1 + 0.6, bh + 0.18, 0.35);
         const ix0 = lx0 + 1.2, ix1 = lx1 - 1.2, iz0 = lz0 + 1.2, iz1 = lz1 - 1.2;
         box(mt.parede, ix0, ix1, iz0, iz1, bh + 0.18, h - 0.8); for (const sd of 'nsew') ribbon(ix0, ix1, iz0, iz1, bh + 0.8, h - 1.4, sd, 1.25, 1);
@@ -1019,9 +1026,17 @@ function init() {
         }
       } else if (t === 'lamps') {
         for (const [x, z] of e.pts) {
-          const h = e.h; box(mt.preto, x - 0.07, x + 0.07, z - 0.07, z + 0.07, 0, h); box(mt.concreto, x - 0.3, x + 0.3, z - 0.3, z + 0.3, 0, 0.3);
+          const h = e.h; box(mt.preto, x - 0.07, x + 0.07, z - 0.07, z + 0.07, 0, h);
+          if (h < 4) box(mt.esquadria, x - 0.2, x + 0.2, z - 0.2, z + 0.2, 0, 0.3); else box(mt.concreto, x - 0.3, x + 0.3, z - 0.3, z + 0.3, 0, 0.3);
           for (const sg of [-1, 1]) { box(mt.preto, Math.min(x + sg * 0.1, x + sg * 0.75), Math.max(x + sg * 0.1, x + sg * 0.75), z - 0.05, z + 0.05, h - 0.35, h - 0.27); box(mt.preto, Math.min(x + sg * 0.55, x + sg * 1.1), Math.max(x + sg * 0.55, x + sg * 1.1), z - 0.22, z + 0.22, h - 0.32, h - 0.2); }
         }
+      } else if (t === 'bancos') {                          // bancos de concreto (tampo sobre dois apoios)
+        for (const [x, z, rz] of e.pts) {
+          const [a, b] = rz ? [0.25, 1.0] : [1.0, 0.25]; box(mt.concreto, x - a, x + a, z - b, z + b, 0.38, 0.47);
+          for (const sg of [-1, 1]) { const ax = rz ? x : x + sg * (a - 0.3), bz = rz ? z + sg * (b - 0.3) : z; box(mt.concreto, ax - 0.12, ax + 0.12, bz - 0.18, bz + 0.18, 0, 0.38); }
+        }
+      } else if (t === 'sebe') {                            // cerca viva podada
+        for (const [x0, x1, z0, z1] of e.r) box(mt.sebe, x0, x1, z0, z1, 0.1, e.h || 0.9);
       } else if (t === 'palms') e.pts.forEach(([x, z]) => palms.push([x, z, 7 + rand() * 4]));
     }
     // palmeiras: folhas arqueadas com folíolos (mesma receita da copa do Blender), instanciadas
