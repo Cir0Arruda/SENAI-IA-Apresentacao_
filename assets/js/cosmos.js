@@ -796,7 +796,7 @@ function init() {
       azul: triMat('box_profile_metal_sheet', 1.2, 0x2f86b8, 0.45, 0.15, { gray: 1, gain: 1.8, mat: { side: DS } }),
       testeira: M(0x0d5584, 0.4, 0.35), rufo: M(0xaeb1b3, 0.4, 0.6), forro: M(0xcdc2aa, 0.8), trelica: M(0xc9b993, 0.5, 0.4),
       vidro: M(0x1a242c, 0.05, 0.85, { envMapIntensity: 1.3 }), esquadria: M(0xf2f2ee, 0.4, 0.1),
-      pastilha: triMat('mosaico', 1.6, 0xffffff, 0.3), vermelho: M(0xa3161d, 0.35), branco: M(0xf4f4f2, 0.5),
+      pastilha: triMat('mosaico', 1.6, 0xffffff, 0.3), ceramica: triMat('mosaico', 0.8, 0xd8c9a8, 0.35), vermelho: M(0xa3161d, 0.35), branco: M(0xf4f4f2, 0.5),
       galv: M(0xbfc3c3, 0.35, 0.85), preto: M(0x161616, 0.5, 0.3), painel: M(0x0e1630, 0.12, 0.5),
       gradil: M(0xc7cccc, 0.45, 0.7, { map: meshTex, alphaTest: 0.5, side: DS }), toldo: M(0x1f4fb4, 0.35, 0.2, { side: DS }),
       grama: triMat('leafy_grass', 2.5, 0x8db062, 1), terra_batida: triMat('red_laterite_soil_stones', 5, 0xe0aa90, 1),
@@ -954,7 +954,8 @@ function init() {
       } else if (t === 'patio') {
         const [x0, x1, z0, z1] = r, h = e.h;
         box(mt.granito, x0 + 0.5, x1 - 0.5, z0 + 0.5, z1 - 0.5, 0, 0.16); box(mt.parede, x0 + 0.6, x0 + 6.5, z0 + 1, z1 - 1, 0, 3.5); ribbon(x0 + 0.6, x0 + 6.5, z0 + 1, z1 - 1, 0.3, 3.0, 'e', 1.4, 2);
-        box(mt.parede, x1 - 4.5, x1 - 0.6, z0 + 1, z1 - 1, 0, 3.8);
+        box(mt.ceramica, x1 - 4.5, x1 - 0.6, z0 + 1, z1 - 1, 0, 3.8);                         // bloco de serviço em cerâmica creme (foto DSC_2064)
+        for (const zd of [z0 + 3.0, z0 + 6.2, z0 + 9.6]) { box(mt.branco, x1 - 4.58, x1 - 4.5, zd - 0.45, zd + 0.45, 0.16, 2.25); box(mt.vermelho, x1 - 4.56, x1 - 4.5, zd - 0.12, zd + 0.12, 2.5, 2.7); }
         box(mt.telha, x0 - 0.3, x1 + 0.3, z0 - 0.3, z1 + 0.3, h - 0.2, h + 0.05); fascia(x0 - 0.3, x1 + 0.3, z0 - 0.3, z1 + 0.3, h + 0.08, 0.45);
         for (const f of [0.35, 0.62]) { const zz = z0 + (z1 - z0) * f; box(mt.vidro, x0 + 1, x1 - 1, zz - 0.6, zz + 0.6, h + 0.05, h + 0.08); }
         columns(x0 + 0.8, x1 - 0.8, z0 + 0.8, z1 - 0.8, h - 0.2, 6, 0.5); trusses(x0, x1, z0, z1, h - 0.2, 'z', 5, 0.9); trusses(x0, x1, z0, z1, h - 0.2, 'x', 6.5, 0.5);
