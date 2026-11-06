@@ -1034,14 +1034,16 @@
    "sp": "arbusto"
   },
   {
-   "t": "dracenas",
+   "t": "trees",
    "pts": [
     [
      -2.2,
      -30.5
     ]
    ],
-   "n": 2
+   "keep": 1,
+   "h": 3.6,
+   "sp": "muda"
   },
   {
    "t": "bancos",
