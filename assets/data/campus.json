@@ -144,7 +144,8 @@
     "e": 2.6,
     "w": 0.6
    },
-   "skirt": "en"
+   "skirt": "en",
+   "sala": true
   },
   {
    "t": "pavilion",
