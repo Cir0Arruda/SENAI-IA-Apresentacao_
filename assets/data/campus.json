@@ -242,7 +242,8 @@
    "eave": 4.3,
    "ridge": 5.3,
    "over": 2.4,
-   "glass": ""
+   "glass": "s",
+   "interior": "refeitorio"
   },
   {
    "t": "portaria",

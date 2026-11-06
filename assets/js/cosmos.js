@@ -918,10 +918,20 @@ function init() {
             else { const [a, b, c, d] = W[sd]; box(mt.parede, a, b, c, d, 0, e.eave - 0.3); ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
           }
           const ix0 = wx0 + 0.2, ix1 = wx1 - 0.2, iz0 = wz0 + 0.2, iz1 = wz1 - 0.2;
-          box(pisoInt, ix0, ix1, iz0, iz1, 0, 0.1); box(mt.branco, ix0, ix1, iz0, iz1, hc, hc + 0.05);
+          box(pisoInt, ix0, ix1, iz0, iz1, 0, 0.17); box(mt.branco, ix0, ix1, iz0, iz1, hc, hc + 0.05);
           for (let x = ix0 + 1.2; x < ix1 - 0.6; x += 2.4) for (let z = iz0 + 1.2; z < iz1 - 0.6; z += 2.4) box(luz, x - 0.3, x + 0.3, z - 0.3, z + 0.3, hc - 0.02, hc);
-          const zb = iz0 + (iz1 - iz0) * 0.45; box(mt.forro, ix0, ix1, zb - 0.06, zb + 0.06, 0.1, hc);
-          for (let x = ix0 + 2; x < ix1 - 1; x += 3) for (const zm of [iz1 - 2.4, iz1 - 5.2]) if (zm - 0.4 > zb + 0.5) { box(mesa, x - 0.7, x + 0.7, zm - 0.4, zm + 0.4, 0.72, 0.76); box(mt.preto, x - 0.05, x + 0.05, zm - 0.05, zm + 0.05, 0.1, 0.72); box(cadeira, x - 0.5, x + 0.5, zm - 0.9, zm - 0.5, 0.43, 0.9); }
+          for (const sd of gl) { const [a, b, c, d] = W[sd]; if (sd === 's' || sd === 'n') box(mt.vermelho, a, b, (sd === 's' ? d : c) - 0.02, (sd === 's' ? d : c) + 0.02, 1.05, 1.15); else box(mt.vermelho, (sd === 'e' ? b : a) - 0.02, (sd === 'e' ? b : a) + 0.02, c, d, 1.05, 1.15); }   // faixa vermelha de segurança no vidro
+          if (e.interior === 'refeitorio') {               // refeitório (foto DSC_2027): duas fileiras de mesas longas brancas com bancos fixos, pilares, parede de pastilha
+            box(mt.branco, ix0, ix1, iz0, iz0 + 0.05, 0.1, hc);
+            for (const xp of [ix0 + (ix1 - ix0) / 3, ix0 + 2 * (ix1 - ix0) / 3]) box(mt.pilar, xp - 0.2, xp + 0.2, (iz0 + iz1) / 2 - 0.2, (iz0 + iz1) / 2 + 0.2, 0.1, hc);
+            for (const zr of [iz0 + (iz1 - iz0) * 0.3, iz0 + (iz1 - iz0) * 0.72]) for (let x = ix0 + 1.5; x + 2.4 <= ix1 - 1.5; x += 2.5) {
+              box(mt.branco, x, x + 2.4, zr - 0.4, zr + 0.4, 0.72, 0.75); box(mt.preto, x + 0.1, x + 2.3, zr - 0.02, zr + 0.02, 0.3, 0.33);
+              for (let k = 0; k < 4; k++) for (const sz of [-1, 1]) { const xb = x + 0.3 + k * 0.6, zb = zr + sz * 0.62; box(mt.branco, xb - 0.16, xb + 0.16, zb - 0.16, zb + 0.16, 0.44, 0.47); box(mt.preto, xb - 0.02, xb + 0.02, zb - 0.02, zb + 0.02, 0.1, 0.44); }
+            }
+          } else {
+            const zb = iz0 + (iz1 - iz0) * 0.45; box(mt.forro, ix0, ix1, zb - 0.06, zb + 0.06, 0.1, hc);
+            for (let x = ix0 + 2; x < ix1 - 1; x += 3) for (const zm of [iz1 - 2.4, iz1 - 5.2]) if (zm - 0.4 > zb + 0.5) { box(mesa, x - 0.7, x + 0.7, zm - 0.4, zm + 0.4, 0.72, 0.76); box(mt.preto, x - 0.05, x + 0.05, zm - 0.05, zm + 0.05, 0.1, 0.72); box(cadeira, x - 0.5, x + 0.5, zm - 0.9, zm - 0.5, 0.43, 0.9); }
+          }
         }
         // cobertura curva (pontas leste/oeste levantadas, foto da fachada): laje, testeira bege grossa, forro bege e vigas aparentes
         const ye = e.eave + 0.1, rise = 1.1, xc = (x0 + x1) / 2, hl = (x1 - x0) / 2, yy = x => ye + rise * ((x - xc) / hl) ** 2, N = 24, tk = 0.35;
