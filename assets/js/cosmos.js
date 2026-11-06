@@ -934,7 +934,7 @@ function init() {
           }
         }
         // cobertura curva (pontas leste/oeste levantadas, foto da fachada): laje, testeira bege grossa, forro bege e vigas aparentes
-        const ye = e.eave + 0.1, rise = 1.1, xc = (x0 + x1) / 2, hl = (x1 - x0) / 2, yy = x => ye + rise * ((x - xc) / hl) ** 2, N = 24, tk = 0.35;
+        const ye = e.eave + 0.1, rise = 0.5, xc = (x0 + x1) / 2, hl = (x1 - x0) / 2, yy = x => ye + rise * ((x - xc) / hl) ** 2, N = 24, tk = 0.35;
         const top = [], bot = [], fz0 = [], fz1 = [], Ft = [], Fb = [], Ff = [];
         for (let i = 0; i <= N; i++) { const x = x0 + (x1 - x0) * i / N, y = yy(x);
           top.push([x, y + 0.1, z0], [x, y + 0.1, z1]); bot.push([x, y - tk, z0], [x, y - tk, z1]);
