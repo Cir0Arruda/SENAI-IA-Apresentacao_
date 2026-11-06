@@ -1037,6 +1037,16 @@ function init() {
         }
       } else if (t === 'sebe') {                            // cerca viva podada
         for (const [x0, x1, z0, z1] of e.r) box(mt.sebe, x0, x1, z0, z1, 0.1, e.h || 0.9);
+      } else if (t === 'lawnpatch') {                       // canteiro gramado no miolo da praça (DSC_2098)
+        const [x0, x1, z0, z1] = e.r, y = 0.14 + e.y; K.flat(mt.grama, x1 - x0, z1 - z0, (x0 + x1) / 2, y, (z0 + z1) / 2);
+        for (const [a0, a1, b0, b1] of [[x0 - 0.1, x1 + 0.1, z0 - 0.1, z0], [x0 - 0.1, x1 + 0.1, z1, z1 + 0.1], [x0 - 0.1, x0, z0, z1], [x1, x1 + 0.1, z0, z1]]) box(mt.concreto, a0, a1, b0, b1, 0.12, y + 0.02);
+      } else if (t === 'muro') {                            // muro de blocos de concreto nas divisas oeste (DJI_0002, DSC_2025)
+        for (let i = 0; i < e.pts.length - 1; i++) {
+          const [xa, za] = e.pts[i], [xb, zb] = e.pts[i + 1];
+          box(mt.concreto, Math.min(xa, xb) - 0.08, Math.max(xa, xb) + 0.08, Math.min(za, zb) - 0.08, Math.max(za, zb) + 0.08, 0, e.h);
+        }
+      } else if (t === 'postes_energia') {                  // postes de concreto da entrada de energia
+        for (const [x, z] of e.pts) { box(mt.concreto, x - 0.12, x + 0.12, z - 0.12, z + 0.12, 0, 9.5); box(mt.concreto, x - 1, x + 1, z - 0.06, z + 0.06, 8.9, 9.05); }
       } else if (t === 'palms') e.pts.forEach(([x, z]) => palms.push([x, z, 7 + rand() * 4]));
     }
     // palmeiras: folhas arqueadas com folíolos (mesma receita da copa do Blender), instanciadas
