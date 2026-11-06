@@ -641,7 +641,7 @@ function init() {
   const hot = [];                                           // partes clicáveis do SENAI
   let siteData = null;
   const getJ = u => fetch(u).then(r => r.json()).catch(() => null);
-  Promise.all(['senai-iracemapolis', 'campus', 'cobertura'].map(n => getJ(`assets/data/${n}.json`))).then(([d, cd, cov]) => { if (!d) return; siteData = d; buildSite(d, cd, cov); }).catch(e => console.error(e));
+  Promise.all(['senai-iracemapolis', 'campus', 'cobertura', 'carros'].map(n => getJ(`assets/data/${n}.json`))).then(([d, cd, cov, cars]) => { if (!d) return; siteData = d; carData = cars; buildSite(d, cd, cov); }).catch(e => console.error(e));
   function signTex(text, bg, fg, w = 1024, h = 256) {
     const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
     g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = fg; g.font = `800 ${h * 0.62}px "Inter Tight", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h * 0.54);
@@ -676,6 +676,7 @@ function init() {
     m.customProgramCacheKey = () => 'tri' + (o.cmap ? 'c' : '');
     return m;
   }
+  let carData = null;
   function buildSite(d, cd, cov) {
     const M = (c, r = 0.85, m = 0, ex) => new THREE.MeshStandardMaterial({ color: c, roughness: r, metalness: m, ...ex });
     const DS = THREE.DoubleSide;
@@ -1018,9 +1019,23 @@ function init() {
     for (const j of [0, 1, 3, 4, 6]) cars.push([1 + j * 2.6, -5, Math.PI / 2]);
     for (const x of [-40, -33, -27, -9, -2, 6, 18]) cars.push([x, 2.6, 0]);
     const carCols = [0xdedfe0, 0x8e939a, 0x18191b, 0x8a1418, 0xf0f0f0, 0x3a4554], col = new THREE.Color();
-    const body = new THREE.BoxGeometry(4.2, 0.72, 1.75); body.translate(0, 0.62, 0); const cab = new THREE.BoxGeometry(2.2, 0.55, 1.55); cab.translate(-0.2, 1.24, 0);
-    const carB = new THREE.InstancedMesh(body, M(0xffffff, 0.28, 0.65), cars.length), carC = new THREE.InstancedMesh(cab, mt.vidro, cars.length);
-    cars.forEach(([x, z, ry], i) => { m4.compose(new THREE.Vector3(x, 0.12, z), qq.setFromEuler(eu.set(0, ry, 0)), one); carB.setMatrixAt(i, m4); carC.setMatrixAt(i, m4); carB.setColorAt(i, col.set(carCols[i % 6])); });
+    // carros modelados no Blender (sedã, hatch e SUV: carroceria com caixas de roda, vidros, rodas, faróis), um InstancedMesh por material
+    const carMats = { pintura: M(0xffffff, 0.3, 0.55), vidro: M(0x0b0f12, 0.05, 0.6, { envMapIntensity: 1.4 }), escuro: M(0x111112, 0.7, 0.1),
+      claro: M(0xcfd2d6, 0.25, 0.9), lanterna: M(0x7a0a0c, 0.2, 0.1) };
+    const kinds = carData ? Object.keys(carData) : [];
+    const carGroup = new THREE.Group();
+    if (kinds.length) kinds.forEach((k, ki) => {
+      const mine = cars.filter((_, i) => i % kinds.length === ki); if (!mine.length) return;
+      const pos = new THREE.Float32BufferAttribute(carData[k].p.map(v => v / 100), 3);
+      for (const [g, idx] of Object.entries(carData[k].g)) {
+        const geo = new THREE.BufferGeometry(); geo.setAttribute('position', pos); geo.setIndex(idx); geo.computeVertexNormals();
+        const im = new THREE.InstancedMesh(geo, carMats[g] || carMats.escuro, mine.length);
+        mine.forEach(([x, z, ry], i) => { m4.compose(new THREE.Vector3(x, 0.12, z), qq.setFromEuler(eu.set(0, ry, 0)), one); im.setMatrixAt(i, m4);
+          if (g === 'pintura') im.setColorAt(i, col.set(carCols[(i * kinds.length + ki) % 6])); });
+        carGroup.add(im);
+      }
+    });
+    const carB = carGroup, carC = new THREE.Group();
     const buses = [[30, 0xf0c419], [44, 0xf0c419], [-62, 0xffffff], [-84, 0xd9282f], [-110, 0xffffff], [-190, 0xffffff], [-210, 0xd9282f]];
     const busMesh = new THREE.InstancedMesh(B(12.5, 3.2, 2.6), M(0xffffff, 0.4, 0.3), buses.length);
     buses.forEach(([x, c], i) => { busMesh.setMatrixAt(i, m4.makeTranslation(x, 1.7, 6.5)); busMesh.setColorAt(i, col.set(c)); });
