@@ -835,7 +835,10 @@ function init() {
         if (sd === 'n' || sd === 's') { const z = sd === 'n' ? z0 : z1, n = Math.max(1, Math.round((x1 - x0) / sp)); for (let i = 0; i <= n; i++) pts.add(`${(x0 + i * (x1 - x0) / n).toFixed(2)},${z}`); }
         else { const x = sd === 'w' ? x0 : x1, n = Math.max(1, Math.round((z1 - z0) / sp)); for (let i = 0; i <= n; i++) pts.add(`${x},${(z0 + i * (z1 - z0) / n).toFixed(2)}`); }
       }
-      pts.forEach(p => { const [x, z] = p.split(',').map(Number); box(mt.pilar, x - s / 2, x + s / 2, z - s / 2, z + s / 2, 0, y1); });
+      pts.forEach(p => { const [x, z] = p.split(',').map(Number); const yt = typeof y1 === 'function' ? y1(x) : y1;
+        // pilar redondo (16 lados), como os de concreto das fotos
+        const V = [], F = [], n = 16; for (const y of [0, yt]) for (let k = 0; k < n; k++) { const a = k * Math.PI * 2 / n; V.push([x + Math.cos(a) * s / 2, y, z + Math.sin(a) * s / 2]); }
+        for (let k = 0; k < n; k++) F.push([k, n + k, n + (k + 1) % n, (k + 1) % n]); poly(mt.pilar, V, F); });
     };
     const fascia = (x0, x1, z0, z1, y, hh = 0.45, t = 0.08) => {
       box(mt.testeira, x0 - t, x1 + t, z0 - t, z0, y - hh, y); box(mt.testeira, x0 - t, x1 + t, z1, z1 + t, y - hh, y);
@@ -861,6 +864,7 @@ function init() {
       hot.push({ b: { id: e.id, desc: e.desc, x: (r[0] + r[1]) / 2, z: (r[2] + r[3]) / 2, w: r[1] - r[0], d: r[3] - r[2], h }, g });
     };
     const palms = [], cars = [];
+    const bege = M(0xcdc3aa, 0.6, 0.05, { side: DS });
     for (const e of cd.els) {
       const t = e.t, r = e.r;
       if (t === 'shed') {
@@ -906,15 +910,22 @@ function init() {
       } else if (t === 'pavilion') {
         const [x0, x1, z0, z1] = r, ov = e.over, wx0 = x0 + ov, wx1 = x1 - ov, wz0 = z0 + ov, wz1 = z1 - ov;
         box(mt.parede, wx0, wx1, wz0, wz1, 0, e.eave - 0.3);
-        for (const sd of 'nsew') { if ((e.glass || '').includes(sd)) ribbon(wx0, wx1, wz0, wz1, 0.1, e.eave - 0.5, sd, 1.45, 2); else ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
-        hipRoof(x0, x1, z0, z1, e.eave, e.ridge, mt.telha); box(mt.forro, x0, x1, z0, z1, e.eave - 0.24, e.eave - 0.2);
-        box(mt.rufo, x0 - 0.05, x1 + 0.05, z0 - 0.05, z0 + 0.05, e.eave - 0.4, e.eave + 0.05); box(mt.rufo, x0 - 0.05, x1 + 0.05, z1 - 0.05, z1 + 0.05, e.eave - 0.4, e.eave + 0.05);
-        box(mt.rufo, x0 - 0.05, x0 + 0.05, z0, z1, e.eave - 0.4, e.eave + 0.05); box(mt.rufo, x1 - 0.05, x1 + 0.05, z0, z1, e.eave - 0.4, e.eave + 0.05);
-        columns(x0 + 0.7, x1 - 0.7, z0 + 0.7, z1 - 0.7, e.eave - 0.2, 6.2, 0.45); trusses(x0, x1, z0, z1, e.eave - 0.2, 'x', 6.2, 0.4);
+        for (const sd of 'nsew') { if ((e.glass || '').includes(sd)) ribbon(wx0, wx1, wz0, wz1, 0.1, e.eave - 0.6, sd, 1.41, 2); else ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
+        // cobertura curva (pontas leste/oeste levantadas, foto da fachada): laje, testeira bege grossa, forro bege e vigas aparentes
+        const ye = e.eave + 0.1, rise = 1.1, xc = (x0 + x1) / 2, hl = (x1 - x0) / 2, yy = x => ye + rise * ((x - xc) / hl) ** 2, N = 24, tk = 0.35;
+        const top = [], bot = [], fz0 = [], fz1 = [], Ft = [], Fb = [], Ff = [];
+        for (let i = 0; i <= N; i++) { const x = x0 + (x1 - x0) * i / N, y = yy(x);
+          top.push([x, y + 0.1, z0], [x, y + 0.1, z1]); bot.push([x, y - tk, z0], [x, y - tk, z1]);
+          fz0.push([x, y + 0.15, z0 - 0.08], [x, y - tk - 0.35, z0 - 0.08]); fz1.push([x, y + 0.15, z1 + 0.08], [x, y - tk - 0.35, z1 + 0.08]); }
+        for (let i = 0; i < N; i++) { const a = 2 * i, b = 2 * i + 2; Ft.push([a, a + 1, b + 1, b]); Fb.push([a, b, b + 1, a + 1]); Ff.push([a, b, b + 1, a + 1]); }
+        poly(mt.telha, top, Ft); poly(bege, bot, Fb); poly(bege, fz0, Ff); poly(bege, fz1, Ff.map(f => [f[0], f[3], f[2], f[1]]));
+        for (const x of [x0, x1]) { const y = yy(x), dx = x === x0 ? -0.08 : 0.08; poly(bege, [[x + dx, y + 0.15, z0 - 0.08], [x + dx, y + 0.15, z1 + 0.08], [x + dx, y - tk - 0.35, z1 + 0.08], [x + dx, y - tk - 0.35, z0 - 0.08]], [[0, 1, 2, 3], [0, 3, 2, 1]]); }
+        for (let x = x0 + 1.2; x < x1; x += 2.4) box(mt.trelica, x - 0.07, x + 0.07, z0, z1, yy(x) - tk - 0.32, yy(x) - tk);
+        columns(x0 + 0.7, x1 - 0.7, z0 + 0.7, z1 - 0.7, x => yy(x) - 0.3, 6.2, 0.5);
         addHot(e, r, e.ridge);
       } else if (t === 'cube') {                            // sanitários: cubo de pastilha vermelha com telhadinho azul
         const [x0, x1, z0, z1] = r, h = e.h;
-        box(mt.pastilha, x0, x1, z0, z1, 0, h); box(mt.concreto, x0, x1, z0, z1, h, h + 0.15);
+        box(mt.vermelho, x0, x1, z0, z1, 0, h); box(mt.concreto, x0, x1, z0, z1, h, h + 0.15);
         poly(mt.toldo, [[x0 - 0.3, h + 0.55, z0 - 0.3], [x1 + 0.3, h + 0.55, z0 - 0.3], [x1 + 0.3, h + 0.15, z1 + 0.3], [x0 - 0.3, h + 0.15, z1 + 0.3]], [[0, 3, 2, 1]]);
         box(mt.esquadria, (x0 + x1) / 2 - 0.5, (x0 + x1) / 2 + 0.5, z1 - 0.02, z1 + 0.04, 0, 2.2);
         addHot(e, r, h);
@@ -928,7 +939,7 @@ function init() {
         addHot(e, r, h);
       } else if (t === 'portaria') {
         const [cx0, cx1, cz0, cz1] = e.canopy, [bx0, bx1, bz0, bz1] = e.box, h = e.h;
-        box(mt.pastilha, bx0, bx1, bz0, bz1, 0, 3.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 's', 1.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 'e', 1.0);
+        box(mt.vermelho, bx0, bx1, bz0, bz1, 0, 3.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 's', 1.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 'e', 1.0);
         box(mt.branco, cx0, cx1, cz0, cz1, h - 0.45, h); box(mt.forro, cx0, cx1, cz0, cz1, h - 0.47, h - 0.45);
         const px = (cx0 + cx1) / 2 + 2.5, pz = (cz0 + cz1) / 2; box(mt.pilar, px - 0.25, px + 0.25, pz - 0.25, pz + 0.25, 0, h - 0.45);
         for (let k = 0; k < 3; k++) { const xx = bx1 + 1.6 + k * 1.2; box(mt.galv, xx - 0.15, xx + 0.15, bz1 - 0.5, bz1 - 0.2, 0, 1.0); }
