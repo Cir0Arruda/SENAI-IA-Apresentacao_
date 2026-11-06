@@ -796,7 +796,7 @@ function init() {
       azul: triMat('box_profile_metal_sheet', 1.2, 0x2f86b8, 0.45, 0.15, { gray: 1, gain: 1.8, mat: { side: DS } }),
       testeira: M(0x0d5584, 0.4, 0.35), rufo: M(0xaeb1b3, 0.4, 0.6), forro: M(0xcdc2aa, 0.8), trelica: M(0xc9b993, 0.5, 0.4),
       vidro: M(0x1a242c, 0.05, 0.85, { envMapIntensity: 1.3 }), esquadria: M(0xf2f2ee, 0.4, 0.1),
-      pastilha: triMat('mosaico', 1.6, 0xffffff, 0.3), ceramica: triMat('mosaico', 0.8, 0xd8c9a8, 0.35), vermelho: M(0xa3161d, 0.35), branco: M(0xf4f4f2, 0.5),
+      pastilha: triMat('mosaico', 1.6, 0xffffff, 0.3), forroBeiral: M(0x6b5c4d, 0.8), ceramica: triMat('mosaico', 0.8, 0xd8c9a8, 0.35), vermelho: M(0xa3161d, 0.35), branco: M(0xf4f4f2, 0.5),
       galv: M(0xbfc3c3, 0.35, 0.85), preto: M(0x161616, 0.5, 0.3), painel: M(0x0e1630, 0.12, 0.5),
       gradil: M(0xc7cccc, 0.45, 0.7, { map: meshTex, alphaTest: 0.5, side: DS }), toldo: M(0x1f4fb4, 0.35, 0.2, { side: DS }),
       grama: triMat('leafy_grass', 2.5, 0x8db062, 1), terra_batida: triMat('red_laterite_soil_stones', 5, 0xe0aa90, 1),
@@ -940,7 +940,7 @@ function init() {
           top.push([x, y + 0.1, z0], [x, y + 0.1, z1]); bot.push([x, y - tk, z0], [x, y - tk, z1]);
           fz0.push([x, y + 0.15, z0 - 0.08], [x, y - tk - 0.35, z0 - 0.08]); fz1.push([x, y + 0.15, z1 + 0.08], [x, y - tk - 0.35, z1 + 0.08]); }
         for (let i = 0; i < N; i++) { const a = 2 * i, b = 2 * i + 2; Ft.push([a, a + 1, b + 1, b]); Fb.push([a, b, b + 1, a + 1]); Ff.push([a, b, b + 1, a + 1]); }
-        poly(mt.telha, top, Ft); poly(bege, bot, Fb); poly(bege, fz0, Ff); poly(bege, fz1, Ff.map(f => [f[0], f[3], f[2], f[1]]));
+        poly(mt.telha, top, Ft); poly(mt.forroBeiral, bot, Fb); poly(bege, fz0, Ff); poly(bege, fz1, Ff.map(f => [f[0], f[3], f[2], f[1]]));
         for (const x of [x0, x1]) { const y = yy(x), dx = x === x0 ? -0.08 : 0.08; poly(bege, [[x + dx, y + 0.15, z0 - 0.08], [x + dx, y + 0.15, z1 + 0.08], [x + dx, y - tk - 0.35, z1 + 0.08], [x + dx, y - tk - 0.35, z0 - 0.08]], [[0, 1, 2, 3], [0, 3, 2, 1]]); }
         for (let x = x0 + 1.2; x < x1; x += 2.4) box(mt.trelica, x - 0.07, x + 0.07, z0, z1, yy(x) - tk - 0.32, yy(x) - tk);
         columns(x0 + 0.7, x1 - 0.7, z0 + 0.7, z1 - 0.7, x => yy(x) - 0.3, 6.2, 0.5);
@@ -963,7 +963,7 @@ function init() {
       } else if (t === 'portaria') {
         const [cx0, cx1, cz0, cz1] = e.canopy, [bx0, bx1, bz0, bz1] = e.box, h = e.h;
         box(mt.vermelho, bx0, bx1, bz0, bz1, 0, 3.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 's', 1.0); ribbon(bx0, bx1, bz0, bz1, 1.1, 2.4, 'e', 1.0);
-        box(mt.branco, cx0, cx1, cz0, cz1, h - 0.45, h); box(mt.forro, cx0, cx1, cz0, cz1, h - 0.47, h - 0.45);
+        box(bege, cx0, cx1, cz0, cz1, h - 0.5, h); box(mt.forroBeiral, cx0 + 0.15, cx1 - 0.15, cz0 + 0.15, cz1 - 0.15, h - 0.52, h - 0.5);   // laje grossa de concreto claro (DSC_2025)
         const px = (cx0 + cx1) / 2 + 2.5, pz = (cz0 + cz1) / 2; box(mt.pilar, px - 0.25, px + 0.25, pz - 0.25, pz + 0.25, 0, h - 0.45);
         for (let k = 0; k < 3; k++) { const xx = bx1 + 1.6 + k * 1.2; box(mt.galv, xx - 0.15, xx + 0.15, bz1 - 0.5, bz1 - 0.2, 0, 1.0); }
         const s = sign('765', '#b3121b', 1.4, 0.36, false); s.position.set(bx0 + 2.2, h - 0.22, cz1 + 0.02); site.add(s);
