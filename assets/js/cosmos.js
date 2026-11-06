@@ -803,15 +803,15 @@ function init() {
       piso_concreto: triMat('concrete_pavement', 3, 0xe6e4de, 0.95, 0, { gray: 0.5 }), bloquete: triMat('hexagonal_concrete_paving', 1.4, 0xd8ccc4, 1),
       calcada: triMat('concrete_pavement', 2.5, 0xf0eee8, 0.95), granito: M(0x55575b, 0.45, 0.1),
     };
-    const ribbon = (x0, x1, z0, z1, y0, y1, side, step = 1.25, rows = 1) => {   // faixa de janelas: vidro + montantes e travessas brancos
+    const ribbon = (x0, x1, z0, z1, y0, y1, side, step = 1.25, rows = 1, gm = mt.vidro) => {   // faixa de janelas: vidro + montantes e travessas brancos
       const e = 0.06;
       if (side === 'n' || side === 's') {
-        const z = side === 'n' ? z0 : z1; box(mt.vidro, x0 + 0.3, x1 - 0.3, z - e, z + e, y0, y1);
+        const z = side === 'n' ? z0 : z1; box(gm, x0 + 0.3, x1 - 0.3, z - e, z + e, y0, y1);
         const n = Math.max(1, Math.floor((x1 - x0 - 0.6) / step));
         for (let i = 0; i <= n; i++) { const x = x0 + 0.3 + i * (x1 - x0 - 0.6) / n; box(mt.esquadria, x - 0.04, x + 0.04, z - e - 0.02, z + e + 0.02, y0, y1); }
         for (let k = 0; k <= rows; k++) { const y = y0 + k * (y1 - y0) / rows; box(mt.esquadria, x0 + 0.3, x1 - 0.3, z - e - 0.03, z + e + 0.03, y - 0.04, y + 0.04); }
       } else {
-        const x = side === 'e' ? x1 : x0; box(mt.vidro, x - e, x + e, z0 + 0.3, z1 - 0.3, y0, y1);
+        const x = side === 'e' ? x1 : x0; box(gm, x - e, x + e, z0 + 0.3, z1 - 0.3, y0, y1);
         const n = Math.max(1, Math.floor((z1 - z0 - 0.6) / step));
         for (let i = 0; i <= n; i++) { const z = z0 + 0.3 + i * (z1 - z0 - 0.6) / n; box(mt.esquadria, x - e - 0.02, x + e + 0.02, z - 0.04, z + 0.04, y0, y1); }
         for (let k = 0; k <= rows; k++) { const y = y0 + k * (y1 - y0) / rows; box(mt.esquadria, x - e - 0.03, x + e + 0.03, z0 + 0.3, z1 - 0.3, y - 0.04, y + 0.04); }
@@ -865,6 +865,8 @@ function init() {
     };
     const palms = [], cars = [];
     const bege = M(0xcdc3aa, 0.6, 0.05, { side: DS });
+    const vidroReal = new THREE.MeshPhysicalMaterial({ color: 0x9fb4b2, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.32, depthWrite: false, envMapIntensity: 1.5, side: DS });
+    const pisoInt = M(0x9e9a91, 0.3), luz = new THREE.MeshBasicMaterial({ color: 0xfff6e8 }), mesa = M(0x8c6b4d, 0.5), cadeira = M(0x1a2a52, 0.55);
     for (const e of cd.els) {
       const t = e.t, r = e.r;
       if (t === 'shed') {
@@ -909,8 +911,20 @@ function init() {
         addHot(e, r, h);
       } else if (t === 'pavilion') {
         const [x0, x1, z0, z1] = r, ov = e.over, wx0 = x0 + ov, wx1 = x1 - ov, wz0 = z0 + ov, wz1 = z1 - ov;
-        box(mt.parede, wx0, wx1, wz0, wz1, 0, e.eave - 0.3);
-        for (const sd of 'nsew') { if ((e.glass || '').includes(sd)) ribbon(wx0, wx1, wz0, wz1, 0.1, e.eave - 0.6, sd, 1.41, 2); else ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
+        const gl = e.glass || '', hc = e.eave - 0.6;
+        if (!gl) { box(mt.parede, wx0, wx1, wz0, wz1, 0, e.eave - 0.3); for (const sd of 'nsew') ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
+        else {                                           // casca oca: paredes finas, pele de vidro transparente e interior (piso, forro, luminárias, divisória, mesas)
+          const wt = 0.2, W = { s: [wx0, wx1, wz1 - wt, wz1], n: [wx0, wx1, wz0, wz0 + wt], w: [wx0, wx0 + wt, wz0, wz1], e: [wx1 - wt, wx1, wz0, wz1] };
+          for (const sd of 'nsew') {
+            if (gl.includes(sd)) { ribbon(wx0, wx1, wz0, wz1, 0.1, hc, sd, 1.41, 2, vidroReal); const [a, b, c, d] = W[sd]; box(mt.parede, a, b, c, d, hc, e.eave - 0.3); }
+            else { const [a, b, c, d] = W[sd]; box(mt.parede, a, b, c, d, 0, e.eave - 0.3); ribbon(wx0, wx1, wz0, wz1, 1.0, 2.6, sd, 1.25, 2); }
+          }
+          const ix0 = wx0 + 0.2, ix1 = wx1 - 0.2, iz0 = wz0 + 0.2, iz1 = wz1 - 0.2;
+          box(pisoInt, ix0, ix1, iz0, iz1, 0, 0.1); box(mt.branco, ix0, ix1, iz0, iz1, hc, hc + 0.05);
+          for (let x = ix0 + 1.2; x < ix1 - 0.6; x += 2.4) for (let z = iz0 + 1.2; z < iz1 - 0.6; z += 2.4) box(luz, x - 0.3, x + 0.3, z - 0.3, z + 0.3, hc - 0.02, hc);
+          const zb = iz0 + (iz1 - iz0) * 0.45; box(mt.forro, ix0, ix1, zb - 0.06, zb + 0.06, 0.1, hc);
+          for (let x = ix0 + 2; x < ix1 - 1; x += 3) for (const zm of [iz1 - 2.4, iz1 - 5.2]) if (zm - 0.4 > zb + 0.5) { box(mesa, x - 0.7, x + 0.7, zm - 0.4, zm + 0.4, 0.72, 0.76); box(mt.preto, x - 0.05, x + 0.05, zm - 0.05, zm + 0.05, 0.1, 0.72); box(cadeira, x - 0.5, x + 0.5, zm - 0.9, zm - 0.5, 0.43, 0.9); }
+        }
         // cobertura curva (pontas leste/oeste levantadas, foto da fachada): laje, testeira bege grossa, forro bege e vigas aparentes
         const ye = e.eave + 0.1, rise = 1.1, xc = (x0 + x1) / 2, hl = (x1 - x0) / 2, yy = x => ye + rise * ((x - xc) / hl) ** 2, N = 24, tk = 0.35;
         const top = [], bot = [], fz0 = [], fz1 = [], Ft = [], Fb = [], Ff = [];
