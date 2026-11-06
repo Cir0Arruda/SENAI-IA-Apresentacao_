@@ -794,8 +794,8 @@ function init() {
       forma: triMat('concrete_wall_008', 7, 0xe6e3dc, 0.9, 0, { gray: 0.7, gain: 1.18 }),
       pilar: triMat('concrete_wall_008', 2, 0xe0ddd6, 0.85, 0, { gray: 0.6, gain: 1.15 }),
       telha: triMat('box_profile_metal_sheet', 2.5, 0xf2ecdc, 0.55, 0.08, { gray: 1, gain: 2.3, mat: { side: DS } }),
-      azul: triMat('box_profile_metal_sheet', 1.2, 0x2f86b8, 0.45, 0.15, { gray: 1, gain: 1.8, mat: { side: DS } }),
-      testeira: M(0x0d5584, 0.4, 0.35), rufo: M(0xaeb1b3, 0.4, 0.6), forro: M(0xcdc2aa, 0.8), trelica: M(0xc9b993, 0.5, 0.4),
+      azul: triMat('box_profile_metal_sheet', 1.2, 0x1f8199, 0.6, 0.0, { gray: 1, gain: 1.8, mat: { side: DS } }),
+      testeira: M(0x0f6a80, 0.45, 0.1), rufo: M(0xaeb1b3, 0.4, 0.6), forro: M(0xcdc2aa, 0.8), trelica: M(0xc9b993, 0.5, 0.4),
       vidro: M(0x1a242c, 0.05, 0.85, { envMapIntensity: 1.3 }), esquadria: M(0xf2f2ee, 0.4, 0.1),
       pastilha: triMat('mosaico', 1.6, 0xffffff, 0.3), forroBeiral: M(0x6b5c4d, 0.8), ceramica: triMat('mosaico', 0.8, 0xd8c9a8, 0.35), vermelho: M(0xa3161d, 0.35), branco: M(0xf4f4f2, 0.5),
       galv: M(0xbfc3c3, 0.35, 0.85), preto: M(0x161616, 0.5, 0.3), painel: M(0x0e1630, 0.12, 0.5),
@@ -1037,6 +1037,16 @@ function init() {
         }
       } else if (t === 'sebe') {                            // cerca viva podada
         for (const [x0, x1, z0, z1] of e.r) box(mt.sebe, x0, x1, z0, z1, 0.1, e.h || 0.9);
+      } else if (t === 'lawnpatch') {                       // canteiro gramado no miolo da praça (DSC_2098)
+        const [x0, x1, z0, z1] = e.r, y = 0.14 + e.y; K.flat(mt.grama, x1 - x0, z1 - z0, (x0 + x1) / 2, y, (z0 + z1) / 2);
+        for (const [a0, a1, b0, b1] of [[x0 - 0.1, x1 + 0.1, z0 - 0.1, z0], [x0 - 0.1, x1 + 0.1, z1, z1 + 0.1], [x0 - 0.1, x0, z0, z1], [x1, x1 + 0.1, z0, z1]]) box(mt.concreto, a0, a1, b0, b1, 0.12, y + 0.02);
+      } else if (t === 'muro') {                            // muro de blocos de concreto nas divisas oeste (DJI_0002, DSC_2025)
+        for (let i = 0; i < e.pts.length - 1; i++) {
+          const [xa, za] = e.pts[i], [xb, zb] = e.pts[i + 1];
+          box(mt.concreto, Math.min(xa, xb) - 0.08, Math.max(xa, xb) + 0.08, Math.min(za, zb) - 0.08, Math.max(za, zb) + 0.08, 0, e.h);
+        }
+      } else if (t === 'postes_energia') {                  // postes de concreto da entrada de energia
+        for (const [x, z] of e.pts) { box(mt.concreto, x - 0.12, x + 0.12, z - 0.12, z + 0.12, 0, 9.5); box(mt.concreto, x - 1, x + 1, z - 0.06, z + 0.06, 8.9, 9.05); }
       } else if (t === 'palms') e.pts.forEach(([x, z]) => palms.push([x, z, 7 + rand() * 4]));
     }
     // palmeiras: folhas arqueadas com folíolos (mesma receita da copa do Blender), instanciadas
