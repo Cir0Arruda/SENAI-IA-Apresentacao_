@@ -953,9 +953,9 @@ function init() {
         addHot(e, r, h);
       } else if (t === 'patio') {
         const [x0, x1, z0, z1] = r, h = e.h;
-        box(mt.granito, x0 + 0.5, x1 - 0.5, z0 + 0.5, z1 - 0.5, 0, 0.16); box(mt.parede, x0 + 0.6, x0 + 6.5, z0 + 1, z1 - 1, 0, 3.5); ribbon(x0 + 0.6, x0 + 6.5, z0 + 1, z1 - 1, 0.3, 3.0, 'e', 1.4, 2);
-        box(mt.ceramica, x1 - 4.5, x1 - 0.6, z0 + 1, z1 - 1, 0, 3.8);                         // bloco de serviço em cerâmica creme (foto DSC_2064)
-        for (const zd of [z0 + 3.0, z0 + 6.2, z0 + 9.6]) { box(mt.branco, x1 - 4.58, x1 - 4.5, zd - 0.45, zd + 0.45, 0.16, 2.25); box(mt.vermelho, x1 - 4.56, x1 - 4.5, zd - 0.12, zd + 0.12, 2.5, 2.7); }
+        box(mt.granito, x0 + 0.5, x1 - 0.5, z0 + 0.5, z1 - 0.5, 0, 0.16); box(mt.parede, x0 + 0.6, x0 + 4.8, z0 + 1, z1 - 1, 0, 3.5); ribbon(x0 + 0.6, x0 + 4.8, z0 + 1, z1 - 1, 0.3, 3.0, 'e', 1.4, 2);   // vão livre de ~12 m (DSC_2064)
+        box(mt.ceramica, x1 - 3.6, x1 - 0.6, z0 + 1, z1 - 1, 0, 3.8);                         // bloco de serviço em cerâmica creme (foto DSC_2064)
+        for (const zd of [z0 + 3.0, z0 + 6.2, z0 + 9.6]) { box(mt.branco, x1 - 3.68, x1 - 3.6, zd - 0.45, zd + 0.45, 0.16, 2.25); box(mt.vermelho, x1 - 3.66, x1 - 3.6, zd - 0.12, zd + 0.12, 2.5, 2.7); }
         box(mt.telha, x0 - 0.3, x1 + 0.3, z0 - 0.3, z1 + 0.3, h - 0.2, h + 0.05); fascia(x0 - 0.3, x1 + 0.3, z0 - 0.3, z1 + 0.3, h + 0.08, 0.45);
         for (const f of [0.35, 0.62]) { const zz = z0 + (z1 - z0) * f; box(mt.vidro, x0 + 1, x1 - 1, zz - 0.6, zz + 0.6, h + 0.05, h + 0.08); }
         columns(x0 + 0.8, x1 - 0.8, z0 + 0.8, z1 - 0.8, h - 0.2, 6, 0.5); trusses(x0, x1, z0, z1, h - 0.2, 'z', 5, 0.9); trusses(x0, x1, z0, z1, h - 0.2, 'x', 6.5, 0.5);
