@@ -1178,6 +1178,7 @@ function init() {
     thanks.visible = k > 0 && site.visible; thanks.material.opacity = k;
     thanks.position.copy(c).addScaledVector(dir, 0.3).setY(lerp(-0.045, 0.062, ease(k))); thanks.up.copy(N0);
     thanks.lookAt(local.localToWorld(new THREE.Vector3(cl.x, thanks.position.y, cl.z)));
+    root.classList.toggle('thanks', k > 0.1 && site.visible);   // a legenda sai quando o "Obrigado!" sobe no mesmo canto da tela
     root.classList.toggle('ended', t > 75.5);
     label('z-br', BR, ecam, t > 52 && h > 2500 && h < 15000 ? 'Brasil' : '');
     label('z-sp', SP, ecam, h > 250 && h < 2500 ? 'Estado de São Paulo' : '');
