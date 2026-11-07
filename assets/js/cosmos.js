@@ -501,6 +501,9 @@ function init() {
   // modelo novo da escola, exportado do Blender (assets/models/senai.glb, comprimido com Draco).
   // Se o arquivo não existir, a escola é montada peça por peça a partir de campus.json, como antes.
   const GLB_URL = 'assets/models/senai.glb';
+  // área que o modelo novo cobre (x leste, z sul, em metros): ruas, guias, faixas e árvores do Blender.
+  // Dentro dela o site não desenha as próprias ruas e árvores simplificadas (ver tools/exportar-senai-glb.py)
+  const GLB_AREA = [-160, 160, -260, 140];
   const getGLB = () => fetch(GLB_URL, { method: 'HEAD', cache: 'no-store' }).then(r => !r.ok ? null : new Promise(res => {
     const ld = new GLTFLoader(), dr = new DRACOLoader(); dr.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/'); ld.setDRACOLoader(dr);
     ld.load(GLB_URL, g => { dr.dispose(); res(g.scene); }, undefined, e => { console.warn('senai.glb não carregou; usando campus.json', e); res(null); });
@@ -576,18 +579,19 @@ function init() {
     }
     const AREA = { lot: [0xb9b4aa, 0.25, 'concrete_floor_02', 5, 0xe4e2dc], garden: [0x4f8a3a, 0.35, 'leafy_grass', 3, 0x8fae70], parking: [0x55585e, 0.3, 'asphalt_02', 6, 0xb8b8b8], forest: [0x2f5a2a, 0.0, 'leafy_grass', 5, 0x7f9a66], field: [0x7f8f45, 0.0, 'leafy_grass', 4, 0xb8b27a], dirt: [0xa86a3e, 0.0, 'red_laterite_soil_stones', 8, 0xd8b8a8] };
     const areaMat = {}, trees = [];
+    const inGLB = (x, z) => glb && x > GLB_AREA[0] && x < GLB_AREA[1] && z > GLB_AREA[2] && z < GLB_AREA[3];
     d.areas.forEach(a => {
       if (inCov(a.x0, a.z0) && inCov(a.x1, a.z1)) return;   // já descrita pela cobertura do satélite
       const [c, hgt, tn, tl, tc] = AREA[a.t] || [0x888888, 0], w = a.x1 - a.x0, dd = a.z1 - a.z0;
       const mt = areaMat[a.t] || (areaMat[a.t] = tn ? triMat(tn, tl, tc, 0.95) : M(c, 1));
       const m = new THREE.Mesh(PL(w, dd), mt); m.rotation.x = -Math.PI / 2; m.position.set((a.x0 + a.x1) / 2, 0.12 + hgt, (a.z0 + a.z1) / 2); site.add(m);
-      if (a.t === 'forest') { const n = Math.min(900, Math.round(w * dd / 70)); for (let i = 0; i < n; i++) { const x = a.x0 + rand() * w, z = a.z0 + rand() * dd; if (!inCov(x, z)) trees.push([x, z, 6 + rand() * 7, 0]); } }
+      if (a.t === 'forest') { const n = Math.min(900, Math.round(w * dd / 70)); for (let i = 0; i < n; i++) { const x = a.x0 + rand() * w, z = a.z0 + rand() * dd; if (!inCov(x, z) && !inGLB(x, z)) trees.push([x, z, 6 + rand() * 7, 0]); } }
     });
     // árvores medidas no satélite: posição da copa (corrigida da inclinação da imagem), raio e altura
     const campusR = (cd ? cd.els : []).filter(e => e.r && e.t !== 'surf').map(e => e.r);
     const inside = (x, z, rs, pad = 1) => rs.some(r => x > r[0] - pad && x < r[1] + pad && z > r[2] - pad && z < r[3] + pad);
     const nbR = d.predios.filter(b => !b.id.startsWith('senai')).map(b => [b.x - b.w / 2, b.x + b.w / 2, b.z - b.d / 2, b.z + b.d / 2]);
-    if (cov) cov.arvores.forEach(([x, z, r, h]) => { if (!inside(x, z, campusR) && !inside(x, z, nbR)) trees.push([x, z, h, r]); });
+    if (cov) cov.arvores.forEach(([x, z, r, h]) => { if (!inside(x, z, campusR) && !inside(x, z, nbR) && !inGLB(x, z)) trees.push([x, z, h, r]); });
     const crownGeo = new THREE.IcosahedronGeometry(1, 2); { const p = crownGeo.attributes.position; for (let i = 0; i < p.count; i++) { const k = 0.82 + 0.3 * Math.abs(Math.sin(p.getX(i) * 7.1 + p.getY(i) * 5.3 + p.getZ(i) * 3.7)); p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k); } crownGeo.computeVertexNormals(); }
     if (cd && !glb) cd.els.filter(e => e.t === 'trees' && e.keep).forEach(e => e.pts.forEach(([x, z]) => trees.push([x, z, e.h || 6, 0])));   // árvores vistas nas fotos (praça interna)
     const crowns = new THREE.InstancedMesh(crownGeo, M(0xffffff, 0.95), trees.length), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion();
@@ -604,6 +608,7 @@ function init() {
     d.ruas.forEach(r => {
       for (let i = 0; i < r.p.length - 1; i++) {
         const [x0, z0] = r.p[i], [x1, z1] = r.p[i + 1], L = Math.hypot(x1 - x0, z1 - z0); if (L < 0.5) continue;
+        if (inGLB((x0 + x1) / 2, (z0 + z1) / 2)) continue;   // essa rua vem do modelo novo, com guias e sinalização
         const rz = -Math.atan2(z1 - z0, x1 - x0);
         put(asphalt, PL(L + r.w * 0.5, r.w), (x0 + x1) / 2, 0.25, (z0 + z1) / 2, -Math.PI / 2, 0, rz);
         if (r.w >= 14) put(line, PL(L, 0.3), (x0 + x1) / 2, 0.3, (z0 + z1) / 2, -Math.PI / 2, 0, rz);
@@ -620,6 +625,7 @@ function init() {
     };
     d.predios.forEach((b, i) => {
       if (b.id.startsWith('senai')) return;                  // a escola vem de campus.json (medida no satélite)
+      if (inGLB(b.x, b.z)) return;                           // vizinho que já vem no modelo novo
       if (b.roof === 'solar') { for (let k = 0; k < 6; k++) put(solarV, B(b.w / 6 - 0.6, 0.12, b.d), b.x - b.w / 2 + (k + 0.5) * b.w / 6, 1.3, b.z, -0.3); return; }
       if (b.roof === 'frame') {
         for (let k = 0; k <= 6; k++) { for (const sx of [-1, 1]) put(steel, B(0.4, b.h, 0.4), b.x + sx * b.w / 2, b.h / 2, b.z - b.d / 2 + k * b.d / 6); put(steel, B(b.w, 0.4, 0.4), b.x, b.h, b.z - b.d / 2 + k * b.d / 6); }
@@ -645,13 +651,18 @@ function init() {
   // conferida nas fotos aéreas e de solo da Bilenge Engenharia (projeto padrão SENAI-SP, NPC Arquitetura)
   // materiais do Blender → as mesmas texturas reais (Poly Haven) do resto do distrito, mantendo a cor do modelo
   const GLB_TEX = [[/piso|calcada|calçada|pavimento/i, 'concrete_pavement', 3], [/parede|reboco|plaster/i, 'white_plaster_02', 3], [/concreto|pilar|forma/i, 'concrete_wall_008', 4],
-    [/telha|chapa/i, 'box_profile_metal_sheet', 2.5], [/bloquete|paver/i, 'hexagonal_concrete_paving', 1.4], [/grama|gramado|lawn/i, 'leafy_grass', 2.5], [/asfalto/i, 'asphalt_02', 6], [/terra|solo/i, 'red_laterite_soil_stones', 5]];
+    [/telha|chapa/i, 'box_profile_metal_sheet', 2.5], [/bloquete|paver/i, 'hexagonal_concrete_paving', 1.4], [/grama|gramado|lawn/i, 'leafy_grass', 2.5], [/asfalto/i, 'asphalt_02', 6], [/terra|solo/i, 'red_laterite_soil_stones', 5], [/guia|meio_fio/i, 'concrete_wall_008', 2]];
   function addGLB(g) {
     const cache = new Map();
     g.traverse(o => {
       if (!o.isMesh || Array.isArray(o.material)) return;
       const old = o.material, nm = old.name || '';
       o.userData.glb = true;
+      if (/^arvore_/.test(nm)) {                             // árvore: cartões com a foto da árvore do Blender (a luz já vem na foto)
+        const n = o.geometry.attributes.normal; if (n) { for (let i = 0; i < n.count; i++) n.setXYZ(i, 0, 1, 0); n.needsUpdate = true; }
+        old.side = THREE.DoubleSide; old.alphaTest = 0.5; old.transparent = false; old.roughness = 1; old.metalness = 0; o.userData.noShadow = false; return;
+      }
+      if (/gradil/i.test(nm)) { old.transparent = true; old.opacity = 0.38; old.depthWrite = false; old.side = THREE.DoubleSide; o.userData.noShadow = true; return; }   // tela soldada: vê-se através
       if (/vidro|glass/i.test(nm) || old.transparent || /^car_/i.test(nm)) { old.envMapIntensity = /vidro/i.test(nm) ? 1.4 : 1; return; }
       const hit = GLB_TEX.find(([re]) => re.test(nm)); if (!hit) return;
       if (!cache.has(nm)) cache.set(nm, triMat(hit[1], hit[2], old.color ? old.color.clone() : 0xffffff, old.roughness ?? 0.9, old.metalness ?? 0, { gray: 0.7, gain: 1.15, mat: { side: old.side } }));
@@ -990,7 +1001,7 @@ function init() {
     const buses = [[30, 0xf0c419], [44, 0xf0c419], [-62, 0xffffff], [-84, 0xd9282f], [-110, 0xffffff], [-190, 0xffffff], [-210, 0xd9282f]];
     const busMesh = new THREE.InstancedMesh(B(12.5, 3.2, 2.6), M(0xffffff, 0.4, 0.3), buses.length);
     buses.forEach(([x, c], i) => { busMesh.setMatrixAt(i, m4.makeTranslation(x, 1.7, 6.5)); busMesh.setColorAt(i, col.set(c)); });
-    addS(carB, carC); site.add(busMesh);
+    addS(carB, carC); if (!G) site.add(busMesh);              // com o modelo novo, a rua fica como na foto (sem ônibus de caixa)
   }
 
   /* ---------- Rótulos e HUD ---------- */
@@ -1395,7 +1406,10 @@ function init() {
   };
   if ($('.slide[data-id="cosmos"]')?.classList.contains('active')) demos.cosmos.enter();
   if (TEST) window.IACosmos = {
-    seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; }, acts: ACTS.map((a, i) => ({ id: a.id, t0: T_ACT[i], dur: a.dur })), total: TOTAL,
+    seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; },
+    // câmera livre num ponto do terreno da escola (metros: x leste, y altura, z sul), olhando para (tx, ty, tz)
+    view: (x, y, z, tx, ty, tz) => { t = TOTAL; setPlay(false); freeOrbit(); const V = (a, b, c) => local.localToWorld(new THREE.Vector3(a, b, c).multiplyScalar(0.001));
+      orbit.minDistance = 0; orbit.target.copy(V(tx, ty, tz)); ecam.position.copy(V(x, y, z)); orbit.update(); }, acts: ACTS.map((a, i) => ({ id: a.id, t0: T_ACT[i], dur: a.dur })), total: TOTAL,
     // posição da câmera no nível 0 (universo) e na Terra: o teste confere que ela nunca "pula"
     cam: x => { const si = stageAt(x), S = STAGES[si], p = poseAt(si, x); const w = c => c.tg.clone().add(c.of).toArray(); return { lv: S.lv, deep: w(convert(p, S.lv, 2, x)), es: w(convert(p, S.lv, 3, x)), look: convert(p, S.lv, 3, x).of.clone().normalize().toArray(), look0: convert(p, S.lv, 0, x).of.clone().normalize().toArray(), d0: convert(p, S.lv, 0, x).of.length(), tg0: convert(p, S.lv, 0, x).tg.toArray() }; },
     state: () => ({ t, act: ACTS[actIdx]?.id, tiles: levels.reduce((s, L) => s + L.mats.filter(m => m.userData.ok).length, 0), site: !!site.userData.ready, glb: !!site.userData.glb, siteMeshes: (() => { let n = 0; site.traverse(o => { if (o.isMesh) n++; }); return n; })(), hi: earthU.uHiOn.value })
