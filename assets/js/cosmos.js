@@ -505,7 +505,10 @@ function init() {
     const ld = new GLTFLoader(), dr = new DRACOLoader(); dr.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/'); ld.setDRACOLoader(dr);
     ld.load(GLB_URL, g => { dr.dispose(); res(g.scene); }, undefined, e => { console.warn('senai.glb não carregou; usando campus.json', e); res(null); });
   })).catch(() => null);
-  Promise.all([...['senai-iracemapolis', 'campus', 'cobertura', 'carros'].map(n => getJ(`assets/data/${n}.json`)), getGLB()]).then(([d, cd, cov, cars, glb]) => { if (!d) return; siteData = d; carData = cars; buildSite(d, cd, cov, glb); }).catch(e => console.error(e));
+  // só baixa a escola (1,5 MB) quando o slide do Big Bang abre, e não a cada visita ao site
+  let siteAsked = false;
+  const loadSite = () => { if (siteAsked) return; siteAsked = true;
+  Promise.all([...['senai-iracemapolis', 'campus', 'cobertura', 'carros'].map(n => getJ(`assets/data/${n}.json`)), getGLB()]).then(([d, cd, cov, cars, glb]) => { if (!d) return; siteData = d; carData = cars; buildSite(d, cd, cov, glb); }).catch(e => console.error(e)); };
   function signTex(text, bg, fg, w = 1024, h = 256) {
     const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
     g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = fg; g.font = `800 ${h * 0.62}px "Inter Tight", Arial, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h * 0.54);
@@ -1386,7 +1389,7 @@ function init() {
   demos.cosmos = {
     enter() {
       on = true; cinema(true); last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(frame); if (t >= TOTAL) t = 0; setPlay(true);
-      loadEarth(); if (!warmed) { warmed = true; setTimeout(warm, 400); }
+      loadSite(); loadEarth(); if (!warmed) { warmed = true; setTimeout(warm, 400); }
     },
     leave() { on = false; cancelAnimationFrame(raf); cinema(false); root.classList.remove('ended'); }
   };
