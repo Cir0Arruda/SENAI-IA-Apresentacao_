@@ -120,6 +120,10 @@ Pesquisadas para refazer o final como um plano-sequência:
 6. [Codrops: caminho de câmera feito no Blender](https://tympanus.net/codrops/?p=117076): trajetória contínua desenhada no Blender e tocada no three.js.
 7. [Igloo Inc (Abeto), Site do Ano Awwwards 2024](https://www.awwwards.com/annual-awards-2024/site-of-the-year): three.js com narrativa 3D contínua, sem trocar de página.
 8. [NASA Eyes on the Solar System (WebGL)](https://pcgamer.com/nasas-3d-space-exploration-tool-eyes-on-the-solar-system-now-works-in-browser): Sistema Solar em tempo real no navegador, com controle do tempo.
+9. [The Long Way Home (three.js, GLSL, GSAP)](https://buildsbyluke-website.pages.dev/work/cinematic-website): uma viagem só pelo espaço profundo, em seis "movimentos", com a câmera sem cortes.
+10. [DEPT®: Coding a cinematic camera path](https://deptagency.com/en-gb/?p=44630): câmera de abertura num spline (`CatmullRomCurve3`) com poucos pontos de controle, para o movimento sair suave.
+
+**Ritmo e mensagem.** A versão anterior tinha 12 capítulos encadeados e durava 2min03 (123 s). A atual tem 1min18 (78 s), 37% mais curta, sem cortes. Durante toda a sequência, um selo mostra "Feito com IA · N mil partículas calculadas ao vivo · N quadros/s · nenhum vídeo". O último capítulo fecha com "cada quadro é calculado ao vivo pela placa de vídeo, com código escrito por IA".
 
 ## Ligar o Gemini ao vivo
 
