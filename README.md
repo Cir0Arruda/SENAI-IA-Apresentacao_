@@ -66,17 +66,60 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 | Estúdio · cena 3D | Planeta em three.js controlado pela linha do tempo: o mesmo instante gera sempre a mesma imagem, como no render |
 | Estúdio · mão na massa | 4 desafios para fazer em aula, com o pedido pronto para copiar |
 | Ética, Quiz e Fontes | Checklist, quiz de 6 perguntas e 41 referências |
-| **Final: do Big Bang ao SENAI** | 1min37 de viagem em 10 capítulos (Big Bang, núcleos, primeira luz, primeiras estrelas, teia cósmica, Via Láctea, Sistema Solar, Terra, mergulho até Iracemápolis e a escola em 3D), com linha do tempo, capítulos clicáveis e câmera livre no fim |
+| **Final: do Big Bang ao SENAI** | 1min18 num plano-sequência só, sem cortes nem transições: do ponto inicial até o pátio da escola, com relógio cósmico, capítulos clicáveis e câmera livre no fim |
 
 ## Final: do Big Bang ao SENAI Iracemápolis
 
-Arquivo `assets/js/cosmos.js`. Tudo é three.js, sem vídeo pronto:
+Arquivo `assets/js/cosmos.js`. Tudo é three.js, sem vídeo pronto: cada quadro é calculado ao vivo, com código escrito com IA (o selo "Feito com IA" no canto mostra quantas partículas e quadros por segundo).
 
-- **Universo**: partículas da expansão esfriando (branco → vermelho); prótons e nêutrons formando hélio (75% H / 25% He); o plasma clareando e mostrando o fundo de micro-ondas nas cores do mapa do Planck; estrelas acendendo e supernovas; filamentos da teia cósmica; a Via Láctea com o "você está aqui"; o disco do Sistema Solar abrindo lacunas onde nascem os planetas.
-- **Terra**: começa como oceano de magma e esfria. Textura NASA Blue Marble com luzes das cidades no lado da noite, brilho do Sol nos oceanos, nuvens, atmosfera e Lua.
-- **Mergulho**: a câmera desce de 15 mil km até 550 m em escala real (quilômetros). Por cima do globo entram imagens cada vez mais detalhadas: NASA GIBS (América do Sul) e Sentinel-2 cloudless 2023 da EOX (níveis 9 a 15; a resolução real do Sentinel-2 é de 10 m).
-- **SENAI**: `assets/data/senai-iracemapolis.json` tem 65 ruas do OpenStreetMap e 42 prédios do Distrito Industrial II, medidos sobre imagem de satélite (resolução de ~0,55 m/pixel), com o galpão das oficinas, os dois blocos de salas com o pátio arborizado, a portaria na Rua Camilo Ferrari, o estacionamento, as fileiras de painéis e os ônibus na rua. **As alturas são estimadas** (não existe dado público de altura). No fim, a câmera fica livre: arraste para girar e clique num prédio para ver o que funciona nele.
+**Um plano-sequência só (1min18).** Não existe corte, fade nem troca de cena: a mesma câmera vai do ponto inicial até o SENAI, sempre girando devagar para o mesmo lado, e tudo evolui na frente dela:
+
+1. **Big Bang** (0 s): um ponto pulsando, o clarão com raio anamórfico e tremor de câmera, e a bola de fogo da inflação engole a câmera.
+2. **Sopa de quarks → núcleos** (4 s): as mesmas partículas ganham as três "cores" dos quarks, se prendem de três em três (prótons e nêutrons) e o hidrogênio/hélio aparece no contador.
+3. **Primeira luz** (13 s): a névoa de 3.000 °C clareia e, atrás dela, surge o céu do satélite Planck.
+4. **Trevas e primeiras estrelas** (18,5 s): o céu escurece e a gravidade puxa cada pedaço de gás para os fios da teia; estrelas azuis acendem nos fios.
+5. **Teia cósmica** (25 s): a câmera abre e mostra a teia; depois mergulha num nó.
+6. **Via Láctea** (31 s): a galáxia nasce dentro desse nó; a câmera desce até o braço do Sol.
+7. **Sistema Solar** (37,5 s): no ponto do Sol, a nuvem colapsa, o Sol acende, o disco abre lacunas e os planetas se formam.
+8. **Terra** (46 s): a câmera chega na Terra pelo lado do dia; a lava esfria e vira oceano, nuvens e atmosfera.
+9. **Brasil → Iracemápolis** (53 s): descida de 10 mil km até 750 m olhando para baixo, com imagens cada vez mais detalhadas.
+10. **SENAI** (64 s): a câmera inclina como um drone e dá a volta na escola; "Obrigado!" sobe atrás dela e a câmera fica livre.
+
+**Como fica contínuo:** são três níveis encaixados, como numa "potência de dez": a Via Láctea mora num nó da teia, o Sistema Solar mora no ponto do Sol e a Terra (em km) mora no planetinha do disco, girada para receber a luz do mesmo Sol. A cada quadro a cena é montada a partir do nível onde a câmera está (*rebase*), então os números ficam pequenos e nada treme. Quando a câmera passa de um nível para o outro, a pose é só convertida de um sistema de coordenadas para o outro (a imagem é a mesma) e o movimento anterior continua enquanto o novo começa, sem tranco. A Terra é desenhada por cima da cena do espaço: o fundo dela é o espaço de verdade. Tudo é função do tempo, então a linha do tempo e os capítulos pulam para qualquer instante.
+
+- **Universo**: as mesmas 48 mil partículas fazem tudo, calculadas na placa de vídeo: fagulhas → quarks → prótons e nêutrons → gás escuro → teia cósmica (filamentos como nas simulações Millennium e IllustrisTNG).
+- **Terra**: textura NASA Blue Marble com luzes das cidades no lado da noite, brilho do Sol nos oceanos, nuvens, atmosfera e Lua.
+- **Mergulho**: por cima do globo entram imagens cada vez mais detalhadas: NASA GIBS (América do Sul) e Sentinel-2 cloudless 2023 da EOX (níveis 9 a 15; a resolução real do Sentinel-2 é de 10 m).
+- **SENAI**: o modelo novo da escola vem do Blender, no arquivo `assets/models/senai.glb` (veja abaixo). O distrito em volta vem de `assets/data/senai-iracemapolis.json` (65 ruas do OpenStreetMap e 42 prédios medidos sobre imagem de satélite). **As alturas são estimadas** (não existe dado público de altura). No fim, arraste para girar e clique num prédio para ver o que funciona nele.
 - **Sobre o Google Maps**: as imagens e o 3D do Google não podem ser copiados para um site (termos de uso e chave de API), então não foram usados. Tudo aqui vem de fontes abertas, com crédito na tela.
+
+### Modelo 3D da escola (Blender → site)
+
+O site carrega `assets/models/senai.glb` (comprimido com Draco) e, quando ele existe, **não monta mais a escola antiga** de `campus.json` (só os volumes invisíveis do clique e os ônibus da rua continuam). Sem o arquivo, a escola antiga aparece como reserva.
+
+Para gerar o arquivo a partir do `.blend` (coleções `SENAI` e `Veiculos`):
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b "C:\Users\ciroe\Documents\SENAI-Iracemapolis-3D\distrito-industrial-senai.blend" -P tools\exportar-senai-glb.py -- assets\models\senai.glb
+git add assets/models/senai.glb
+git commit -m "Modelo novo do SENAI"
+git push
+```
+
+As coordenadas são as do gerador (x = leste, y = norte, z = altura, em metros). O site aplica as texturas reais pelo nome do material (`c_parede`, `c_piso_concreto`, `c_telha_...`, `c_bloquete`...).
+
+### Referências das aberturas cinematográficas
+
+Pesquisadas para refazer o final como um plano-sequência:
+
+1. [100,000 Stars (Google Data Arts, three.js)](https://web.dev/case-studies/100000stars): zoom contínuo da galáxia até o Sol; a sensação de escala vem do desfoque e do brilho, não de cortes.
+2. [Powers of Ten (WebGL)](https://pete-6z3.pages.dev/lab/skala/powers): sessenta ordens de grandeza num túnel contínuo, com cada escala desenhada por código; daqui veio a ideia de níveis encaixados.
+3. [Powers of Ten Celestial Zoomer (Matt Montag, three.js)](https://www.mattmontag.com/?p=10162): explorador de escalas do universo em three.js.
+4. [Fórum do three.js: "infinite zoom" story](https://discourse.threejs.org/t/advice-on-infinite-zoom-story/64035): reescalar o modelo e reposicionar a origem para não perder precisão (o *rebase* usado aqui).
+5. [Codrops: voo de câmera com Theatre.js](https://tympanus.net/codrops/2023/02/14/animate-a-camera-fly-through-on-scroll-using-theatre-js-and-react-three-fiber/): uma câmera só, com posição e rotação em quadros-chave, atravessando a cena.
+6. [Codrops: caminho de câmera feito no Blender](https://tympanus.net/codrops/?p=117076): trajetória contínua desenhada no Blender e tocada no three.js.
+7. [Igloo Inc (Abeto), Site do Ano Awwwards 2024](https://www.awwwards.com/annual-awards-2024/site-of-the-year): three.js com narrativa 3D contínua, sem trocar de página.
+8. [NASA Eyes on the Solar System (WebGL)](https://pcgamer.com/nasas-3d-space-exploration-tool-eyes-on-the-solar-system-now-works-in-browser): Sistema Solar em tempo real no navegador, com controle do tempo.
 
 ## Ligar o Gemini ao vivo
 
