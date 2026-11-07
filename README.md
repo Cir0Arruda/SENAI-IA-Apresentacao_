@@ -118,8 +118,8 @@ Pesquisadas para refazer o final como um plano-sequência:
 4. [Fórum do three.js: "infinite zoom" story](https://discourse.threejs.org/t/advice-on-infinite-zoom-story/64035): reescalar o modelo e reposicionar a origem para não perder precisão (o *rebase* usado aqui).
 5. [Codrops: voo de câmera com Theatre.js](https://tympanus.net/codrops/2023/02/14/animate-a-camera-fly-through-on-scroll-using-theatre-js-and-react-three-fiber/): uma câmera só, com posição e rotação em quadros-chave, atravessando a cena.
 6. [Codrops: caminho de câmera feito no Blender](https://tympanus.net/codrops/?p=117076): trajetória contínua desenhada no Blender e tocada no three.js.
-7. [Igloo Inc (Abeto), Site do Ano Awwwards 2024](https://www.awwwards.com/annual-awards-2024/site-of-the-year): three.js com narrativa 3D contínua, sem trocar de página.
-8. [NASA Eyes on the Solar System (WebGL)](https://pcgamer.com/nasas-3d-space-exploration-tool-eyes-on-the-solar-system-now-works-in-browser): Sistema Solar em tempo real no navegador, com controle do tempo.
+7. [Igloo Inc (Abeto), Site do Ano Awwwards 2024](https://www.awwwards.com/sites/igloo-inc): three.js com narrativa 3D contínua, sem trocar de página.
+8. [NASA Eyes on the Solar System (WebGL)](https://eyes.nasa.gov/apps/solar-system/): Sistema Solar em tempo real no navegador, com controle do tempo.
 9. [The Long Way Home (three.js, GLSL, GSAP)](https://buildsbyluke-website.pages.dev/work/cinematic-website): uma viagem só pelo espaço profundo, em seis "movimentos", com a câmera sem cortes.
 10. [three.js camera path tool (cjgammon)](https://github.com/cjgammon/three.js-camera-path-tool): ferramenta para montar o caminho de câmera de uma cena three.js ponto a ponto, a base de um voo contínuo.
 
