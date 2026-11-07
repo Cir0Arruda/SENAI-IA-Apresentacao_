@@ -79,6 +79,7 @@
 .cos-end p { margin: 0 0 14px; font-size: clamp(20px, 2.2vw, 30px); font-weight: 600; text-shadow: 0 2px 20px rgba(0, 0, 0, .6); }
 .cos.ended .cos-end { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
 .cos.ended .cos-side, .cos.ended .cos-cap p { opacity: 0; transition: opacity .8s; }
+.cos.thanks .cos-cap { opacity: 0; transition: opacity .9s; }
 .cos-end .pill.ghost { color: #fff; border-color: rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .08); }
 
 @media (max-width: 760px) {
