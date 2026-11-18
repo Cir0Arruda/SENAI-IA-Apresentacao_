@@ -452,7 +452,7 @@ function init(photo) {
   galaxy.add(stars);
   // de longe a galáxia É a fotografia (NGC 1232, VLT/ESO) num disco fino, inclinado e girando como no espaço:
   // fotorrealista de verdade. Ao chegar perto (viagem ao braço, buraco negro) ela passa aos poucos para o volume 3D.
-  let photoDisk = null;
+  let photoDisk = null, hidePhoto = false;          // hidePhoto: só para o teste medir quanto da luz vem da foto
   if (photo) {
     photoDisk = new THREE.Mesh(new THREE.PlaneGeometry(SPAN, SPAN), new THREE.ShaderMaterial({
       uniforms: { tP: { value: photoTex }, uK: { value: 1 } },
@@ -2343,7 +2343,7 @@ function init(photo) {
     // longe: a foto; perto: o volume 3D feito a partir dela (troca suave, sem corte)
     const pk = photoDisk ? sstep(32, 72, camD) : 0;
     if (photoDisk) {
-      photoDisk.visible = pk > 0.001; photoDisk.material.uniforms.uK.value = pk;
+      photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
       galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.8 * pk;
     }
     composer.render(dt);
@@ -2436,6 +2436,13 @@ function init(photo) {
           res(st);
         };
       });
+    },
+    // quanto da luz na tela vem da fotografia: a mesma vista com e sem o disco da foto
+    async photoShare() {
+      if (!photoDisk) return { share: 0, k: 0 };
+      const on = await this.stats(); hidePhoto = true;
+      const off = await this.stats(); hidePhoto = false;
+      return { on: on.mean, off: off.mean, share: 1 - off.mean / Math.max(on.mean, 1e-6), k: photoDisk.material.uniforms.uK.value };
     }
   };
 
