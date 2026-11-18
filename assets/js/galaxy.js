@@ -450,6 +450,26 @@ function init(photo) {
     U.uFovK.value = cam.fov && cam.fov < 50 ? 0.46631 / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) : 1;
   };
   galaxy.add(stars);
+  // de longe a galáxia É a fotografia (NGC 1232, VLT/ESO) num disco fino, inclinado e girando como no espaço:
+  // fotorrealista de verdade. Ao chegar perto (viagem ao braço, buraco negro) ela passa aos poucos para o volume 3D.
+  let photoDisk = null;
+  if (photo) {
+    photoDisk = new THREE.Mesh(new THREE.PlaneGeometry(SPAN, SPAN), new THREE.ShaderMaterial({
+      uniforms: { tP: { value: photoTex }, uK: { value: 1 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform sampler2D tP; uniform float uK; varying vec2 vUv;
+        void main(){
+          // o pedaço que falta na foto original (borda direita) vem do lado oposto da galáxia, girado 180°
+          float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
+          vec3 c = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
+          float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
+          c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);      // tira o fundo do céu da foto
+          gl_FragColor = vec4(c * uK, 1.0);
+        }`,
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+    }));
+    photoDisk.rotation.x = Math.PI / 2; photoDisk.renderOrder = -0.5; galaxy.add(photoDisk);
+  }
   // perto (dentro da galáxia) as estrelas ficam menores, para não virarem bolas
   function setStarView(k) {
     starMat.uniforms.uScaleK.value = 34 + (9 - 34) * k * k;
@@ -2320,8 +2340,14 @@ function init(photo) {
     updateGalaxyLabels();
     // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
     galMarch.uniforms.uBulge.value = 0.12 + 0.88 * sstep(6, 70, camD);
+    // longe: a foto; perto: o volume 3D feito a partir dela (troca suave, sem corte)
+    const pk = photoDisk ? sstep(32, 72, camD) : 0;
+    if (photoDisk) {
+      photoDisk.visible = pk > 0.001; photoDisk.material.uniforms.uK.value = pk;
+      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.8 * pk;
+    }
     composer.render(dt);
-    galMarch.uniforms.uBulge.value = 1;
+    galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1; starMat.uniforms.uAlpha.value = 1;
     afterRender();
   }
 
@@ -2380,7 +2406,7 @@ function init(photo) {
     },
     camAt(x, y, z) { controls.autoRotate = false; camera.position.set(x, y, z); controls.target.set(0, 0, 0); controls.update(); return true; },
     state: () => ({
-      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, nebKinds: NEB_KINDS.length, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N,
+      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, nebKinds: NEB_KINDS.length, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N, photo: !!photo,
       cam: gPos.toArray(), caption: cap && cap.classList.contains('on') ? cap.textContent : '',
       planetLabels: PLANETS.filter(p => !p.label.classList.contains('off')).length,
       hero: !$('#gx-hero').hidden, sysPanel: !$('#gx-sys').hidden, planetPanel: !$('#gx-planet').hidden, bhPanel: !$('#gx-bh').hidden,

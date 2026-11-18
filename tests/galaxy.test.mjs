@@ -109,7 +109,9 @@ async function desktop(browser) {
   check('Centro brilhante (bojo)', st.centre > st.mean * 4, `centro ${st.centre.toFixed(0)} × média ${st.mean.toFixed(1)}`);
   check('Dois braços espirais num anel de raio 6', ring.peaks >= 2 && ring.peaks <= 4, `${ring.peaks} trechos claros`);
   check('Contraste entre braços e espaço entre eles', ring.contrast > 1.8, `p90/p10 = ${ring.contrast.toFixed(2)}`);
-  check('Cores de foto real: braços azulados, centro dourado e regiões rosadas', st.blueFrac > 0.12 && st.warmFrac > 0.08 && st.pinkFrac > 0.003,
+  // com a foto real (NGC 1232, VLT/ESO) a foto é a referência: os filtros do VLT quase não mostram o rosa do hidrogênio,
+  // então o rosa só é exigido na galáxia desenhada com código
+  check('Cores de foto real: braços azulados, centro dourado e regiões rosadas', st.blueFrac > 0.12 && st.warmFrac > 0.08 && (s.photo || st.pinkFrac > 0.003),
     `azul ${(st.blueFrac * 100).toFixed(0)}% · dourado ${(st.warmFrac * 100).toFixed(0)}% · rosa ${(st.pinkFrac * 100).toFixed(1)}%`);
   // como numa foto real: nada estoura em branco (os braços continuam azuis mesmo onde são mais claros)
   check('Sem brilho estourado na abertura', st.satFrac < 0.004, `${(st.satFrac * 100).toFixed(2)}% dos pixels em branco puro`);
