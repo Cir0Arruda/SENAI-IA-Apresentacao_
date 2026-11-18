@@ -174,7 +174,7 @@ function init() {
         float r0 = length(p);
         // os braços reais não são curvas perfeitas: uma distorção lenta deixa cada trecho com seu desenho
         vec2 wv = vec2(fb2(p * 0.32 + 3.1), fb2(p * 0.32 - 8.7)) - 0.5;
-        vec2 q = p + wv * 0.7 * smoothstep(R0, R0 + 3.0, r0);
+        vec2 q = p + wv * 1.05 * smoothstep(R0, R0 + 3.0, r0);
         float r = max(length(q), 0.02), th = atan(q.y, q.x);
         float u = log(max(r, R0 * 0.6) / R0);
         float K = K_OUT + (K_IN - K_OUT) * exp(-u / U0);
@@ -191,7 +191,7 @@ function init() {
         // cada braço muda de brilho ao longo do caminho (trechos fortes e fracos, como na M51)
         float along = 0.55 + 0.9 * fb2(vec2(s * 0.35, armK * 7.0 + 1.0));
         // ---- estrelas velhas: disco exponencial contínuo (o espaço entre os braços não é vazio) ----
-        float disk = exp(-r0 / 3.3) * smoothstep(13.5, 8.0, r0);
+        float disk = exp(-r0 / 4.0) * smoothstep(13.5, 8.0, r0);
         // ---- barra: oval largo e suave (não uma faixa fina), com as pontas um pouco mais claras ----
         vec2 bp = vec2(p.x / (R0 * 0.95), p.y / 0.95);
         float bar = exp(-pow(dot(bp, bp), 0.85) * 2.2);
@@ -209,30 +209,35 @@ function init() {
         vec2 sc = p * 3.4 + 7.0, sf = fract(sc) - 0.5 - (vec2(h2(floor(sc)), h2(floor(sc) + 5.1)) - 0.5) * 0.6;
         float spark = step(0.62, h2(floor(sc) + 9.3)) * exp(-dot(sf, sf) / 0.026);
         vec2 v3 = vor(cs * 1.7 + vec2(13.0, 5.0));
-        float hii = step(0.58, v3.y) * exp(-pow(v3.x / (0.15 + 0.2 * (v3.y - 0.58)), 2.0)) * exp(-pow((x + 0.05) / 0.6, 2.0));
+        float hii = step(0.5, v3.y) * exp(-pow(v3.x / (0.15 + 0.2 * (v3.y - 0.5)), 2.0)) * exp(-pow((x + 0.05) / 0.6, 2.0));
         // ---- esporas: filetes que saem dos braços para fora, com ângulo bem mais aberto ----
         float spurN = fb2(vec2((phi + 2.4 * u) * 5.0, u * 2.0 + armK * 5.0));
         float spur = smoothstep(0.55, 0.85, ridge(spurN)) * exp(-pow((x + 1.6) / 1.4, 2.0)) * smoothstep(0.4, -0.6, x);
         float fine = fb2(p * 7.0 + 1.3);
+        // ---- borda de fora: os braços se quebram em pedaços e ramos (como na M101 e na M74) ----
+        float frag = smoothstep(0.52, 0.8, fb2(vec2(s * 0.55, x * 0.7) + 21.0)) * exp(-pow((x + 0.6) / 2.4, 2.0)) * smoothstep(5.5, 9.5, r0) * smoothstep(13.5, 10.5, r0);
+        // ---- núcleo: perfil de Sérsic (n ≈ 2), denso e amarelado, como o bojo de estrelas velhas das fotos ----
+        float sers = exp(-3.67 * (pow(r0 / 1.15, 0.5) - 1.0)) * 0.085 + exp(-r0 * r0 / 0.03) * 1.6;   // + o núcleo, quase um ponto
         float lum = (0.5 + 0.5 * smoothstep(R0, R0 + 2.5, r0)) * exp(-max(r0 - 3.0, 0.0) / 9.0);
         // ---- cores (aproximadas das fotos do Hubble em cor real) ----
-        vec3 OLD = vec3(1.0, 0.82, 0.6), DISK = vec3(0.94, 0.88, 0.82), YOUNG = vec3(0.5, 0.66, 1.0), HAZE = vec3(0.32, 0.48, 1.0);
-        vec3 HII = vec3(1.0, 0.36, 0.5), CL = vec3(0.78, 0.86, 1.0);
+        vec3 OLD = vec3(1.0, 0.82, 0.6), DISK = vec3(0.95, 0.87, 0.78), YOUNG = vec3(0.68, 0.79, 1.0), HAZE = vec3(0.55, 0.68, 1.0);
+        vec3 HII = vec3(1.0, 0.4, 0.46), CL = vec3(0.84, 0.9, 1.0);
         float a = env * along * lum;
-        vec3 E = DISK * disk * 0.3
-               + OLD * (bar * 0.75 + ansae * 0.45)
+        vec3 E = DISK * disk * 0.62                                   // luz das estrelas velhas entre os braços (não é vazio)
+               + OLD * (bar * 0.75 + ansae * 0.45 + min(sers, 3.0))
+               + YOUNG * frag * a * 0.5 + HII * frag * hii * a * 1.2
                + YOUNG * young * a * (0.42 + 0.22 * fine)
-               + HAZE * haze * env * lum * 0.16
+               + HAZE * haze * env * lum * 0.22
                + CL * clump * a * 1.1
                + YOUNG * spur * a * 0.14
                + CL * spark * young * a * 0.6
-               + HII * hii * a * 2.5;
+               + HII * hii * a * 3.0;
         E *= smoothstep(14.0, 12.0, r0);
         // ---- poeira ----
         // faixa principal: estreita, na borda de dentro do braço, cheia de filamentos
         vec2 dq = vec2(s * 0.8, x * 0.9);
         float fil = ridge(fb2(dq * 1.3 + 4.0));
-        float lane = exp(-pow((x - 0.75) / 0.32, 2.0)) * (0.35 + 1.3 * smoothstep(0.55, 0.9, fil)) * env;
+        float lane = exp(-pow((x - 0.7) / 0.24, 2.0)) * (0.3 + 1.3 * smoothstep(0.55, 0.9, fil)) * env;
         // poeira das esporas (atravessa o braço em ângulo, como na M51)
         float dspur = smoothstep(0.62, 0.9, ridge(fb2(vec2((phi + 1.9 * u) * 7.0, u * 3.0 + 9.0)))) * exp(-pow((x - 0.2) / 1.1, 2.0)) * env;
         // poeira floculenta espalhada pelo disco
@@ -240,7 +245,7 @@ function init() {
         // faixas da barra: no lado que vai na frente, curvando até entrar nos braços (como na NGC 1300)
         float yl = p.y * sign(p.x) - 0.32 - 0.06 * abs(p.x);
         float barLane = exp(-pow(yl / 0.16, 2.0)) * (0.5 + 0.8 * fil) * smoothstep(R0 * 1.15, R0 * 0.55, abs(p.x)) * smoothstep(0.25, 0.8, abs(p.x));
-        float dust = lane * 1.1 + dspur * 0.4 + floc * 0.3 + barLane * 0.55 + 0.03 * exp(-r0 / 4.0);
+        float dust = lane * 0.8 + dspur * 0.45 + floc * 0.3 + barLane * 0.55 + 0.03 * exp(-r0 / 4.0);
         if (uLDR > 0.5) gl_FragColor = vec4(E / (1.0 + E), clamp(dust, 0.0, 1.0));
         else gl_FragColor = vec4(E * 0.5, dust);
       }`,
@@ -461,6 +466,31 @@ function init() {
     });
     const sky = new THREE.Points(g, m); sky.frustumCulled = false; sky.renderOrder = -1;
     scene.add(sky);
+    // como nas fotos do Hubble: algumas estrelas da nossa própria galáxia na frente, com as cruzes de difração
+    // do telescópio, e galáxias distantes do fundo como manchinhas ovais
+    const tex = draw => { const c = document.createElement('canvas'); c.width = c.height = 256; draw(c.getContext('2d')); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+    const spikeTex = tex(g2 => {
+      const r = g2.createRadialGradient(128, 128, 0, 128, 128, 128); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.06, 'rgba(255,255,255,.9)'); r.addColorStop(0.2, 'rgba(255,255,255,.12)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+      g2.fillStyle = r; g2.fillRect(0, 0, 256, 256);
+      for (const [dx, dy] of [[1, 0], [0, 1]]) { const l = g2.createLinearGradient(128 - 128 * dx, 128 - 128 * dy, 128 + 128 * dx, 128 + 128 * dy);
+        l.addColorStop(0, 'rgba(255,255,255,0)'); l.addColorStop(0.5, 'rgba(255,255,255,.85)'); l.addColorStop(1, 'rgba(255,255,255,0)'); g2.fillStyle = l;
+        if (dx) g2.fillRect(0, 126.5, 256, 3); else g2.fillRect(126.5, 0, 3, 256); }
+    });
+    const smudge = tex(g2 => { g2.translate(128, 128); g2.scale(1, 0.45); const r = g2.createRadialGradient(0, 0, 0, 0, 0, 110); r.addColorStop(0, 'rgba(255,240,220,1)'); r.addColorStop(0.3, 'rgba(255,230,210,.35)'); r.addColorStop(1, 'rgba(255,230,210,0)'); g2.fillStyle = r; g2.fillRect(-128, -128, 256, 256); });
+    const fg = new THREE.Group(); fg.renderOrder = -1;
+    // numa faixa do céu atrás da galáxia (a câmera olha para baixo ~28° e gira em volta): sempre há algumas no quadro
+    const band = (spread, R) => { const el = -Math.atan2(HOME_BASE.y, HOME_BASE.z) + gauss() * spread, az = rand() * TAU; return new THREE.Vector3(Math.cos(el) * Math.sin(az), Math.sin(el), Math.cos(el) * Math.cos(az)).multiplyScalar(R); };
+    for (let i = 0; i < 260; i++) {
+      const v = band(0.09, 560);
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: spikeTex, color: pick([C('#ffffff'), C('#ffe9d2'), C('#d6e2ff'), C('#fff3c4')]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.55 + rand() * 0.4 }));
+      s.position.copy(v); s.scale.setScalar(1.1 + Math.pow(rand(), 3) * 3.2); fg.add(s);
+    }
+    for (let i = 0; i < 160; i++) {
+      const v = band(0.1, 590);
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smudge, color: pick([C('#ffe4c4'), C('#ffd2a8'), C('#dfe6ff')]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.35 + rand() * 0.4, rotation: rand() * Math.PI }));
+      s.position.copy(v); s.scale.setScalar(0.5 + rand() * 1.0); fg.add(s);
+    }
+    scene.add(fg);
   }
 
   /* Céu visto de dentro do braço (fundo do sistema planetário)
@@ -2225,7 +2255,7 @@ function init() {
     tmp2.copy(camRight).multiplyScalar(5.2 * BH_SCALE).project(camera);
     const rE = Math.hypot((tmp2.x - tmp.x) / 2 * (W / H), (tmp2.y - tmp.y) / 2);
     // visto de dentro do disco, a poeira esconde o centro: o buraco negro some junto
-    const camD = camera.position.length(), bhF = camD < 4 || mode === 'warp' ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD);
+    const camD = camera.position.length(), bhF = camD < 4 || mode === 'warp' ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD) * sstep(46, 22, camD);   // de longe, como numa foto, o buraco negro é pequeno demais para aparecer
     bbMat.uniforms.uFade.value = bhF; bb.visible = bhF > 0.01;
     lensPass.uniforms.uR.value = tmp.z < 1 ? rE * bhF : 0;
 
@@ -2337,6 +2367,7 @@ function init() {
   });
 
   window.IAGalaxy = { warp, setActive };
+  root.classList.remove('nogl');            // se demorou mais que o aviso de 8 s do main.js, a galáxia volta a aparecer
   if (TEST) window.IAGalaxy.test = testApi;
   $('#gx-count').textContent = `${N.toLocaleString('pt-BR')} estrelas`;
   setMode('galaxy');

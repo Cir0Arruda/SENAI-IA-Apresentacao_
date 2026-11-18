@@ -19,15 +19,44 @@
     /* A abertura (galáxia) aparece quando o site é aberto sem um slide no endereço */
     window.__startHash = location.hash;
     if (!/^#\d+$/.test(location.hash)) document.documentElement.classList.add('intro-on');
+    /* As cenas pesadas (galáxia e Big Bang) passam como vídeo: rodam lisas em qualquer computador e não
+       dependem do 3D. O 3D ao vivo abre no botão "Explorar em 3D" (ou com ?3d no endereço). */
+    window.__live3d = /[?&](teste|3d|gravar)\b/.test(location.search);
+    document.documentElement.classList.add(window.__live3d ? 'live3d' : 'vid');
   </script>
+  <noscript>
+    <!-- JavaScript desligado ou bloqueado: todos os slides um embaixo do outro, e os vídeos tocam sozinhos -->
+    <style>
+      body { overflow: auto; height: auto; }
+      .shell { position: relative; inset: auto; margin: 16px; display: block; padding: 14px; }
+      .rail, .topbar .top-actions, .bottombar, .bot, .gm-btn, .deep-btn, .cos-ctrl, .cos-fs, .cos-cap, .cos-side, .cos-labels, .cos-exit, .cos-end, .cos-free-tip, .cos-info, #cos-canvas, .t3-view canvas, .t3-hud { display: none !important; }
+      .stage { display: block; overflow: visible; }
+      .slides { display: block; }
+      .slide { position: relative !important; inset: auto; opacity: 1 !important; visibility: visible !important; transform: none !important; pointer-events: auto !important; overflow: visible; padding-top: 28px; border-top: 1px solid rgba(21, 21, 29, .1); }
+      .slide [data-anim] { opacity: 1 !important; animation: none !important; }
+      .cos-view, .t3-view { min-height: 0; aspect-ratio: 16 / 9; }
+      .cos-video, .t3-video { display: block !important; }
+      .nojs-hero { display: block !important; }
+    </style>
+  </noscript>
   <script type="importmap">
     { "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        "three": "./assets/vendor/three/build/three.module.min.js",
+        "three/addons/": "./assets/vendor/three/examples/jsm/"
     } }
   </script>
 </head>
 <body>
+  <noscript>
+    <section class="nojs-hero" style="display:none;position:relative;margin:16px;border-radius:32px;overflow:hidden;background:#05040d;color:#fff">
+      <video src="assets/video/galaxia.mp4" poster="assets/video/galaxia.jpg" autoplay muted loop playsinline style="display:block;width:100%;aspect-ratio:16/9;object-fit:cover"></video>
+      <div style="position:absolute;left:5%;bottom:10%;max-width:560px;font-family:sans-serif">
+        <p style="margin:0 0 6px;opacity:.75">IA na Prática · SENAI Iracemápolis</p>
+        <h1 style="margin:0 0 10px;font-size:clamp(28px,4vw,52px)">Um universo escrito por IA</h1>
+        <p style="margin:0;opacity:.85">O JavaScript está desligado nesta rede: os slides aparecem um embaixo do outro e as animações em 3D passam como vídeo.</p>
+      </div>
+    </section>
+  </noscript>
 
   <!-- ============ Ícones (traço fino, mesmo estilo do site) ============ -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -121,6 +150,7 @@
 
   <!-- ============ ABERTURA · Galáxia criada com IA ============ -->
   <div class="gx mode-galaxy" id="gx" role="region" aria-label="Abertura: galáxia interativa criada com IA">
+    <video class="gx-video" src="assets/video/galaxia.mp4" poster="assets/video/galaxia.jpg" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
     <canvas class="gx-canvas" id="gx-canvas" tabindex="0" aria-label="Galáxia em 3D. Arraste para girar, use a roda do mouse para aproximar e clique num braço para viajar até o sistema dos temas."></canvas>
     <div class="gx-vignette" aria-hidden="true"></div>
     <div class="gx-labels" id="gx-labels"></div>
@@ -145,6 +175,7 @@
         <li><svg class="i sm"><use href="#i-target"/></svg>Entre no buraco negro</li>
       </ul>
       <div class="gx-made" aria-label="Tecnologias"><span>three.js r170</span><span>GLSL</span><span>raymarching</span><span>raytracing</span><span>bloom</span></div>
+      <button class="pill gx-live" id="gx-live" type="button"><svg class="i sm"><use href="#i-spiral"/></svg>Explorar em 3D (interativo)</button>
     </section>
 
     <section class="gx-panel gx-glass gx-sys" id="gx-sys" hidden>
@@ -235,7 +266,7 @@
     <footer class="gx-bottom">
       <div class="gx-guide">
         <div class="bot-slot"></div>
-        <div class="gx-bubble gx-glass" id="gx-bubble">Oi! <b>Clique em um braço</b> da galáxia para viajar até o sistema dos temas, ou entre no buraco negro do centro.</div>
+        <div class="gx-bubble gx-glass" id="gx-bubble"><span class="only-3d">Oi! <b>Clique em um braço</b> da galáxia para viajar até o sistema dos temas, ou entre no buraco negro do centro.</span><span class="only-vid">Oi! Esta galáxia foi programada por IA. Toque em <b>Explorar em 3D</b> para mexer nela, ou em <b>Iniciar</b>.</span></div>
       </div>
       <div class="gx-mid">
         <div class="gx-hint" id="gx-hint">Arraste para girar · roda do mouse para aproximar</div>
@@ -1204,7 +1235,7 @@ codex</pre>
             </header>
             <div class="g2 wide-left" data-anim>
               <div class="glass card demo t3-demo">
-                <div class="t3-view"><canvas id="t3-canvas"></canvas><span class="t3-hud" id="t3-hud">t = 0,00 s · quadro 0</span></div>
+                <div class="t3-view"><video class="t3-video" src="assets/video/estudio-3d.mp4" poster="assets/video/estudio-3d.jpg" autoplay muted loop playsinline preload="none" aria-label="Vídeo da cena 3D"></video><canvas id="t3-canvas"></canvas><span class="t3-hud" id="t3-hud">t = 0,00 s · quadro 0</span></div>
                 <div class="t3-ctrl">
                   <button class="circle dark sm" id="t3-play" aria-label="Tocar ou pausar"><svg class="i sm"><use href="#i-play"/></svg></button>
                   <input type="range" id="t3-time" min="0" max="600" value="0" aria-label="Tempo da cena">
@@ -1397,6 +1428,7 @@ desenhar(0);</pre>
         <section class="slide cos-slide" data-id="cosmos" data-title="Conte a história do universo, do Big Bang até o SENAI Iracemápolis, num plano-sequência só" data-bubble="13,8 bilhões de anos até a nossa escola!">
           <div class="cos">
             <div class="cos-view">
+              <video class="cos-video" src="assets/video/bigbang.mp4" poster="assets/video/bigbang.jpg" controls playsinline preload="metadata"></video>
               <canvas id="cos-canvas"></canvas>
               <div class="cos-labels" aria-hidden="true"></div>
               <div class="cos-cap in" aria-live="polite">
@@ -1411,7 +1443,7 @@ desenhar(0);</pre>
                 <span class="cos-bar"><i id="cos-hud-bar"></i></span>
               </div>
               <div class="cos-info" id="cos-info"></div>
-              <div class="cos-end"><p>Perguntas?</p><div class="row center"><button class="pill dark" id="cos-replay"><svg class="i"><use href="#i-refresh"/></svg>Rever a viagem</button><button class="pill ghost" data-goto="0">Voltar ao início</button></div></div>
+              <div class="cos-end"><p>Perguntas?</p><div class="row center"><button class="pill dark" id="cos-replay"><svg class="i"><use href="#i-refresh"/></svg>Rever a viagem</button><button class="pill ghost" id="cos-live" type="button"><svg class="i"><use href="#i-spiral"/></svg>Explorar a escola em 3D</button><button class="pill ghost" data-goto="0">Voltar ao início</button></div></div>
               <button class="cos-exit" id="cos-exit">Sair do modo cinema · Esc</button>
               <span class="cos-free-tip">Arraste para girar · role para aproximar · clique num prédio</span>
               <div class="cos-nogl">Seu navegador não liga o WebGL 2. A viagem do Big Bang ao SENAI precisa dele.</div>
@@ -1516,9 +1548,13 @@ desenhar(0);</pre>
 
   <script src="assets/js/studio.js"></script>
   <script src="assets/js/labs.js"></script>
+  <script src="assets/js/videos.js"></script>
   <script src="assets/js/main.js"></script>
   <script type="module" src="assets/js/studio3d.js"></script>
-  <script type="module" src="assets/js/galaxy.js"></script>
-  <script type="module" src="assets/js/cosmos.js"></script>
+  <script type="module">
+    // o 3D ao vivo (galáxia e Big Bang) só é baixado quando pedido; senão ficam os vídeos
+    window.IALoad3D = () => (window.__3dP ||= Promise.all([import('./assets/js/galaxy.js'), import('./assets/js/cosmos.js')]));
+    if (window.__live3d) window.IALoad3D();
+  </script>
 </body>
 </html>

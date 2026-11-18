@@ -28,6 +28,7 @@ const root = $('.cos');
 const canvas = $('#cos-canvas');
 const demos = (window.IADemos = window.IADemos || {});
 const TEST = /[?&]teste\b/.test(location.search);
+const CAPTURE = /[?&]gravar\b/.test(location.search);   // tools/gravar-videos.mjs: qualidade fixa e sem os botões do fim
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const small = matchMedia('(max-width: 760px)').matches;
 const TAU = Math.PI * 2;
@@ -355,7 +356,7 @@ function init() {
   const es = new THREE.Scene(); scenes.earth = scenes.zoom = scenes.senai = es;
   const ecam = mkCam(40, 1, 200000); cams.earth = cams.zoom = cams.senai = ecam;
   const loader = new THREE.TextureLoader(); loader.setCrossOrigin('anonymous');
-  const TEXB = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/textures/planets/';
+  const TEXB = 'assets/tex/terra/';                 // NASA Blue Marble, do exemplo de planetas do three.js (agora no próprio site)
   const lt = (u, srgb = true) => { const t = loader.load(u); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
   const earthU = { tDay: { value: null }, tNight: { value: null }, tSpec: { value: null }, tClouds: { value: null }, uSun: { value: SUN }, uLava: { value: 1 }, uT: { value: 0 }, uHi: { value: null }, uHiOn: { value: 0 }, uHiBox: { value: new THREE.Vector4() }, uCloud: { value: 1 } };
   let earthLoaded = false;
@@ -505,7 +506,7 @@ function init() {
   // Dentro dela o site não desenha as próprias ruas e árvores simplificadas (ver tools/exportar-senai-glb.py)
   const GLB_AREA = [-160, 160, -260, 140];
   const getGLB = () => fetch(GLB_URL, { method: 'HEAD', cache: 'no-store' }).then(r => !r.ok ? null : new Promise(res => {
-    const ld = new GLTFLoader(), dr = new DRACOLoader(); dr.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/'); ld.setDRACOLoader(dr);
+    const ld = new GLTFLoader(), dr = new DRACOLoader(); dr.setDecoderPath('assets/vendor/three/examples/jsm/libs/draco/gltf/'); ld.setDRACOLoader(dr);
     ld.load(GLB_URL, g => { dr.dispose(); res(g.scene); }, undefined, e => { console.warn('senai.glb não carregou; usando campus.json', e); res(null); });
   })).catch(() => null);
   // só baixa a escola (1,5 MB) quando o slide do Big Bang abre, e não a cada visita ao site
@@ -1145,7 +1146,7 @@ function init() {
     g.uBr.value = sstep(1.0, 1.3, t) * lerp(0.6, 0.55, sstep(3, 6, t)) * lerp(1, 0.25, sstep(14, 17, t)) * lerp(1, 8, sstep(20, 27, t)) * fade0;
     g.uNear.value = clamp(dD / lvS[0] * 0.5, 0.01, 0.35) * lvS[0];
     gas.p.visible = g.uBr.value > 0.001;
-    const fst = (1 - 0.7 * sstep(27, 31, t)) * fade0;
+    const fst = (1 - sstep(27, 31.5, t)) * fade0;           // as primeiras estrelas viram o brilho das galáxias
     FST.forEach(o => {
       const e = t - o.at, on = e > 0 ? 1 : 0, pop = e > 0 ? Math.exp(-e * 6) * 3 : 0;
       o.f.material.opacity = on * (0.35 + pop * 0.3) * fst; o.f.scale.set((0.6 + pop * 1.2) * 4, 0.6 + pop * 1.2, 1);
@@ -1193,7 +1194,7 @@ function init() {
     thanks.position.copy(c).addScaledVector(dir, 0.3).setY(lerp(-0.045, 0.062, ease(k))); thanks.up.copy(N0);
     thanks.lookAt(local.localToWorld(new THREE.Vector3(cl.x, thanks.position.y, cl.z)));
     root.classList.toggle('thanks', k > 0.1 && site.visible);   // a legenda sai quando o "Obrigado!" sobe no mesmo canto da tela
-    root.classList.toggle('ended', t > 75.5);
+    root.classList.toggle('ended', t > 75.5 && !CAPTURE);
     label('z-br', BR, ecam, t > 52 && h > 2500 && h < 15000 ? 'Brasil' : '');
     label('z-sp', SP, ecam, h > 250 && h < 2500 ? 'Estado de São Paulo' : '');
     label('z-ira', IRA, ecam, h > 3 && h < 250 ? 'Iracemápolis' : '');
@@ -1274,6 +1275,7 @@ function init() {
   // resolução adaptativa: se o quadro passar de ~25 ms, baixa a resolução interna; se sobrar tempo, sobe de novo
   let rs = 1, ema = 1 / 60, adaptT = 0, settle = 0;
   function adapt(dt) {
+    if (CAPTURE) return;                           // gravando o vídeo: resolução sempre cheia
     ema = ema * 0.92 + dt * 0.08; adaptT += dt; settle -= dt;
     if (adaptT < 0.8 || settle > 0) return; adaptT = 0;
     const nrs = ema > 1 / 40 ? Math.max(0.5, rs * 0.85) : ema < 1 / 56 ? Math.min(1, rs * 1.08) : rs;
@@ -1343,7 +1345,7 @@ function init() {
     range.value = Math.round(t * 10);
     $('#cos-clock').textContent = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')} / ${Math.floor(TOTAL / 60)}:${String(Math.round(TOTAL % 60)).padStart(2, '0')}`;
     fps = fps * 0.95 + (dt > 0 ? 1 / dt : 60) * 0.05; aiT -= dt;
-    if (aiEl && aiT <= 0) { aiT = 0.5; aiEl.textContent = `Feito com IA · ${Math.round(PARTS / 1000)} mil partículas calculadas ao vivo · ${Math.round(fps)} quadros/s · nenhum vídeo`; }
+    if (aiEl && aiT <= 0) { aiT = 0.5; aiEl.textContent = CAPTURE ? `Feito com IA · ${Math.round(PARTS / 1000)} mil partículas · 100% código` : `Feito com IA · ${Math.round(PARTS / 1000)} mil partículas calculadas ao vivo · ${Math.round(fps)} quadros/s · nenhum vídeo`; }
   }
   function frame(now) {
     if (!on) return;
@@ -1405,6 +1407,7 @@ function init() {
     leave() { on = false; cancelAnimationFrame(raf); cinema(false); root.classList.remove('ended'); }
   };
   if ($('.slide[data-id="cosmos"]')?.classList.contains('active')) demos.cosmos.enter();
+  window.IACosmosEnd = () => { t = TOTAL; setPlay(false); freeOrbit(); };   // "Explorar a escola em 3D" (vindo do vídeo)
   if (TEST) window.IACosmos = {
     seek: x => { t = x; setPlay(false); if (orbit) orbit.enabled = false; },
     // câmera livre num ponto do terreno da escola (metros: x leste, y altura, z sul), olhando para (tx, ty, tz)
