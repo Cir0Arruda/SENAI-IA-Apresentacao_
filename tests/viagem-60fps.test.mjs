@@ -73,8 +73,14 @@ try {
   await page.evaluate(() => window.IAGalaxy.test.record(true));
   const t = await page.evaluate(() => window.IAGalaxy.test.armScreen(1, 7));
   await page.mouse.move(t.x, t.y); await step(2); await page.mouse.click(t.x, t.y);
-  let ok = false;
-  for (let k = 0; k < 160 && !ok; k++) { await step(15); const s = await st(); ok = s.mode === 'system' && s.view === 'system'; }
+  let ok = false, mid = null;
+  for (let k = 0; k < 400 && !ok; k++) {
+    await step(5); const s = await st(); ok = s.mode === 'system' && s.view === 'system';
+    const d = Math.hypot(...s.cam);
+    if (!mid && s.view === 'galaxy' && d < 12 && d > 6) { await page.evaluate(() => window.IAGalaxy.test.record(false)); await page.evaluate(() => { window.__ps = null; window.IAGalaxy.test.photoShare().then(v => (window.__ps = v)); }); for (let j = 0; j < 20 && !(await page.evaluate(() => window.__ps)); j++) await step(1); mid = { d, ...(await page.evaluate(() => window.__ps)) }; await page.evaluate(() => window.IAGalaxy.test.record(true)); }
+  }
+  // no meio do mergulho, perto do braço, o que se vê ainda é a fotografia (não um desenho)
+  check('No meio do mergulho a galáxia ainda é a fotografia', mid && mid.share > 0.8, mid ? `a ${mid.d.toFixed(1)} unidades do centro: ${(mid.share * 100).toFixed(0)}% da luz vem da foto` : 'não medido');
   await step(60);
   let rec = await page.evaluate(() => window.IAGalaxy.test.record(false));
   check('Chega ao sistema planetário', ok);
