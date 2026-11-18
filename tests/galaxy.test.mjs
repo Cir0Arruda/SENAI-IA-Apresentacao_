@@ -114,6 +114,11 @@ async function desktop(browser) {
   check('Cores de foto real: braços azulados, centro dourado e regiões rosadas', st.blueFrac > 0.12 && st.warmFrac > 0.08 && (s.photo || st.pinkFrac > 0.003),
     `azul ${(st.blueFrac * 100).toFixed(0)}% · dourado ${(st.warmFrac * 100).toFixed(0)}% · rosa ${(st.pinkFrac * 100).toFixed(1)}%`);
   // como numa foto real: nada estoura em branco (os braços continuam azuis mesmo onde são mais claros)
+  // fotorrealismo: de longe, a luz da galáxia na tela vem da fotografia real (NGC 1232, VLT/ESO), não de um desenho
+  if (s.photo) {
+    const ps = await page.evaluate(() => window.IAGalaxy.test.photoShare());
+    check('De longe, a galáxia é a fotografia real (NGC 1232, ESO)', ps.k > 0.99 && ps.share > 0.8, `${(ps.share * 100).toFixed(0)}% da luz vem da foto`);
+  }
   check('Sem brilho estourado na abertura', st.satFrac < 0.004, `${(st.satFrac * 100).toFixed(2)}% dos pixels em branco puro`);
   check('7 tipos de nebulosa para atravessar', s.nebKinds >= 7, `${s.nebKinds} tipos`);
 
