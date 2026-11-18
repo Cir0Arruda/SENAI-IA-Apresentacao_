@@ -4,6 +4,18 @@ Apresentação interativa sobre Inteligência Artificial, feita em HTML para o G
 
 **Ver online:** https://cir0arruda.github.io/SENAI-IA-Apresentacao_/
 
+## Vídeo ou 3D ao vivo (rede do SENAI)
+
+A rede do SENAI bloqueia muito JavaScript, e os computadores da sala nem sempre aguentam o 3D ao vivo. Por isso:
+
+- **Por padrão, as cenas pesadas passam como vídeo**: a galáxia da abertura (`assets/video/galaxia.mp4`, em loop) e o final "Do Big Bang ao SENAI" (`assets/video/bigbang.mp4`, 1min18, com as legendas e o relógio cósmico na imagem). Rodam lisos em qualquer computador.
+- **Botão "Explorar em 3D"** (na abertura) ou **"Explorar a escola em 3D"** (no fim do Big Bang): carrega a versão interativa ao vivo. Também abre direto com `?3d` no endereço.
+- **Nada vem de CDN**: o three.js (r170), o decodificador Draco e as texturas da Terra ficam no próprio site (`assets/vendor/three`, `assets/tex/terra`).
+- **Com o JavaScript desligado**, a página ainda funciona: os slides aparecem um embaixo do outro e os vídeos tocam sozinhos.
+- A cena 3D do estúdio também tem vídeo (`assets/video/estudio-3d.mp4`), usado quando o navegador não tem WebGL.
+
+**Como os vídeos são gravados** (`tools/gravar-videos.mjs`): o site é aberto num Chrome automático com o relógio trocado por um relógio virtual. A cada passo o tempo anda exatamente 1/30 s e a tela é fotografada, então o vídeo sai fluido mesmo num computador sem placa de vídeo, que leva segundos por quadro. O Big Bang é gravado no GitHub Actions (`.github/workflows/gravar-videos.yml`), em 6 trechos ao mesmo tempo, porque lá a internet baixa as imagens de satélite durante a gravação. Para gravar de novo depois de mudar a cena: aba **Actions → Gravar vídeo do Big Bang → Run workflow**. A galáxia e o estúdio: `node tools/gravar-videos.mjs galaxia` e `node tools/gravar-videos.mjs estudio`.
+
 ## Abertura: a galáxia feita por IA
 
 Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo do que a IA pode fazer:
@@ -33,6 +45,10 @@ Ao abrir o site aparece uma galáxia 3D, escrita com o Claude Code, como exemplo
 - A imagem volumétrica é suavizada para não ficar granulada, e a qualidade se ajusta sozinha ao computador para manter a animação fluida.
 - **Exposição como numa câmera**: a luz forte é comprimida aos poucos pelo canal de cor mais forte, então nada estoura em branco, nem de perto, no mergulho no braço.
 - Cada tipo de nebulosa é um shader separado, compilado em segundo plano enquanto a abertura está na tela: a viagem não trava no primeiro uso.
+
+**Fotorrealista (nov/2026): a galáxia é feita a partir de uma foto real.** A base é a NGC 1232 fotografada pelo telescópio VLT, do ESO ([eso9845d](https://www.eso.org/public/images/eso9845d/), CC BY 4.0), escolhida entre fotos da M74, M101, M51, NGC 1300, M83 e NGC 1232 porque aparece inteira, vista de frente e com o fundo escuro. A foto vira o mapa da galáxia vista de cima: dela vêm a luz e as cores; a poeira é onde a foto é mais escura que a vizinhança; as 150 mil estrelas são sorteadas onde a foto tem luz; o disco é fino e a luz atravessa raio por raio, então dá para girar, inclinar e mergulhar num braço em 3D. Onde a foto original termina (um pedaço do lado direito), entra o lado oposto da galáxia, girado 180° (as espirais são quase simétricas). Uma estrela da nossa galáxia e uma galáxia de fundo que estavam na frente da foto foram apagadas. Como a foto do VLT usa filtros que quase não mostram o hidrogênio, parte dos nós de estrelas novas ganha o brilho rosado das nebulosas de Hα, como nas fotos do Hubble. O clique num braço usa os braços da foto. Sem a foto, a galáxia é desenhada só com código (o modelo abaixo).
+
+**Antes da foto (modelo desenhado com código):** o bojo segue o perfil de Sérsic das galáxias reais, com um núcleo brilhante; entre os braços há a luz das estrelas velhas (não um vazio); os braços são menos regulares, se quebram em pedaços na borda (como na M101 e na M74) e têm mais nebulosas rosadas (a M101 tem mais de mil regiões HII catalogadas); a poeira é mais fina; as cores seguem as fotos do Hubble (núcleo amarelado de estrelas velhas, braços azul-claros). Como numa foto de telescópio, o buraco negro só aparece quando a câmera chega perto, e há estrelas da nossa galáxia na frente, com as cruzes de difração, e galáxias distantes ao fundo. Referências: [M101 pelo Hubble (ESA)](https://www.esa.int/ESA_Multimedia/Images/2006/03/Hubble_view_of_Spiral_Galaxy_M101), [M101 no catálogo Messier do Hubble (NASA)](https://science.nasa.gov/mission/hubble/science/explore-the-night-sky/hubble-messier-catalog/messier-101/), [M74 pelo Webb e pelo Hubble (ESA)](https://esahubble.org/images/potw2235b/), [renderizador de galáxias espirais (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/spiral-galaxy-renderer.html).
 
 **Referências da galáxia e da nebulosa:** [M74 pelo Hubble (ESA/Hubble)](https://esahubble.org/news/heic0719/), [ondas de densidade (Beltoforion)](https://beltoforion.de/en/spiral_galaxy_renderer/), [galáxias procedurais do Gaia Sky](https://gaia.ari.uni-heidelberg.de/gaiasky/docs/master/Procedural-galaxies.html), [nebulosas e auroras volumétricas (Toni Sagristà)](https://tonisagrista.com/blog/2024/rendering-aurorae-nebulae/), [Gaia Sky: nebulosas volumétricas](https://gaiasky.space/news/2024/2024-03-01-volumetric-nebulae/), [poeira cósmica volumétrica (Godot Shaders)](https://godotshaders.com/shader/volumetric-cosmic-dust/), [Volumetric Rendering (wallisc)](https://github.com/wallisc/VolumetricRendering), fotos da [M51 pelo Hubble (ESA/Hubble)](https://esahubble.org/images/heic0506a/) e as animações de aproximação do [ESO (Órion, Carina)](https://www.eso.org/public/videos/).
 

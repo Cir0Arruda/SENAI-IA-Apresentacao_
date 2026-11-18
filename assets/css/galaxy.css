@@ -287,3 +287,12 @@ html.gx-closing .gx {
 .gx-toast b { color: var(--peach); margin-right: 6px; }
 .gx-toast.on { opacity: 1; transform: none; }
 @media (max-width: 1100px) { .gx-bhlab { display: none; } }
+
+/* ---------- Modo vídeo (padrão): a galáxia é um vídeo gravado do 3D; o 3D ao vivo abre no botão ---------- */
+.gx-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; background: #05040d; display: none; pointer-events: none; }   /* no celular o corte fica na galáxia */
+html.vid .gx-video { display: block; }
+html.vid .gx-canvas, html.vid .gx-enter, html.vid .gx-hint, html.vid .gx-stat, html.vid .gx-how, html.vid .gx-labels, html.vid .gx-cap { display: none !important; }
+.gx-live { margin-top: 14px; background: rgba(21, 21, 29, .88); color: #fff; }
+.gx-live:hover { background: var(--ink); }
+html.live3d .gx-live, html.live3d .only-vid, html.vid .only-3d { display: none; }
+.gx-credit { margin-top: 8px; font-size: 11px; opacity: .6; }

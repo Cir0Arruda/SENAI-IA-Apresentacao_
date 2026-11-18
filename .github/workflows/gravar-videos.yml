@@ -1,0 +1,74 @@
+# Grava o final "Do Big Bang ao SENAI" em vídeo (assets/video/bigbang.mp4).
+# Roda no GitHub porque lá a internet é livre: as imagens de satélite (EOX, NASA GIBS)
+# e as fontes precisam ser baixadas durante a gravação.
+# Os 78 s são divididos em 6 trechos gravados ao mesmo tempo e depois emendados.
+# Para gravar de novo: aba Actions → "Gravar vídeo do Big Bang" → Run workflow.
+name: Gravar vídeo do Big Bang
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/senai-3d-big-bang-9it7tt]
+    paths: ['.github/workflows/gravar-videos.yml', 'tools/gravar-videos.mjs', 'assets/js/cosmos.js']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gravar-videos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trecho:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { n: 1, de: 0, ate: 13 }
+          - { n: 2, de: 13, ate: 26 }
+          - { n: 3, de: 26, ate: 39 }
+          - { n: 4, de: 39, ate: 52 }
+          - { n: 5, de: 52, ate: 65 }
+          - { n: 6, de: 65, ate: 78 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: ffmpeg
+        run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+      - name: Playwright + Chromium
+        run: npm i --no-save --no-package-lock playwright@1.49.1 && npx playwright install --with-deps chromium
+      - name: Gravar o trecho ${{ matrix.n }} (${{ matrix.de }} s a ${{ matrix.ate }} s)
+        run: node tools/gravar-videos.mjs bigbang --de ${{ matrix.de }} --ate ${{ matrix.ate }} --saida trecho-${{ matrix.n }}.mp4
+      - uses: actions/upload-artifact@v4
+        with: { name: 'trecho-${{ matrix.n }}', path: 'trecho-${{ matrix.n }}.mp4', retention-days: 3 }
+
+  juntar:
+    needs: trecho
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'trecho-*', merge-multiple: true }
+      - name: Emendar os trechos e tirar a capa
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          for n in 1 2 3 4 5 6; do echo "file 'trecho-$n.mp4'"; done > lista.txt
+          mkdir -p assets/video
+          ffmpeg -y -loglevel error -f concat -safe 0 -i lista.txt -c copy junto.mp4
+          # duas passadas com taxa fixa: ~30 MB para 78 s (o GitHub não aceita arquivos acima de 100 MB, e a rede da escola agradece)
+          ffmpeg -y -loglevel error -i junto.mp4 -c:v libx264 -preset slow -b:v 2800k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -pass 1 -an -f null /dev/null
+          ffmpeg -y -loglevel error -i junto.mp4 -c:v libx264 -preset slow -b:v 2800k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -pass 2 -an -movflags +faststart assets/video/bigbang.mp4
+          rm -f junto.mp4 ffmpeg2pass*
+          test $(stat -c %s assets/video/bigbang.mp4) -lt 95000000
+          ffmpeg -y -loglevel error -ss 33 -i assets/video/bigbang.mp4 -frames:v 1 -q:v 3 assets/video/bigbang.jpg
+          ls -la assets/video
+      - name: Guardar no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/video/bigbang.mp4 assets/video/bigbang.jpg
+          git commit -m "Vídeo do Big Bang gravado pelo GitHub Actions" || exit 0
+          for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep 5; done

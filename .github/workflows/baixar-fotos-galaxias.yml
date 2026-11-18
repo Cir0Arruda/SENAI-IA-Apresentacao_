@@ -1,0 +1,48 @@
+# Baixa fotos reais de galáxias (ESA/Hubble e ESO, licença CC BY 4.0) usadas como base da galáxia da abertura.
+# Roda no GitHub porque lá a internet é livre. Para rodar de novo: Actions → "Baixar fotos de galáxias" → Run workflow.
+name: Baixar fotos de galáxias
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/senai-3d-big-bang-9it7tt]
+    paths: ['.github/workflows/baixar-fotos-galaxias.yml.desligado']   # só pelo botão Run workflow
+
+permissions:
+  contents: write
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar e reduzir para 2048 px
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q imagemagick
+          mkdir -p tools/fotos-galaxias
+          cd tools/fotos-galaxias
+          baixa() { curl -fsSL --retry 3 -A "Mozilla/5.0 (projeto escolar SENAI)" -o "$1.orig" "$2" && convert "$1.orig" -resize '2048x2048>' -quality 92 "$1.jpg"; rm -f "$1.orig"; test -f "$1.jpg" && echo "ok $1" || echo "falhou $1 ($2)"; }
+          baixa m74-hubble   https://cdn.esahubble.org/archives/images/large/heic0719a.jpg
+          baixa m101-hubble  https://cdn.esahubble.org/archives/images/large/heic0602a.jpg
+          baixa m51-hubble   https://cdn.esahubble.org/archives/images/large/heic0506a.jpg
+          baixa ngc1300-hubble https://cdn.esahubble.org/archives/images/large/heic0501a.jpg
+          baixa ngc1232-eso  https://cdn.eso.org/images/large/eso9845d.jpg
+          baixa m83-eso      https://cdn.eso.org/images/large/eso0825a.jpg
+          ls -la
+          cat > LEIA-ME.md <<'EOF'
+          # Fotos de referência da galáxia
+          Baixadas pelo workflow baixar-fotos-galaxias.yml. Créditos (CC BY 4.0):
+          - M74: NASA, ESA e Hubble Heritage (STScI/AURA)-ESA/Hubble Collaboration (heic0719a)
+          - M101: NASA, ESA, K. Kuntz, F. Bresolin, J. Trauger, J. Mould, Y.-H. Chu e STScI (heic0602a)
+          - M51: NASA, ESA, S. Beckwith (STScI) e Hubble Heritage Team (heic0506a)
+          - NGC 1300: NASA, ESA e Hubble Heritage Team (heic0501a)
+          - NGC 1232: ESO (eso9845d)
+          - M83: ESO (eso0825a)
+          EOF
+      - name: Guardar no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/fotos-galaxias
+          git commit -m "Fotos de referência de galáxias (ESA/Hubble, ESO) [skip ci]" || exit 0
+          for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep 5; done

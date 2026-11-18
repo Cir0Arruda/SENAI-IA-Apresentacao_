@@ -296,3 +296,8 @@
 @media (max-width: 760px) { .k5.scenes { grid-template-columns: repeat(2, 1fr); } .k5.scenes .k5-card:nth-child(n+5) { display: flex; } }
 .wf-term .term-body .w { color: #ffc46b; padding-left: 14px; }
 .wf-term .term-body .w::before { content: "⚠ "; }
+
+/* sem WebGL (ou sem JavaScript) a cena aparece como vídeo, gravado do próprio 3D */
+.t3-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.t3-view.nogl .t3-video { display: block; }
+.t3-view.nogl::after { content: none; }

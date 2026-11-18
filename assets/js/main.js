@@ -455,7 +455,7 @@
   $('#gx-open').addEventListener('click', openIntro);
   $('#gx-fs').addEventListener('click', () => $('#btn-fs').click());
   window.addEventListener('galaxy:goto', e => closeIntro(e.detail?.slide ?? 0, e.detail?.from));
-  setTimeout(() => { if (!window.IAGalaxy) { gxEl.classList.add('nogl'); $('#gx-count').textContent = 'modo simples'; } }, 8000);
+  setTimeout(() => { if (!window.IAGalaxy && html.classList.contains('live3d')) { gxEl.classList.add('nogl'); $('#gx-count').textContent = 'modo simples'; } }, 8000);
 
   window.addEventListener('hashchange', () => {
     const n = parseInt(location.hash.slice(1), 10);
