@@ -80,7 +80,7 @@ async function openPage(browser, vp) {
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => { if (m.type() === 'error' && !/favicon|ERR_INTERNET_DISCONNECTED|fonts\.g/i.test(m.text())) errors.push(m.text()); });
   // download do modelo 3D interrompido porque o teste fechou a página não é erro do site
-  page.on('requestfailed', r => { if (r.url().startsWith(BASE) && !(/\.glb$/.test(r.url()) && /ERR_ABORTED/.test(r.failure()?.errorText || ''))) errors.push(`falhou: ${r.url()} ${r.failure()?.errorText}`); });
+  page.on('requestfailed', r => { if (r.url().startsWith(BASE) && !(/\.(glb|mp4)$/.test(r.url()) && /ERR_ABORTED/.test(r.failure()?.errorText || ''))) errors.push(`falhou: ${r.url()} ${r.failure()?.errorText}`); });
   return { page, errors };
 }
 
