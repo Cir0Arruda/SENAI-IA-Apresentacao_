@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [claude/senai-3d-big-bang-9it7tt]
-    paths: ['.github/workflows/baixar-fotos-galaxias.yml']
+    paths: ['.github/workflows/baixar-fotos-galaxias.yml.desligado']   # só pelo botão Run workflow
 
 permissions:
   contents: write
@@ -18,9 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Baixar e reduzir para 2048 px
         run: |
+          sudo apt-get update -q && sudo apt-get install -y -q imagemagick
           mkdir -p tools/fotos-galaxias
           cd tools/fotos-galaxias
-          baixa() { curl -fsSL --retry 3 -A "Mozilla/5.0 (projeto escolar SENAI)" -o "$1.orig" "$2" && convert "$1.orig" -resize '2048x2048>' -quality 92 "$1.jpg" && rm "$1.orig" && echo "ok $1" || echo "falhou $1 ($2)"; }
+          baixa() { curl -fsSL --retry 3 -A "Mozilla/5.0 (projeto escolar SENAI)" -o "$1.orig" "$2" && convert "$1.orig" -resize '2048x2048>' -quality 92 "$1.jpg"; rm -f "$1.orig"; test -f "$1.jpg" && echo "ok $1" || echo "falhou $1 ($2)"; }
           baixa m74-hubble   https://cdn.esahubble.org/archives/images/large/heic0719a.jpg
           baixa m101-hubble  https://cdn.esahubble.org/archives/images/large/heic0602a.jpg
           baixa m51-hubble   https://cdn.esahubble.org/archives/images/large/heic0506a.jpg

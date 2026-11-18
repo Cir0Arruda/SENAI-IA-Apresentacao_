@@ -31,6 +31,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const small = matchMedia('(max-width: 760px)').matches;
 const lowEnd = small || (navigator.hardwareConcurrency || 8) <= 4;
 const TEST = /[?&]teste\b/.test(location.search);
+const CAPTURE = /[?&]gravar\b/.test(location.search);   // gravando o vídeo (tools/gravar-videos.mjs): qualidade de foto, sem pressa
 
 function noGL(msg) {
   root.classList.add('nogl');
@@ -39,9 +40,14 @@ function noGL(msg) {
   if (msg) console.warn('[galáxia]', msg);
 }
 
-try { init(); } catch (err) { noGL(err && err.message); }
+// a galáxia é montada a partir de uma FOTO REAL (NGC 1232, VLT/ESO): a luz, as cores e a poeira vêm da foto,
+// e o volume, as estrelas e a viagem continuam em 3D. Sem a foto, o mapa é desenhado só com código.
+const PHOTO_URL = 'assets/tex/galaxia/ngc1232.jpg';
+let started = false;
+const start = img => { if (started) return; started = true; try { init(img); } catch (err) { noGL(err && err.message); } };
+{ const img = new Image(); img.onload = () => start(img); img.onerror = () => start(null); img.src = PHOTO_URL; setTimeout(() => start(null), 9000); }
 
-function init() {
+function init(photo) {
   /* ---------- Renderizador e câmeras ---------- */
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', alpha: false });
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 indisponível');
@@ -115,7 +121,7 @@ function init() {
   const K_IN = 5.6, K_OUT = 3.0, U0 = 0.5, R0 = 2.6, R_MAX = 13;     // R0 = meio comprimento da barra
   const SPAN = 28;                         // o mapa cobre de -14 a 14
   const MAP_RES = lowEnd ? 1024 : 2048;
-  const HE = 0.13, HD = 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira
+  const HE = photo ? 0.075 : 0.13, HD = photo ? 0.04 : 0.05, SIG = 2.7;   // espessura do gás, da poeira e opacidade da poeira (com a foto, disco fino e nítido)
   const wind = u => K_OUT * u + (K_IN - K_OUT) * U0 * (1 - Math.exp(-u / U0));
   const armAngle = (r, k) => k * Math.PI + wind(Math.log(Math.max(r, R0 * 0.6) / R0));
   const galaxy = new THREE.Group();
@@ -148,11 +154,14 @@ function init() {
   /* ---------- 1) Mapa da galáxia vista de cima (calculado uma vez) ----------
      rgb = brilho (estrelas velhas, braços azuis, regiões HII rosadas)
      a   = poeira (faixas escuras na borda interna dos braços) */
+  let photoTex = null;
+  if (photo) { photoTex = new THREE.Texture(photo); photoTex.colorSpace = THREE.NoColorSpace;   // os valores da foto como estão (a saída do site não volta para sRGB)
+    photoTex.generateMipmaps = true; photoTex.minFilter = THREE.LinearMipmapLinearFilter; photoTex.anisotropy = 4; photoTex.needsUpdate = true; }
   const mapMat = new THREE.ShaderMaterial({
-    uniforms: { uLDR: { value: 0 } },
+    uniforms: { uLDR: { value: 0 }, uPhoto: { value: photoTex }, uUse: { value: photo ? 1 : 0 } },
     vertexShader: FSQ_VS,
     fragmentShader: /* glsl */`
-      uniform float uLDR; varying vec2 vUv;
+      uniform float uLDR, uUse; uniform sampler2D uPhoto; varying vec2 vUv;
       ${GLSL_NOISE}
       const float K_IN = ${K_IN.toFixed(3)}, K_OUT = ${K_OUT.toFixed(3)}, U0 = ${U0.toFixed(3)}, R0 = ${R0.toFixed(3)};
       const float PI = 3.14159265;
@@ -246,6 +255,31 @@ function init() {
         float yl = p.y * sign(p.x) - 0.32 - 0.06 * abs(p.x);
         float barLane = exp(-pow(yl / 0.16, 2.0)) * (0.5 + 0.8 * fil) * smoothstep(R0 * 1.15, R0 * 0.55, abs(p.x)) * smoothstep(0.25, 0.8, abs(p.x));
         float dust = lane * 0.8 + dspur * 0.45 + floc * 0.3 + barLane * 0.55 + 0.03 * exp(-r0 / 4.0);
+        if (uUse > 0.5) {
+          // ---- FOTO REAL: NGC 1232 (VLT/ESO), vista de frente, centrada no núcleo; raio da galáxia = 12,5 ----
+          // a foto original termina um pouco antes dos braços do lado direito: ali entra o lado oposto da galáxia
+          // (girado 180°: as espirais são quase simétricas), com uma emenda suave
+          float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
+          vec2 ou = 1.0 - vUv;
+          vec3 ph = mix(texture2D(uPhoto, ou).rgb, texture2D(uPhoto, vUv).rgb, inP);
+          vec3 bl = mix(texture2D(uPhoto, ou, 4.5).rgb, texture2D(uPhoto, vUv, 4.5).rgb, inP);   // a foto borrada (vizinhança)
+          ph = max(ph - 0.075, 0.0); bl = max(bl - 0.075, 0.0);   // tira o fundo do céu e a névoa entre os braços                         // tira o fundo do céu
+          float lp = dot(ph, vec3(0.3, 0.5, 0.2)), lb = dot(bl, vec3(0.3, 0.5, 0.2));
+          // estrelas da nossa galáxia que estavam na frente da foto: pontos muito mais claros que a vizinhança
+          float fgs = smoothstep(2.2, 4.5, lp / max(lb, 1e-4)) * smoothstep(1.6, 3.0, r0) * step(0.62, max(ph.r, max(ph.g, ph.b)));
+          ph = mix(ph, bl, fgs);
+          float mask = smoothstep(14.0, 11.8, r0);
+          vec3 lin = pow(ph, vec3(1.45));                     // valores da foto → luz (parte da curva da câmera desfeita)
+          E = mix(vec3(dot(lin, vec3(0.3, 0.5, 0.2))), lin, 0.78) * mask * 1.0;   // um pouco menos saturado: a exposição final já realça a cor
+          // nebulosas de hidrogênio (Hα): rosadas como nas fotos do Hubble; a foto do VLT usa filtros que quase não as mostram
+          float knot = smoothstep(1.25, 2.2, lp / max(lb, 1e-4)) * smoothstep(2.5, 4.0, r0);
+          // as nebulosas ficam nos nós de estrelas novas dos braços: parte deles ganha o brilho rosado do hidrogênio
+          vec2 kc = floor(vUv * 300.0); float hsel = step(0.74, h2(kc + 3.7));
+          float blueK = smoothstep(0.0, 0.05, ph.b - ph.r * 0.85);
+          E += vec3(1.0, 0.28, 0.4) * knot * hsel * blueK * lp * 2.4 * mask;
+          // poeira: onde a foto é mais escura que a vizinhança (as faixas marrons dos braços)
+          dust = (clamp((lb - lp) / max(lb, 1e-4), 0.0, 1.0) * 0.75 + 0.03 * exp(-r0 / 4.0)) * mask;
+        }
         if (uLDR > 0.5) gl_FragColor = vec4(E / (1.0 + E), clamp(dust, 0.0, 1.0));
         else gl_FragColor = vec4(E * 0.5, dust);
       }`,
@@ -265,6 +299,24 @@ function init() {
   renderer.readRenderTargetPixels(mapLDR, 0, 0, RB, RB, mapPix);
   mapQuad.dispose(); mapLDR.dispose();
   const MAP = mapRT.texture;
+
+  // braço da foto: o azul mais forte do mapa (estrelas novas); o ângulo escolhido tem braço e, 90° adiante, espaço vazio
+  let armLumV = 0;
+  const armLum = () => armLumV || (armLumV = (() => { let m = 0; for (let i = 0; i < mapPix.length; i += 4) m = Math.max(m, mapPix[i + 2]); return m || 1; })());
+  const armScore = (r, a) => { const k = mapIdx(Math.cos(a) * r, Math.sin(a) * r); return mapPix[k + 2] / armLum() - (mapPix[k] > mapPix[k + 2] * 1.05 ? 1 : 0); };
+  const armCache = {};
+  function armAngleP(r, k) {
+    if (!photo) return armAngle(r, k);
+    const key = r.toFixed(3) + '|' + k; if (key in armCache) return armCache[key];
+    let best = -1e9, ba = k * Math.PI;
+    for (let i = 0; i < 360; i++) {
+      const a = k * Math.PI + i / 360 * TAU, on = armScore(r, a);
+      if (on < 0.32) continue;
+      const sc = on - Math.max(0, armScore(r, a + Math.PI / 2)) * 1.5;
+      if (sc > best) { best = sc; ba = a; }
+    }
+    return (armCache[key] = ba);
+  }
 
   /* ---------- 2) Estrelas sorteadas a partir do mapa ---------- */
   const N = reduce ? 50000 : lowEnd ? 65000 : 150000;
@@ -321,10 +373,11 @@ function init() {
         c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
         b = (0.2 + Math.pow(rand(), 4) * 0.7) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.4 + Math.pow(rand(), 4) * 1.1;
         if (blue && rand() < 0.08) { c.copy(PAL.young); s *= 1.3; b = 0.9; }
-        if (pink && rand() < 0.16) { c.copy(PAL.hii).lerp(PAL.white, 0.25 + rand() * 0.3); b = 0.7; }
+        if (pink && !photo && rand() < 0.16) { c.copy(PAL.hii).lerp(PAL.white, 0.25 + rand() * 0.3); b = 0.7; }
       }
       pos.set([x, y, z], i * 3);
-      col.set([c.r * b, c.g * b, c.b * b], i * 3);
+      const sk = photo ? 0.6 : 1;                 // com a foto, a luz já vem dela: as estrelas só dão o brilho de perto
+      col.set([c.r * b * sk, c.g * b * sk, c.b * b * sk], i * 3);
       size[i] = s; seed[i] = rand();
     }
     return starGeometry(pos, col, size, seed);
@@ -408,7 +461,7 @@ function init() {
      Nas fotos reais elas ficam do lado de fora do braço (depois da faixa de poeira), são
      pequenas e quase todas vermelho-rosadas; algumas têm o miolo verde-azulado (oxigênio). */
   {
-    const n = lowEnd ? 90 : 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
+    const n = photo ? 0 : lowEnd ? 90 : 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);   // com a foto, as nebulosas já estão nela
     const NC = [C('#ff5a7a'), C('#ff6f8c'), C('#ff8a7a'), C('#e86aa8'), C('#7fd8d0'), C('#a8b8ff')];
     for (let i = 0; i < n; i++) {
       const r = R0 * 1.25 + Math.pow(rand(), 0.85) * 9.2, k = rand() < 0.5 ? 0 : 1;
@@ -562,10 +615,10 @@ function init() {
   const CAM_UNI = () => ({ uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() }, uCamPos: { value: new THREE.Vector3() }, uPixAng: { value: 0.001 } });
   const galInv = new THREE.Matrix4();
   const galMarch = new THREE.ShaderMaterial({
-    uniforms: { ...CAM_UNI(), tMap: { value: MAP }, uGalInv: { value: galInv }, uBulge: { value: 1 } },
+    uniforms: { ...CAM_UNI(), tMap: { value: MAP }, uGalInv: { value: galInv }, uBulge: { value: 1 }, uMapK: { value: 1 } },
     vertexShader: FSQ_VS,
     fragmentShader: /* glsl */`
-      uniform sampler2D tMap; uniform mat4 uInvProj, uCamWorld, uGalInv; uniform vec3 uCamPos; uniform float uPixAng, uBulge;
+      uniform sampler2D tMap; uniform mat4 uInvProj, uCamWorld, uGalInv; uniform vec3 uCamPos; uniform float uPixAng, uBulge, uMapK;
       varying vec2 vUv;
       ${GLSL_NOISE}
       ${GLSL_COL}
@@ -587,10 +640,10 @@ function init() {
         if (t1 <= t0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
         // bojo: soma de três gaussianas achatadas, integradas exatamente ao longo do raio (sem ruído)
         // achatado na vertical e alongado no eixo da barra (x)
-        const vec3 Q = vec3(1.0 / 1.3, 1.0 / 0.62, 1.0 / 0.95);
+        const vec3 Q = ${photo ? 'vec3(1.0 / 1.0, 1.0 / 0.62, 1.0 / 1.0)' : 'vec3(1.0 / 1.3, 1.0 / 0.62, 1.0 / 0.95)'};
         vec3 o2 = ro * Q, d2 = rd * Q;
         float bA = dot(d2, d2), bB = dot(o2, d2), bC = dot(o2, o2) - bB * bB / bA, sA = sqrt(bA), tc = bB / bA;
-        vec3 S = vec3(0.07, 0.26, 1.0), AMP = vec3(2.0, 0.62, 0.12) * uBulge;
+        vec3 S = vec3(0.07, 0.26, 1.0), AMP = vec3(2.0, 0.62, 0.12) * uBulge * ${photo ? '0.3' : '1.0'};
         vec3 K = AMP * S * 0.8862269 / sA * exp(-bC / (S * S));
         vec3 prevE = vec3(erf1(sA * (t0 + tc) / S.x), erf1(sA * (t0 + tc) / S.y), erf1(sA * (t0 + tc) / S.z));
         float L = t1 - t0;
@@ -608,7 +661,7 @@ function init() {
           float cd = colI(pa.y, pb.y, ${HD}, ds) / ${(2 * HD).toFixed(3)};
           vec3 nE = vec3(erf1(sA * (tB + tc) / S.x), erf1(sA * (tB + tc) / S.y), erf1(sA * (tB + tc) / S.z));
           vec3 bk = K * (nE - prevE); prevE = nE;
-          vec3 em = m.rgb * 2.0 * ce + vec3(1.0, 0.96, 0.86) * bk.x + vec3(1.0, 0.86, 0.62) * bk.y + vec3(1.0, 0.78, 0.54) * bk.z;
+          vec3 em = m.rgb * 2.0 * uMapK * ce + vec3(1.0, 0.96, 0.86) * bk.x + vec3(1.0, 0.86, 0.62) * bk.y + vec3(1.0, 0.78, 0.54) * bk.z;
           // perto da câmera a luz do disco já aparece como estrelas separadas (os pontos), não como névoa
           em *= smoothstep(0.04, 1.1, mix(tA, tB, j));
           float tau = m.a * ${SIG.toFixed(2)} * cd;
@@ -1064,7 +1117,7 @@ function init() {
   labelsBox.appendChild(bhLabel);
   // marcador fixo num dos braços, para quem não sabe onde clicar
   const PIN_R = 7.2;
-  const pinLocal = new THREE.Vector3(Math.cos(armAngle(PIN_R, 1)) * PIN_R, 0, Math.sin(armAngle(PIN_R, 1)) * PIN_R);
+  const pinLocal = new THREE.Vector3(Math.cos(armAngleP(PIN_R, 1)) * PIN_R, 0, Math.sin(armAngleP(PIN_R, 1)) * PIN_R);
   const pinLabel = document.createElement('button');
   pinLabel.className = 'gx-label pin';
   pinLabel.innerHTML = `<span class="pd">${iconSvg('planet')}</span><span>Sistema dos temas · clique para viajar</span>`;
@@ -1328,7 +1381,7 @@ function init() {
       this.cq.render(renderer);
     }
   }
-  const VOL_SCALE = lowEnd ? 0.42 : 0.5;
+  const VOL_SCALE = CAPTURE ? 1 : lowEnd ? 0.42 : 0.5;     // no vídeo, o volume em resolução cheia (nítido como a foto)
 
   // Céu capturado do centro da galáxia (é o que a lente distorce lá dentro)
   const CUBE = lowEnd ? 256 : 512;
@@ -1522,9 +1575,14 @@ function init() {
   }
 
   // ponto do braço mais próximo (em coordenadas da galáxia), ou null
+  // com a foto, braço é onde o mapa tem luz azul de estrelas novas (e não a espiral matemática)
   function armAt(local) {
     const r = Math.hypot(local.x, local.z);
     if (r < R0 * 0.85 || r > 12.8) return null;
+    if (photo) {
+      const k = mapIdx(local.x, local.z), b = mapPix[k + 2] / armLum(), warm = mapPix[k] > mapPix[k + 2] * 1.05;
+      return b > 0.32 && !warm ? new THREE.Vector3(local.x, 0, local.z) : null;
+    }
     const th = Math.atan2(local.z, local.x);
     let best = 1e9, bk = 0;
     for (let k = 0; k < 2; k++) {
@@ -2227,10 +2285,10 @@ function init() {
       armSkyMat.uniforms.uCtr.value.set(-tmp.x, -tmp.z).normalize();
       armSkyMat.uniforms.uAmt.value = sk;
       // o centro da galáxia, visto de dentro do disco, vira um brilho suave (não uma faixa estourada)
-      galMarch.uniforms.uBulge.value = 1 - 0.92 * sk;
+      galMarch.uniforms.uBulge.value = 1 - 0.92 * sk; galMarch.uniforms.uMapK.value = photo ? 1 - 0.5 * sk : 1;   // de dentro do braço, a luz difusa da foto se acumula: fica mais fraca
       volS.comp.uniforms.uExposure.value = 1.55 - 1.0 * sk;
       composerSys.render(dt);
-      armSky.visible = false; galMarch.uniforms.uBulge.value = 1;
+      armSky.visible = false; galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1;
       afterRender();
       return;
     }
@@ -2314,7 +2372,7 @@ function init() {
     // mostra um tipo de nebulosa de perto (para conferir o desenho de cada uma)
     showNeb(kind, dist = 1.9) {
       controls.autoRotate = false; galaxy.rotation.y = 0; galaxy.updateMatrixWorld();
-      const a = armAngle(7, 0), Cn = new THREE.Vector3(Math.cos(a) * 7, 0.15, Math.sin(a) * 7);
+      const a = armAngleP(7, 0), Cn = new THREE.Vector3(Math.cos(a) * 7, 0.15, Math.sin(a) * 7);
       nebKind = kind - 1; placeNebula(Cn); setNebula(true);
       const dir = Cn.clone().setY(0).normalize().negate();
       camera.position.copy(Cn).addScaledVector(dir, -NEB_R * dist).add(new THREE.Vector3(0, 0.12, 0));
@@ -2329,13 +2387,13 @@ function init() {
       planetTitle: $('#gxp-title').textContent
     }),
     // ponto de um braço na tela (para o teste clicar como uma pessoa)
-    armAngle,
+    armAngle: armAngleP,
     armScreen(k, r) {
-      const a = armAngle(r, k), w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
+      const a = armAngleP(r, k), w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
       return { x: (w.x + 1) / 2 * W, y: (1 - w.y) / 2 * H, onScreen: Math.abs(w.x) < 1 && Math.abs(w.y) < 1 && w.z < 1 };
     },
     between(r) {   // ponto entre os dois braços
-      const a = armAngle(r, 0) + Math.PI / 2, w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
+      const a = armAngleP(r, 0) + Math.PI / 2, w = galaxy.localToWorld(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)).project(camera);
       return { x: (w.x + 1) / 2 * W, y: (1 - w.y) / 2 * H };
     },
     armAt: (x, z) => !!armAt(new THREE.Vector3(x, 0, z)),
