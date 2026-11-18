@@ -28,6 +28,8 @@ jobs:
           baixa ngc1300-hubble https://cdn.esahubble.org/archives/images/large/heic0501a.jpg
           baixa ngc1232-eso  https://cdn.eso.org/images/large/eso9845d.jpg
           baixa m83-eso      https://cdn.eso.org/images/large/eso0825a.jpg
+          # a Via Láctea inteira em 360° (ESO/S. Brunier): a vista de dentro de uma galáxia espiral, para o mergulho no braço
+          curl -fsSL --retry 3 -A "Mozilla/5.0 (projeto escolar SENAI)" -o via.orig https://cdn.eso.org/images/large/eso0932a.jpg && mkdir -p ../../assets/tex/galaxia && convert via.orig -resize '4096x2048!' -quality 88 ../../assets/tex/galaxia/via-lactea-360.jpg; rm -f via.orig
           ls -la
           cat > LEIA-ME.md <<'EOF'
           # Fotos de referência da galáxia
@@ -37,12 +39,14 @@ jobs:
           - M51: NASA, ESA, S. Beckwith (STScI) e Hubble Heritage Team (heic0506a)
           - NGC 1300: NASA, ESA e Hubble Heritage Team (heic0501a)
           - NGC 1232: ESO (eso9845d)
+          - Via Láctea 360°: ESO/S. Brunier (eso0932a)
           - M83: ESO (eso0825a)
           EOF
       - name: Guardar no repositório
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tools/fotos-galaxias
+          rm -f tools/fotos-galaxias/*.jpg     # só a referência; o site usa as versões em assets/tex/galaxia
+          git add tools/fotos-galaxias assets/tex/galaxia
           git commit -m "Fotos de referência de galáxias (ESA/Hubble, ESO) [skip ci]" || exit 0
           for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep 5; done
