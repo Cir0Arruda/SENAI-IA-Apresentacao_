@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
   push:
     branches: [claude/senai-3d-big-bang-9it7tt]
-    paths: ['.github/workflows/gravar-videos.yml', 'tools/gravar-videos.mjs']
+    paths: ['.github/workflows/gravar-videos.yml', 'tools/gravar-videos.mjs', 'assets/js/cosmos.js']
 
 permissions:
   contents: write
@@ -57,7 +57,12 @@ jobs:
           sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
           for n in 1 2 3 4 5 6; do echo "file 'trecho-$n.mp4'"; done > lista.txt
           mkdir -p assets/video
-          ffmpeg -y -loglevel error -f concat -safe 0 -i lista.txt -c copy -movflags +faststart assets/video/bigbang.mp4
+          ffmpeg -y -loglevel error -f concat -safe 0 -i lista.txt -c copy junto.mp4
+          # duas passadas com taxa fixa: ~30 MB para 78 s (o GitHub não aceita arquivos acima de 100 MB, e a rede da escola agradece)
+          ffmpeg -y -loglevel error -i junto.mp4 -c:v libx264 -preset slow -b:v 2800k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -pass 1 -an -f null /dev/null
+          ffmpeg -y -loglevel error -i junto.mp4 -c:v libx264 -preset slow -b:v 2800k -maxrate 4500k -bufsize 9000k -pix_fmt yuv420p -pass 2 -an -movflags +faststart assets/video/bigbang.mp4
+          rm -f junto.mp4 ffmpeg2pass*
+          test $(stat -c %s assets/video/bigbang.mp4) -lt 95000000
           ffmpeg -y -loglevel error -ss 33 -i assets/video/bigbang.mp4 -frames:v 1 -q:v 3 assets/video/bigbang.jpg
           ls -la assets/video
       - name: Guardar no repositório

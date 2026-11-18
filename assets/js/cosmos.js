@@ -1337,7 +1337,7 @@ function init() {
     bloom.strength = lerp(lerp(1.1, 0.85, sstep(3, 6, t)), 0.35, gk) * lerp(1, 0.46, s2);
     bloom.threshold = lerp(lerp(0.55, 0.85, gk), 0.95, s2);
     renderer.toneMappingExposure = lerp(1, lerp(1.1, 0.92, s2), sstep(52, 56, t));
-    film.uniforms.uT.value = t; const gr = sstep(53, 58, t); film.uniforms.uGrain.value = lerp(0.06, 0.035, gr); film.uniforms.uCA.value = lerp(0.0009, 0.0005, gr);
+    film.uniforms.uT.value = t; const gr = sstep(53, 58, t); film.uniforms.uGrain.value = lerp(0.06, 0.035, gr) * (CAPTURE ? 0.25 : 1);   // no vídeo, quase sem granulado (ruído não comprime) film.uniforms.uCA.value = lerp(0.0009, 0.0005, gr);
     comp.render(dt);
     const a = ACTS[actIdx];
     hud(hudAt(t, h), (t - a.t0) / a.dur);
