@@ -2341,7 +2341,7 @@ function init(photo) {
     // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
     galMarch.uniforms.uBulge.value = 0.12 + 0.88 * sstep(6, 70, camD);
     // longe: a foto; perto: o volume 3D feito a partir dela (troca suave, sem corte)
-    const pk = photoDisk ? sstep(32, 72, camD) : 0;
+    const pk = photoDisk ? sstep(14, 40, camD) : 0;   // a foto vale até bem perto; o volume 3D só no mergulho para dentro do braço
     if (photoDisk) {
       photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
       galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.8 * pk;
@@ -2406,7 +2406,7 @@ function init(photo) {
     },
     camAt(x, y, z) { controls.autoRotate = false; camera.position.set(x, y, z); controls.target.set(0, 0, 0); controls.update(); return true; },
     state: () => ({
-      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, nebKinds: NEB_KINDS.length, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N, photo: !!photo,
+      mode, view, phase: trip ? trip.phase : null, nebOn, nebKind, nebKinds: NEB_KINDS.length, bulge: galMarch.uniforms.uBulge.value, armSky: armSkyMat.uniforms.uAmt.value, inNeb: !!(trip && trip.inNeb), sawNeb: !!(trip && trip.sawNeb), fps: lastFps, stars: N, starsTarget: reduce ? 50000 : lowEnd ? 65000 : 150000, photo: !!photo,
       cam: gPos.toArray(), caption: cap && cap.classList.contains('on') ? cap.textContent : '',
       planetLabels: PLANETS.filter(p => !p.label.classList.contains('off')).length,
       hero: !$('#gx-hero').hidden, sysPanel: !$('#gx-sys').hidden, planetPanel: !$('#gx-planet').hidden, bhPanel: !$('#gx-bh').hidden,
