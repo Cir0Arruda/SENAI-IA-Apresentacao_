@@ -217,21 +217,21 @@ function init() {
         // ---- borda de fora: os braços se quebram em pedaços e ramos (como na M101 e na M74) ----
         float frag = smoothstep(0.52, 0.8, fb2(vec2(s * 0.55, x * 0.7) + 21.0)) * exp(-pow((x + 0.6) / 2.4, 2.0)) * smoothstep(5.5, 9.5, r0) * smoothstep(13.5, 10.5, r0);
         // ---- núcleo: perfil de Sérsic (n ≈ 2), denso e amarelado, como o bojo de estrelas velhas das fotos ----
-        float sers = exp(-3.67 * (pow(r0 / 1.15, 0.5) - 1.0)) * 0.085 + exp(-r0 * r0 / 0.03) * 1.6;   // + o núcleo, quase um ponto
+        float sers = exp(-3.67 * (pow(r0 / 1.45, 0.5) - 1.0)) * 0.07 + exp(-r0 * r0 / 0.03) * 1.6;   // + o núcleo, quase um ponto
         float lum = (0.5 + 0.5 * smoothstep(R0, R0 + 2.5, r0)) * exp(-max(r0 - 3.0, 0.0) / 9.0);
         // ---- cores (aproximadas das fotos do Hubble em cor real) ----
-        vec3 OLD = vec3(1.0, 0.82, 0.6), DISK = vec3(0.95, 0.87, 0.78), YOUNG = vec3(0.68, 0.79, 1.0), HAZE = vec3(0.55, 0.68, 1.0);
-        vec3 HII = vec3(1.0, 0.4, 0.46), CL = vec3(0.84, 0.9, 1.0);
+        vec3 OLD = vec3(1.0, 0.82, 0.6), DISK = vec3(1.0, 0.84, 0.66), YOUNG = vec3(0.68, 0.79, 1.0), HAZE = vec3(0.55, 0.68, 1.0);
+        vec3 HII = vec3(1.0, 0.34, 0.52), CL = vec3(0.84, 0.9, 1.0);
         float a = env * along * lum;
-        vec3 E = DISK * disk * 0.62                                   // luz das estrelas velhas entre os braços (não é vazio)
+        vec3 E = DISK * disk * 0.48                                   // luz das estrelas velhas entre os braços (não é vazio)
                + OLD * (bar * 0.75 + ansae * 0.45 + min(sers, 3.0))
                + YOUNG * frag * a * 0.5 + HII * frag * hii * a * 1.2
-               + YOUNG * young * a * (0.42 + 0.22 * fine)
+               + YOUNG * young * a * (0.48 + 0.24 * fine)
                + HAZE * haze * env * lum * 0.22
                + CL * clump * a * 1.1
                + YOUNG * spur * a * 0.14
                + CL * spark * young * a * 0.6
-               + HII * hii * a * 3.0;
+               + HII * hii * a * 3.6;
         E *= smoothstep(14.0, 12.0, r0);
         // ---- poeira ----
         // faixa principal: estreita, na borda de dentro do braço, cheia de filamentos
