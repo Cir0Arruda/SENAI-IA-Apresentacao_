@@ -80,6 +80,11 @@ function init(photo, pano) {
   controls.zoomSpeed = 0.7;
   controls.autoRotate = !reduce;
   controls.autoRotateSpeed = 0.22;
+  // parada, a câmera "respira": sobe e desce devagar (ciclo de 24 s, o mesmo do vídeo) e mostra a espessura do disco
+  let heldUntil = 0, breathT = 0;
+  controls.addEventListener('start', () => { heldUntil = Infinity; });
+  controls.addEventListener('end', () => { heldUntil = breathT + 6; });
+  const breathSph = new THREE.Spherical();
 
   const sysCam = new THREE.PerspectiveCamera(50, 1, 0.1, 5000);
   const bgCam = new THREE.PerspectiveCamera(50, 1, 0.002, 2000);   // galáxia vista de dentro do sistema
@@ -407,6 +412,10 @@ function init(photo, pano) {
     }
     void main() {
       vec3 p = position;
+      ${photo ? `// cada estrela orbita o centro com velocidade quase constante (curva de rotação plana, como a da Via Láctea):
+      // as de dentro dão a volta mais depressa e atravessam os braços, que giram como um bloco
+      { float rr = max(length(p.xz), 0.8), da = uTime * (0.16 / rr - 0.022) * 0.35, cs = cos(da), sn = sin(da);
+        p.xz = vec2(cs * p.x - sn * p.z, sn * p.x + cs * p.z); }` : ''}
       float wob = uTime * (0.15 + aSeed * 0.25) + aSeed * 60.0;
       p.xz += vec2(cos(wob), sin(wob)) * 0.01;
       vec2 d = p.xz - uMouse.xz;
@@ -457,21 +466,44 @@ function init(photo, pano) {
   // fotorrealista de verdade. Ao chegar perto (viagem ao braço, buraco negro) ela passa aos poucos para o volume 3D.
   let photoDisk = null, hidePhoto = false;          // hidePhoto: só para o teste medir quanto da luz vem da foto
   if (photo) {
-    photoDisk = new THREE.Mesh(new THREE.PlaneGeometry(SPAN, SPAN), new THREE.ShaderMaterial({
-      uniforms: { tP: { value: photoTex }, uK: { value: 1 } },
-      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-      fragmentShader: `uniform sampler2D tP; uniform float uK; varying vec2 vUv;
-        void main(){
-          // o pedaço que falta na foto original (borda direita) vem do lado oposto da galáxia, girado 180°
-          float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
-          vec3 c = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
-          float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
-          c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);      // tira o fundo do céu da foto
-          gl_FragColor = vec4(c * uK, 1.0);
-        }`,
-      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
-    }));
-    photoDisk.rotation.x = Math.PI / 2; photoDisk.renderOrder = -0.5; galaxy.add(photoDisk);
+    // a foto vira um disco com VOLUME: até 30 camadas finas empilhadas. Cada pixel da foto espalha a luz na vertical
+    // conforme o tipo de estrela: as jovens (azuis) num disco fino, as velhas (amarelas) num disco grosso, e no centro
+    // o bojo, quase redondo. A soma das camadas dá exatamente a foto vista de cima; inclinada, aparece a espessura.
+    const NL = lowEnd ? 24 : 44, YM = 1.25, DY = 2 * YM / NL, uK = { value: 1 };
+    photoDisk = new THREE.Group(); photoDisk.renderOrder = -0.5;
+    const geo = new THREE.PlaneGeometry(SPAN, SPAN);
+    for (let i = 0; i < NL; i++) {
+      const y = -YM + (i + 0.5) * DY;
+      const m = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+        uniforms: { tP: { value: photoTex }, uK, uY: { value: y } },
+        vertexShader: `varying vec2 vUv; varying float vG; void main(){ vUv = uv;
+          vec4 w = modelMatrix * vec4(position, 1.0);
+          vG = abs(dot(normalize(w.xyz - cameraPosition), normalize((modelMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz)));
+          gl_Position = projectionMatrix * viewMatrix * w; }`,
+        fragmentShader: `uniform sampler2D tP; uniform float uK, uY; varying vec2 vUv; varying float vG;
+          float F(float y, float h){ return sign(y) * h * (1.0 - exp(-abs(y) / h)); }
+          void main(){
+            float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
+            // longe do plano a luz é mais espalhada: as camadas de cima usam a foto mais borrada (sem "pente" de cópias)
+            // e de lado (olhar rasante) as camadas também se borram, senão aparecem como listras
+            float gk = smoothstep(0.4, 0.07, vG);
+            float bias = max(clamp(abs(uY) * 9.0, 0.0, 5.0), gk * 4.0);
+            vec3 c = mix(texture2D(tP, 1.0 - vUv, bias).rgb, texture2D(tP, vUv, bias).rgb, inP);
+            vec3 c0 = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
+            float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
+            c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
+            c0 = max(c0 - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
+            float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
+            float h = mix(0.17 + 0.95 * exp(-r / 1.1), 0.045, young);             // altura do disco (no centro, o bojo)
+            float w = (F(uY + ${(DY / 2).toFixed(4)}, h) - F(uY - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
+            gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
+          }`,
+        transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+      }));
+      m.rotation.x = Math.PI / 2; m.position.y = y; m.renderOrder = -0.5; photoDisk.add(m);
+    }
+    photoDisk.material = { uniforms: { uK } };       // atalho: o loop ajusta o brilho de todas as camadas de uma vez
+    galaxy.add(photoDisk);
   }
   // perto (dentro da galáxia) as estrelas ficam menores, para não virarem bolas
   function setStarView(k) {
@@ -2327,6 +2359,15 @@ function init(photo, pano) {
     }
 
     if (mode === 'galaxy' && !reduce) galaxy.rotation.y -= dt * 0.022;
+    if (controls.enabled && controls.autoRotate && mode === 'galaxy') {
+      breathT += dt;
+      if (breathT > heldUntil) {
+        const w = TAU / 24, k = Math.min(1, (breathT - heldUntil) / 4);       // depois de soltar o mouse, volta aos poucos
+        breathSph.setFromVector3(camera.position.clone().sub(controls.target));
+        breathSph.phi = clamp(breathSph.phi + k * 0.16 * w * Math.cos(w * breathT) * dt, 0.3, 1.5);
+        camera.position.setFromSpherical(breathSph).add(controls.target);
+      }
+    }
     if (controls.enabled) controls.update();
     // de longe, lente fechada (sem distorção de perspectiva, como numa foto de telescópio);
     // de perto, lente aberta (sensação de estar dentro da galáxia)
@@ -2346,7 +2387,7 @@ function init(photo, pano) {
     tmp2.copy(camRight).multiplyScalar(5.2 * BH_SCALE).project(camera);
     const rE = Math.hypot((tmp2.x - tmp.x) / 2 * (W / H), (tmp2.y - tmp.y) / 2);
     // visto de dentro do disco, a poeira esconde o centro: o buraco negro some junto
-    const camD = camera.position.length(), bhF = camD < 4 || mode === 'warp' ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD) * sstep(46, 22, camD);   // de longe, como numa foto, o buraco negro é pequeno demais para aparecer
+    const camD = camera.position.length(), bhF = camD < 4 || mode === 'warp' ? 1 : sstep(0.1, 0.26, Math.abs(camera.position.y) / camD) * sstep(9, 4.5, camD);   // como numa foto, o buraco negro só aparece quando a câmera chega bem perto dele
     bbMat.uniforms.uFade.value = bhF; bb.visible = bhF > 0.01;
     lensPass.uniforms.uR.value = tmp.z < 1 ? rE * bhF : 0;
 
@@ -2357,7 +2398,7 @@ function init(photo, pano) {
     const pk = photoDisk ? sstep(2.5, 7, camD) : 0;   // a foto fica até a câmera chegar ao braço; lá dentro, o céu é a foto da Via Láctea
     if (photoDisk) {
       photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
-      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.8 * pk;
+      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.5 * pk;
     }
     composer.render(dt);
     galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1; starMat.uniforms.uAlpha.value = 1;
@@ -2475,6 +2516,8 @@ function init(photo, pano) {
         };
       });
     },
+    // põe a câmera num ponto (para fotos de teste de outros ângulos)
+    setCam(x, y, z) { controls.autoRotate = false; camera.position.set(x, y, z); controls.update(); return true; },
     // quanto da luz na tela vem da fotografia: a mesma vista com e sem o disco da foto
     async photoShare() {
       if (!photoDisk) return { share: 0, k: 0 };
