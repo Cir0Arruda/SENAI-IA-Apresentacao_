@@ -2317,6 +2317,7 @@ function init(photo, pano) {
       armSkyMat.uniforms.uCtr.value.set(-tmp.x, -tmp.z).normalize();
       armSkyMat.uniforms.uAmt.value = sk;
       // o centro da galáxia, visto de dentro do disco, vira um brilho suave (não uma faixa estourada)
+      if (photoDisk) photoDisk.visible = false;      // dentro do sistema, o céu é a foto da Via Láctea (o disco da NGC 1232 não aparece)
       galMarch.uniforms.uBulge.value = 1 - (pano ? 1 : 0.92) * sk; galMarch.uniforms.uMapK.value = pano ? 1 - sk : photo ? 1 - 0.5 * sk : 1;   // de dentro do braço, a luz difusa da foto se acumula: fica mais fraca
       volS.comp.uniforms.uExposure.value = 1.55 - 1.0 * sk;
       composerSys.render(dt);
@@ -2353,7 +2354,7 @@ function init(photo, pano) {
     // de perto a barra ocupa boa parte da tela: a "exposição" do centro diminui, como numa câmera
     galMarch.uniforms.uBulge.value = 0.12 + 0.88 * sstep(6, 70, camD);
     // longe: a foto; perto: o volume 3D feito a partir dela (troca suave, sem corte)
-    const pk = photoDisk ? sstep(14, 40, camD) : 0;   // a foto vale até bem perto; o volume 3D só no mergulho para dentro do braço
+    const pk = photoDisk ? sstep(2.5, 7, camD) : 0;   // a foto fica até a câmera chegar ao braço; lá dentro, o céu é a foto da Via Láctea
     if (photoDisk) {
       photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
       galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.8 * pk;
