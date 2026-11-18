@@ -289,7 +289,7 @@ html.gx-closing .gx {
 @media (max-width: 1100px) { .gx-bhlab { display: none; } }
 
 /* ---------- Modo vídeo (padrão): a galáxia é um vídeo gravado do 3D; o 3D ao vivo abre no botão ---------- */
-.gx-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; pointer-events: none; }
+.gx-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; background: #05040d; display: none; pointer-events: none; }   /* no celular o corte fica na galáxia */
 html.vid .gx-video { display: block; }
 html.vid .gx-canvas, html.vid .gx-enter, html.vid .gx-hint, html.vid .gx-stat, html.vid .gx-how, html.vid .gx-labels, html.vid .gx-cap { display: none !important; }
 .gx-live { margin-top: 14px; background: rgba(21, 21, 29, .88); color: #fff; }

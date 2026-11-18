@@ -31,7 +31,7 @@ const { chromium } = req('playwright');
 
 const argv = process.argv.slice(2), which = argv[0];
 const opt = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 ? argv[i + 1] : d; };
-const W = +opt('largura', 1280), H = +opt('altura', 720), FPS = +opt('fps', 30), CRF = opt('crf', '20');
+const W = +opt('largura', 1280), H = +opt('altura', 720), FPS = +opt('fps', 30), CRF = opt('crf', '23');
 if (!['galaxia', 'bigbang', 'estudio'].includes(which)) { console.error('Use: galaxia | bigbang | estudio'); process.exit(2); }
 const OUT = path.resolve(opt('saida', path.join(ROOT, 'assets/video', which === 'estudio' ? 'estudio-3d.mp4' : `${which}.mp4`)));
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
@@ -107,7 +107,9 @@ if (which === 'galaxia') {
 
 if (which === 'bigbang') {
   // o final inteiro, com as legendas e o relógio cósmico gravados na imagem
-  await page.goto(BASE + '?teste&gravar#28', { waitUntil: 'load' });
+  await page.goto(BASE + '?teste&gravar', { waitUntil: 'load' });
+  const idx = await page.evaluate(() => [...document.querySelectorAll('.slide')].findIndex(s => s.dataset.id === 'cosmos'));   // o número do slide muda quando entram slides novos
+  await page.goto(BASE + `?teste&gravar&slide=${idx + 1}#${idx + 1}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.IACosmos && window.IADemos?.cosmos, null, { timeout: 120000, polling: 250 });
   await page.evaluate(() => { if (!document.querySelector('.cos.cinema')) window.IADemos.cosmos.enter(); });
   await HIDE('.cos-ctrl,.cos-exit,.cos-fs,.cos-free-tip,.cos-end{display:none!important}.cos-label{transition:none}');
