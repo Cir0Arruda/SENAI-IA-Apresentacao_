@@ -46,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          rm -f *.jpg
+          rm -f tools/fotos-galaxias/*.jpg     # só a referência; o site usa as versões em assets/tex/galaxia
           git add tools/fotos-galaxias assets/tex/galaxia
           git commit -m "Fotos de referência de galáxias (ESA/Hubble, ESO) [skip ci]" || exit 0
           for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep 5; done

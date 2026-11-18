@@ -119,6 +119,8 @@ async function desktop(browser) {
   if (s.photo) {
     const ps = await page.evaluate(() => window.IAGalaxy.test.photoShare());
     check('De longe, a galáxia é a fotografia real (NGC 1232, ESO)', ps.k > 0.99 && ps.share > 0.8, `${(ps.share * 100).toFixed(0)}% da luz vem da foto`);
+    const pf = await page.evaluate(() => window.IAGalaxy.test.photoFidelity());
+    check('A imagem na tela confere com a foto, ponto a ponto', pf.r > 0.85 && pf.n > 500, `correlação ${pf.r.toFixed(3)} em ${pf.n} pontos`);
   }
   check('Sem brilho estourado na abertura', st.satFrac < 0.004, `${(st.satFrac * 100).toFixed(2)}% dos pixels em branco puro`);
   check('7 tipos de nebulosa para atravessar', s.nebKinds >= 7, `${s.nebKinds} tipos`);

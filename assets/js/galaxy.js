@@ -44,10 +44,13 @@ function noGL(msg) {
 // e o volume, as estrelas e a viagem continuam em 3D. Sem a foto, o mapa é desenhado só com código.
 const PHOTO_URL = 'assets/tex/galaxia/ngc1232.jpg';
 let started = false;
-const start = img => { if (started) return; started = true; try { init(img); } catch (err) { noGL(err && err.message); } };
-{ const img = new Image(); img.onload = () => start(img); img.onerror = () => start(null); img.src = PHOTO_URL; setTimeout(() => start(null), 9000); }
+// de dentro de um braço, o céu é a FOTO da Via Láctea inteira em 360° (ESO/S. Brunier, eso0932a)
+const PANO_URL = 'assets/tex/galaxia/via-lactea-360.jpg';
+const load = u => new Promise(res => { const img = new Image(); img.onload = () => res(img); img.onerror = () => res(null); img.src = u; });
+const start = (img, pano) => { if (started) return; started = true; try { init(img, pano); } catch (err) { noGL(err && err.message); } };
+Promise.all([load(PHOTO_URL), load(PANO_URL)]).then(([a, b]) => start(a, b)); setTimeout(() => start(null, null), 12000);
 
-function init(photo) {
+function init(photo, pano) {
   /* ---------- Renderizador e câmeras ---------- */
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', alpha: false });
   if (!renderer.capabilities.isWebGL2) throw new Error('WebGL2 indisponível');
@@ -570,11 +573,13 @@ function init(photo) {
      De dentro do disco, a galáxia aparece como uma faixa no céu, como a Via Láctea:
      milhares de estrelas resolvidas, faixas escuras de poeira e nebulosas coloridas.
      Tudo é calculado por direção (sem textura), então fica nítido em qualquer resolução. */
+  let panoTex = null;
+  if (pano) { panoTex = new THREE.Texture(pano); panoTex.colorSpace = THREE.NoColorSpace; panoTex.generateMipmaps = true; panoTex.minFilter = THREE.LinearMipmapLinearFilter; panoTex.wrapS = THREE.RepeatWrapping; panoTex.needsUpdate = true; }
   const armSkyMat = new THREE.ShaderMaterial({
-    uniforms: { uGalInv: { value: new THREE.Matrix4() }, uCtr: { value: new THREE.Vector2(1, 0) }, uSeed: { value: 0 }, uAmt: { value: 1 } },
+    uniforms: { uGalInv: { value: new THREE.Matrix4() }, uCtr: { value: new THREE.Vector2(1, 0) }, uSeed: { value: 0 }, uAmt: { value: 1 }, uPano: { value: panoTex }, uPanoOn: { value: pano ? 1 : 0 } },
     vertexShader: `varying vec3 vD; void main(){ vD = (modelMatrix * vec4(position, 0.0)).xyz; gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0); gl_Position.z = gl_Position.w; }`,
     fragmentShader: /* glsl */`
-      uniform mat4 uGalInv; uniform vec2 uCtr; uniform float uSeed, uAmt; varying vec3 vD;
+      uniform mat4 uGalInv; uniform vec2 uCtr; uniform float uSeed, uAmt, uPanoOn; uniform sampler2D uPano; varying vec3 vD;
       ${GLSL_NOISE}
       vec3 starLayer(vec3 d, float K, float dens, float pw){
         vec3 g = d * K, id = floor(g), f = fract(g) - 0.5;
@@ -623,6 +628,13 @@ function init(photo) {
         float sd = 0.05 + 0.5 * band + 0.35 * core * (1.0 - dust);
         vec3 S = starLayer(d, 150.0, sd * 0.5, pw) + starLayer(d, 340.0, sd, pw) * 0.7 + starLayer(d, 700.0, 0.1 + 0.6 * band, pw) * 0.45;
         S *= 1.0 - dust * 0.8;
+        if (uPanoOn > 0.5) {
+          // a foto de 360°: centro galáctico no meio da imagem, latitude galáctica na vertical
+          float lon = atan(hd.x * uCtr.y - hd.y * uCtr.x, dot(hd, uCtr));
+          vec2 pu = vec2(0.5 - lon / 6.2831853, 0.5 + asin(clamp(lat, -1.0, 1.0)) / 3.14159265);
+          gl_FragColor = vec4(max(texture2D(uPano, pu).rgb - 0.09, 0.0) * 0.86 * uAmt, 1.0);   // tira o brilho de fundo do céu da foto
+          return;
+        }
         gl_FragColor = vec4((E + S) * uAmt, 1.0);
       }`,
     side: THREE.BackSide, depthTest: false, depthWrite: false
@@ -2305,7 +2317,7 @@ function init(photo) {
       armSkyMat.uniforms.uCtr.value.set(-tmp.x, -tmp.z).normalize();
       armSkyMat.uniforms.uAmt.value = sk;
       // o centro da galáxia, visto de dentro do disco, vira um brilho suave (não uma faixa estourada)
-      galMarch.uniforms.uBulge.value = 1 - 0.92 * sk; galMarch.uniforms.uMapK.value = photo ? 1 - 0.5 * sk : 1;   // de dentro do braço, a luz difusa da foto se acumula: fica mais fraca
+      galMarch.uniforms.uBulge.value = 1 - (pano ? 1 : 0.92) * sk; galMarch.uniforms.uMapK.value = pano ? 1 - sk : photo ? 1 - 0.5 * sk : 1;   // de dentro do braço, a luz difusa da foto se acumula: fica mais fraca
       volS.comp.uniforms.uExposure.value = 1.55 - 1.0 * sk;
       composerSys.render(dt);
       armSky.visible = false; galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1;
@@ -2434,6 +2446,31 @@ function init(photo) {
           const st = view === 'galaxy' ? pixelStats(d, ring.concat(centre)) : pixelStats(d);
           if (view === 'galaxy') { st.centre = (st.samples[96] + st.samples[97]) / 2; st.samples = st.samples.slice(0, 96); }
           res(st);
+        };
+      });
+    },
+    // fidelidade à foto: milhares de pontos do disco projetados na tela; correlação (Pearson) entre o brilho
+    // da tela e o da foto original no mesmo ponto (1 = igual). Vale para qualquer ângulo da câmera.
+    photoFidelity() {
+      return new Promise(res => {
+        statWait = ({ px, w, h }) => {
+          if (!photo) { res({ r: 0, n: 0 }); return; }
+          const S = 96, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+          g.drawImage(photo, 0, 0, S, S); const pd = g.getImageData(0, 0, S, S).data;      // foto reduzida: compara a estrutura
+          const A = [], B = [], v = new THREE.Vector3(), rr = mulberry32(7), BL = Math.max(2, Math.round(h / 180));
+          for (let i = 0; i < 6000; i++) {
+            const x = (rr() * 2 - 1) * 12, z = (rr() * 2 - 1) * 12; if (x * x + z * z > 144 || x * x + z * z < 2) continue;
+            const u = x / SPAN + 0.5, vv = z / SPAN + 0.5; if (u > 0.8 || vv < 0.07) continue;    // só onde a foto original existe
+            v.set(x, 0, z); galaxy.localToWorld(v); v.project(camera); if (Math.abs(v.x) > 0.98 || Math.abs(v.y) > 0.98 || v.z > 1) continue;
+            const sx = Math.floor((v.x + 1) / 2 * w), sy = Math.floor((v.y + 1) / 2 * h);
+            let L1 = 0, m = 0;
+            for (let dy = -BL; dy <= BL; dy++) for (let dx = -BL; dx <= BL; dx++) { const k = ((sy + dy) * w + sx + dx) * 4; if (k < 0 || k >= px.length) continue; L1 += 0.3 * px[k] + 0.5 * px[k + 1] + 0.2 * px[k + 2]; m++; }
+            const pi = (Math.floor((1 - vv) * (S - 1)) * S + Math.floor(u * (S - 1))) * 4;
+            A.push(L1 / Math.max(1, m)); B.push(0.3 * pd[pi] + 0.5 * pd[pi + 1] + 0.2 * pd[pi + 2]);
+          }
+          const n = A.length, ma = A.reduce((s, x) => s + x, 0) / n, mb = B.reduce((s, x) => s + x, 0) / n;
+          let sab = 0, saa = 0, sbb = 0; for (let i = 0; i < n; i++) { const da = A[i] - ma, db = B[i] - mb; sab += da * db; saa += da * da; sbb += db * db; }
+          res({ r: sab / Math.sqrt(saa * sbb + 1e-9), n });
         };
       });
     },
