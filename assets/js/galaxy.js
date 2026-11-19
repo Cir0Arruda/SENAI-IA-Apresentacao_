@@ -2373,7 +2373,7 @@ function init(photo, pano) {
       if (breathT > heldUntil) {
         const w = TAU / 24, k = Math.min(1, (breathT - heldUntil) / 4);       // depois de soltar o mouse, volta aos poucos
         breathSph.setFromVector3(camera.position.clone().sub(controls.target));
-        breathSph.phi = clamp(breathSph.phi + k * 0.16 * w * Math.cos(w * breathT) * dt, 0.3, 1.5);
+        breathSph.phi = clamp(breathSph.phi - k * 0.16 * w * Math.cos(w * breathT) * dt, 0.3, 1.5);   // primeiro sobe (vista de frente, como a foto), depois desce e mostra a espessura
         camera.position.setFromSpherical(breathSph).add(controls.target);
       }
     }

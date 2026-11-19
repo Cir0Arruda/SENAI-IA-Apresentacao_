@@ -77,6 +77,57 @@ function armsOnRing(samples) {
   return { n: s.length, peaks, contrast: p90 / Math.max(1, p10) };
 }
 
+/* As medidas "sem corte" comparam a velocidade da câmera de um quadro para o seguinte. Num computador sem placa
+   de vídeo a cena roda a 1–20 quadros/s e um único quadro pode durar meio segundo: a medida vira sorteio.
+   Nesse caso a mesma viagem é refeita com o relógio da página trocado por um relógio virtual (cada quadro anda
+   1/60 s, como num PC com placa de vídeo) — o mesmo método de tests/viagem-60fps.test.mjs. */
+const CLOCK60 = `(() => {
+  let now = 0, id = 0; const q = [];
+  performance.now = () => now; const d0 = Date.now(); Date.now = () => d0 + now;
+  window.requestAnimationFrame = cb => { q.push([++id, cb]); return id; };
+  window.cancelAnimationFrame = i => { const k = q.findIndex(x => x[0] === i); if (k >= 0) q.splice(k, 1); };
+  window.__step = ms => {
+    now += ms;
+    for (const a of document.getAnimations()) { try { if (a.playState === 'running') a.pause(); if (a.playState !== 'finished') a.currentTime = (a.currentTime || 0) + ms; } catch {} }
+    const run = q.splice(0); for (const [, cb] of run) { try { cb(now); } catch (e) { console.error(e); } }
+  };
+})();`;
+let trip60 = null;
+async function viagem60(browser) {
+  if (trip60) return trip60;
+  const page = await browser.newPage();
+  try {
+    await page.setViewport({ width: 960, height: 600, deviceScaleFactor: 0.5 });   // só a câmera importa aqui
+    await page.evaluateOnNewDocument(CLOCK60);
+    await page.goto(`${BASE}?teste`, { waitUntil: 'load', timeout: 60000 });
+    await page.waitForFunction(() => window.IAGalaxy && window.IAGalaxy.test, { timeout: 120000, polling: 500 });
+    const step = n => page.evaluate(k => { for (let i = 0; i < k; i++) window.__step(1000 / 60); }, n);
+    const st = () => page.evaluate(() => window.IAGalaxy.test.state());
+    for (let i = 0; i < 10; i++) await step(30);
+    await page.evaluate(() => window.IAGalaxy.test.record(true));
+    const t = await page.evaluate(() => window.IAGalaxy.test.armScreen(1, 7));
+    await page.mouse.move(t.x, t.y); await step(2); await page.mouse.click(t.x, t.y);
+    for (let k = 0, ok = false; k < 400 && !ok; k++) { await step(5); const s = await st(); ok = s.mode === 'system' && s.view === 'system'; }
+    await step(60);
+    const c1 = continuity(await page.evaluate(() => window.IAGalaxy.test.record(false)), 'galaxy', 'system');
+    await step(60);
+    await page.evaluate(() => window.IAGalaxy.test.record(true));
+    await page.evaluate(() => document.querySelector('#gxs-back')?.click());
+    for (let k = 0, ok = false; k < 160 && !ok; k++) { await step(15); const s = await st(); ok = s.mode === 'galaxy' && s.view === 'galaxy' && !s.phase; }
+    await step(60);
+    const c2 = continuity(await page.evaluate(() => window.IAGalaxy.test.record(false)), 'system', 'galaxy');
+    trip60 = { c1, c2 };
+  } finally { await page.close(); }
+  return trip60;
+}
+// usa a medida em tempo real se a cena rodou a 30 quadros/s ou mais; senão, a da viagem a 60 quadros/s virtuais
+async function trocaMedida(browser, rec, which, fromView, toView) {
+  const frameMs = rec.length > 1 ? (rec[rec.length - 1].t - rec[0].t) / (rec.length - 1) : 1e9;
+  if (frameMs <= 1000 / 30) return { c: continuity(rec, fromView, toView), how: '' };
+  const v = await viagem60(browser);
+  return { c: v[which], how: `medido a 60 quadros/s virtuais; aqui a cena roda a ${(1000 / frameMs).toFixed(0)} quadros/s` };
+}
+
 async function openPage(browser, viewport) {
   const page = await browser.newPage();
   await page.setViewport(viewport);
@@ -174,9 +225,10 @@ async function desktop(browser) {
   check('A câmera atravessa a nebulosa no caminho', s.sawNeb && rec.some(r => r.inNeb));
   const phases = [...new Set(rec.map(r => r.phase).filter(Boolean))];
   check('Fases na ordem: entrada no braço → chegada', phases.join('>') === 'in>arrive', phases.join(' > '));
-  const c1 = continuity(rec, 'galaxy', 'system');
-  check('Sem corte: posição contínua na troca galáxia → sistema', c1.found && c1.speedRatio > 0.3 && c1.speedRatio < 3.5, c1.found ? `velocidade ×${c1.speedRatio.toFixed(2)}` : 'troca não encontrada');
-  check('Sem corte: direção contínua na troca', c1.found && c1.turnAt < Math.max(40, c1.turnBefore * 4), c1.found ? `${c1.turnAt.toFixed(1)}°/s` : '');
+  const { c: c1, how: how1 } = await trocaMedida(browser, rec, 'c1', 'galaxy', 'system');
+  const w1 = how1 ? ` · ${how1}` : '';
+  check('Sem corte: posição contínua na troca galáxia → sistema', c1.found && c1.speedRatio > 0.3 && c1.speedRatio < 3.5, (c1.found ? `velocidade ×${c1.speedRatio.toFixed(2)}` : 'troca não encontrada') + w1);
+  check('Sem corte: direção contínua na troca', c1.found && c1.turnAt < Math.max(40, c1.turnBefore * 4), (c1.found ? `${c1.turnAt.toFixed(1)}°/s` : '') + w1);
   // velocidade quadro a quadro: um corte apareceria como um pico isolado
   const spd = rec.slice(1).map((r, k) => Math.hypot(...r.p.map((v, j) => v - rec[k].p[j])) / Math.max(1, r.t - rec[k].t));
   let spike = 0;
@@ -221,9 +273,9 @@ async function desktop(browser) {
   const rec2 = await page.evaluate(() => window.IAGalaxy.test.record(false));
   s = await state(page);
   check('Volta para a galáxia', back && s.hero && !s.nebOn);
-  const c2 = continuity(rec2, 'system', 'galaxy');
+  const { c: c2, how: how2 } = await trocaMedida(browser, rec2, 'c2', 'system', 'galaxy');
   check('Sem corte na volta (sistema → galáxia)', c2.found && c2.speedRatio > 0.3 && c2.speedRatio < 3.5 && c2.turnAt < Math.max(40, c2.turnBefore * 4),
-    c2.found ? `velocidade ×${c2.speedRatio.toFixed(2)} · ${c2.turnAt.toFixed(1)}°/s` : 'troca não encontrada');
+    (c2.found ? `velocidade ×${c2.speedRatio.toFixed(2)} · ${c2.turnAt.toFixed(1)}°/s` : 'troca não encontrada') + (how2 ? ` · ${how2}` : ''));
 
   // marcador fixo também leva ao sistema
   await sleep(600);
