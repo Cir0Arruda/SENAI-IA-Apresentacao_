@@ -564,7 +564,7 @@ function init(photo, pano) {
       vertexShader: `uniform float uPx, uCube; attribute vec3 aColor; attribute float aSize, aSeed; varying vec3 vC; varying float vS;
         void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
           float z = max(-mv.z, 0.01); gl_PointSize = min(aSize * uPx / z, 70.0);
-          vC = aColor * smoothstep(0.8, 3.0, z) * (1.0 - uCube); vS = aSeed; }`,
+          vC = aColor * smoothstep(0.8, 3.0, z) * (1.0 - uCube) * (1.0 - 0.75 * smoothstep(25.0, 80.0, z)); vS = aSeed; }`,   // de longe se misturam na foto
       fragmentShader: `${GLSL_NOISE} varying vec3 vC; varying float vS;
         void main(){ vec2 p = gl_PointCoord - 0.5; float r = length(p) * 2.0; if (r > 1.0) discard;
           float a = atan(p.y, p.x);
@@ -2275,14 +2275,17 @@ function init(photo, pano) {
     [bhLabel, pinLabel, reticle, armLabel].forEach(el => el.classList.add('off'));
   }
   // posição da câmera no espaço da galáxia (para a nebulosa, as legendas e os testes)
-  const gPos = new THREE.Vector3(), gDir = new THREE.Vector3();
+  const gPos = new THREE.Vector3(), gDir = new THREE.Vector3(), gPrev = new THREE.Vector3(), segT = new THREE.Line3(), segQ = new THREE.Vector3();
   function trackGalaxyCam() {
     const cam = view === 'system' ? bgCam : camera;
     cam.updateMatrixWorld();
+    gPrev.copy(gPos);
     gPos.setFromMatrixPosition(cam.matrixWorld);
     cam.getWorldDirection(gDir);
     if (trip) {
-      const inN = nebOn && gPos.distanceTo(trip.Cn) < NEB_R * 0.95;
+      // olha o trecho percorrido desde o último quadro: num PC lento a câmera pode atravessar a nebulosa entre dois quadros
+      segT.set(gPrev.lengthSq() ? gPrev : gPos, gPos).closestPointToPoint(trip.Cn, true, segQ);
+      const inN = nebOn && segQ.distanceTo(trip.Cn) < NEB_R * 0.95;
       if (inN && !trip.inNeb && trip.phase !== 'leave' && trip.phase !== 'out') caption('neb', ...NEB_KINDS[Math.max(0, nebKind)], 3400);
       trip.inNeb = inN; trip.sawNeb = trip.sawNeb || inN;
     }

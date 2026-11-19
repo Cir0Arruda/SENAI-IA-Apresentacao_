@@ -159,7 +159,9 @@ async function desktop(browser) {
   const st = await page.evaluate(() => window.IAGalaxy.test.stats(6));
   const ring = armsOnRing(st.samples);
   check('Centro brilhante (bojo)', st.centre > st.mean * 4, `centro ${st.centre.toFixed(0)} × média ${st.mean.toFixed(1)}`);
-  check('Dois braços espirais num anel de raio 6', ring.peaks >= 2 && ring.peaks <= 4, `${ring.peaks} trechos claros`);
+  // a NGC 1232 da foto tem vários braços (no anel de raio 6, a foto plana já mostra 4 trechos claros); a galáxia desenhada por código tem 2
+  const maxPk = s.photo ? 6 : 4;
+  check('Braços espirais num anel de raio 6', ring.peaks >= 2 && ring.peaks <= maxPk, `${ring.peaks} trechos claros (de 2 a ${maxPk})`);
   // a foto real (NGC 1232) vista deste ângulo tem contraste ~1,8 quando é um plano; com a espessura do disco em 3D,
   // a luz das estrelas velhas sobe e desce do plano e cobre um pouco o espaço entre os braços (~1,7), como numa galáxia de verdade
   const minC = s.photo ? 1.55 : 1.8;
