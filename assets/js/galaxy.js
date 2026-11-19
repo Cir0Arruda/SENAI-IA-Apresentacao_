@@ -377,7 +377,7 @@ function init(photo, pano) {
         }
         const mr = mapPix[k], mg = mapPix[k + 1], mb = mapPix[k + 2], mx = Math.max(mr, mg, mb, 1);
         const blue = mb > mr * 0.95, pink = mr > mg * 1.45 && mb > mg * 0.8;
-        y = gauss() * (photo ? (blue ? 0.07 + 0.008 * r : 0.18 + 0.025 * r) : (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r));   // com a foto: camadas grossas, as estrelas ficam em alturas diferentes
+        y = gauss() * (photo ? (blue ? 0.06 + 0.006 * r : 0.13 + 0.018 * r) : (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r));   // com a foto: camadas grossas, as estrelas ficam em alturas diferentes
         c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
         b = (0.2 + Math.pow(rand(), 4) * 0.7) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.4 + Math.pow(rand(), 4) * 1.1;
         if (blue && rand() < 0.08) { c.copy(PAL.young); s *= 1.3; b = 0.9; }
@@ -504,7 +504,7 @@ function init(photo, pano) {
             c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             c0 = max(c0 - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
-            float h = mix(0.26 + 0.035 * r + 1.25 * exp(-r / 1.5), 0.08 + 0.006 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
+            float h = mix(0.15 + 0.022 * r + 1.3 * exp(-r / 1.5), 0.06 + 0.005 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
             float w = (F(yS + ${(DY / 2).toFixed(4)}, h) - F(yS - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
             gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
           }`,
