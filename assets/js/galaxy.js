@@ -2435,7 +2435,7 @@ function init(photo, pano) {
     const pk = photoDisk ? sstep(2.5, 7, camD) : 0;   // a foto fica até a câmera chegar ao braço; lá dentro, o céu é a foto da Via Láctea
     if (photoDisk) {
       photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
-      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.62 * pk * sstep(16, 70, camD);   // de longe a foto manda; chegando perto, as estrelas soltas aparecem
+      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.7 * pk * sstep(16, 70, camD);   // de longe a foto manda; chegando perto, as estrelas soltas aparecem
     }
     composer.render(dt);
     galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1; starMat.uniforms.uAlpha.value = 1;

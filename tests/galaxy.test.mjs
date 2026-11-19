@@ -295,7 +295,7 @@ async function desktop(browser) {
 
   // buraco negro
   await page.click('#gx-enter');
-  const inBH = await waitFor(page, () => window.IAGalaxy.test.state().mode === 'inside', 8000);
+  const inBH = await waitFor(page, () => window.IAGalaxy.test.state().mode === 'inside', 25000);   // sem placa de vídeo a cena roda a menos de 1 quadro/s
   s = await state(page);
   check('Entrar no buraco negro', inBH && s.bhPanel);
   // transição suave: a última imagem some aos poucos (sem clarão branco)
