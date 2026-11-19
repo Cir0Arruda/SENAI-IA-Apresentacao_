@@ -1871,7 +1871,9 @@ function init(photo, pano) {
       tmpT.lerpVectors(trip.T0, trip.P, w1).lerp(tmpA.copy(trip.Q).addScaledVector(trip.F, 3), w2);
       camera.lookAt(tmpT); controls.target.copy(tmpT);
       setStarView(1 - clamp((camera.position.distanceTo(trip.Q) - 0.6) / 9, 0, 1));
-      if (t >= 1) { camera.position.copy(trip.Q); camera.lookAt(tmpT.copy(trip.Q).addScaledVector(trip.F, 3)); startArrival(trip.t0 + trip.ms); stepTrip(); }
+      // fim do mergulho: a câmera está no ponto de entrada, dentro da nebulosa. Registra esse instante antes de trocar de cena
+      // (num PC muito lento, nenhum quadro desenhado poderia cair dentro dela e a legenda da nebulosa se perderia)
+      if (t >= 1) { camera.position.copy(trip.Q); camera.lookAt(tmpT.copy(trip.Q).addScaledVector(trip.F, 3)); trackGalaxyCam(true); startArrival(trip.t0 + trip.ms); stepTrip(); }
     } else if (trip.phase === 'arrive') {
       const k = 1 - Math.pow(1 - t, 3);
       sysCam.position.lerpVectors(trip.a0, trip.a1, k);
@@ -2276,7 +2278,7 @@ function init(photo, pano) {
   }
   // posição da câmera no espaço da galáxia (para a nebulosa, as legendas e os testes)
   const gPos = new THREE.Vector3(), gDir = new THREE.Vector3(), gPrev = new THREE.Vector3(), segT = new THREE.Line3(), segQ = new THREE.Vector3();
-  function trackGalaxyCam() {
+  function trackGalaxyCam(only) {     // only: só confere a nebulosa, sem gravar o quadro (o próximo quadro gravado leva a marca)
     const cam = view === 'system' ? bgCam : camera;
     cam.updateMatrixWorld();
     gPrev.copy(gPos);
@@ -2285,7 +2287,9 @@ function init(photo, pano) {
     if (trip) {
       // olha o trecho percorrido desde o último quadro: num PC lento a câmera pode atravessar a nebulosa entre dois quadros
       segT.set(gPrev.lengthSq() ? gPrev : gPos, gPos).closestPointToPoint(trip.Cn, true, segQ);
-      const inN = nebOn && segQ.distanceTo(trip.Cn) < NEB_R * 0.95;
+      let inN = nebOn && segQ.distanceTo(trip.Cn) < NEB_R * 0.95;
+      if (only) { trip.nebHit = trip.nebHit || inN; trip.sawNeb = trip.sawNeb || inN; return; }
+      inN = inN || !!trip.nebHit; trip.nebHit = false;
       if (inN && !trip.inNeb && trip.phase !== 'leave' && trip.phase !== 'out') caption('neb', ...NEB_KINDS[Math.max(0, nebKind)], 3400);
       trip.inNeb = inN; trip.sawNeb = trip.sawNeb || inN;
     }
