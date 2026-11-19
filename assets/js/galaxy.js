@@ -498,7 +498,8 @@ function init(photo, pano) {
             // longe do plano a luz é mais espalhada: as camadas de cima usam a foto mais borrada (sem "pente" de cópias)
             // e de lado (olhar rasante) as camadas também se borram, senão aparecem como listras
             float gk = smoothstep(0.4, 0.07, vG);
-            float bias = max(clamp(2.5 + abs(uY) * 10.0, 0.0, 6.0), gk * 5.0);   // fora do plano, só a luz difusa
+            float bias = max(clamp(2.5 + abs(uY) * 10.0, 0.0, 6.0), gk * 5.0)   // fora do plano, só a luz difusa
+              * mix(0.3, 1.0, smoothstep(1.5, 4.0, length(vUv - 0.5) * ${SPAN.toFixed(1)}));   // o bojo já é liso: borrar só mistura o dourado com o azul dos braços
             vec3 c = mix(texture2D(tP, 1.0 - vUv, bias).rgb, texture2D(tP, vUv, bias).rgb, inP);
             vec3 c0 = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
             float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
