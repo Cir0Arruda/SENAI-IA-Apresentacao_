@@ -504,7 +504,7 @@ function init(photo, pano) {
             c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             c0 = max(c0 - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
-            float h = mix(0.15 + 0.022 * r + 1.3 * exp(-r / 1.5), 0.06 + 0.005 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
+            float h = mix(0.10 + 0.016 * r + 1.3 * exp(-r / 1.5), 0.06 + 0.005 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
             float w = (F(yS + ${(DY / 2).toFixed(4)}, h) - F(yS - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
             gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
           }`,
