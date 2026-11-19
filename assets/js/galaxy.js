@@ -476,13 +476,22 @@ function init(photo, pano) {
       const y = -YM + (i + 0.5) * DY;
       const m = new THREE.Mesh(geo, new THREE.ShaderMaterial({
         uniforms: { tP: { value: photoTex }, uK, uY: { value: y } },
-        vertexShader: `varying vec2 vUv; varying float vG; void main(){ vUv = uv;
+        vertexShader: `varying vec2 vUv; varying float vG; varying vec3 vDir; void main(){ vUv = uv;
+          vDir = position - (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz;     // raio de visão, no plano da camada
           vec4 w = modelMatrix * vec4(position, 1.0);
           vG = abs(dot(normalize(w.xyz - cameraPosition), normalize((modelMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz)));
           gl_Position = projectionMatrix * viewMatrix * w; }`,
-        fragmentShader: `uniform sampler2D tP; uniform float uK, uY; varying vec2 vUv; varying float vG;
+        fragmentShader: `uniform sampler2D tP; uniform float uK, uY; varying vec2 vUv; varying float vG; varying vec3 vDir;
           float F(float y, float h){ return sign(y) * h * (1.0 - exp(-abs(y) / h)); }
           void main(){
+            // cada pixel lê a camada numa altura sorteada dentro da sua faixa, seguindo o raio de visão:
+            // as camadas deixam de formar faixas (viram um granulado fino que o borrão apaga)
+            float j = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + uY * 37.0) * 43758.5453) - 0.5;
+            float dz = -j * ${DY.toFixed(4)};
+            vec2 sh = vDir.xy * (dz / (abs(vDir.z) < 1e-4 ? 1e-4 : vDir.z));
+            float shl = length(sh); if (shl > ${(6 * DY).toFixed(4)}) sh *= ${(6 * DY).toFixed(4)} / shl;
+            vec2 vUv = vUv + sh / ${SPAN.toFixed(1)};
+            float yS = uY + j * ${DY.toFixed(4)};
             float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
             // longe do plano a luz é mais espalhada: as camadas de cima usam a foto mais borrada (sem "pente" de cópias)
             // e de lado (olhar rasante) as camadas também se borram, senão aparecem como listras
@@ -495,7 +504,7 @@ function init(photo, pano) {
             c0 = max(c0 - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
             float h = mix(0.17 + 0.95 * exp(-r / 1.1), 0.045, young);             // altura do disco (no centro, o bojo)
-            float w = (F(uY + ${(DY / 2).toFixed(4)}, h) - F(uY - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
+            float w = (F(yS + ${(DY / 2).toFixed(4)}, h) - F(yS - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
             gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
           }`,
         transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
