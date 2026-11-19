@@ -362,7 +362,7 @@ function init(photo, pano) {
       } else if (u < 0.12) {                // halo esparso
         d3.set(gauss(), gauss(), gauss()).normalize();
         const r = 3 + rand() * 13;
-        x = d3.x * r; y = d3.y * r * 0.45; z = d3.z * r;
+        x = d3.x * r; y = d3.y * r * (photo ? 0.6 : 0.45); z = d3.z * r;
         c.copy(pick(PAL.disk)); b = 0.3; s = 0.5 + rand() * 0.5;
       } else {                              // disco: sorteio proporcional ao brilho do mapa
         let k = 0, r = 0;
@@ -377,14 +377,15 @@ function init(photo, pano) {
         }
         const mr = mapPix[k], mg = mapPix[k + 1], mb = mapPix[k + 2], mx = Math.max(mr, mg, mb, 1);
         const blue = mb > mr * 0.95, pink = mr > mg * 1.45 && mb > mg * 0.8;
-        y = gauss() * (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r);
+        y = gauss() * (photo ? (blue ? 0.07 + 0.008 * r : 0.18 + 0.025 * r) : (blue ? 0.028 + 0.004 * r : 0.05 + 0.01 * r));   // com a foto: camadas grossas, as estrelas ficam em alturas diferentes
         c.setRGB(mr / mx, mg / mx, mb / mx).lerp(PAL.white, 0.3);
         b = (0.2 + Math.pow(rand(), 4) * 0.7) * (r < R0 * 1.1 ? 0.6 : 1); s = 0.4 + Math.pow(rand(), 4) * 1.1;
         if (blue && rand() < 0.08) { c.copy(PAL.young); s *= 1.3; b = 0.9; }
+        if (photo && rand() < 0.025) { s *= 1.6; b = 1.4 + rand(); }        // algumas estrelas bem brilhantes, que se destacam de perto
         if (pink && !photo && rand() < 0.16) { c.copy(PAL.hii).lerp(PAL.white, 0.25 + rand() * 0.3); b = 0.7; }
       }
       pos.set([x, y, z], i * 3);
-      const sk = photo ? 0.6 : 1;                 // com a foto, a luz já vem dela: as estrelas só dão o brilho de perto
+      const sk = 1;
       col.set([c.r * b * sk, c.g * b * sk, c.b * b * sk], i * 3);
       size[i] = s; seed[i] = rand();
     }
@@ -469,7 +470,7 @@ function init(photo, pano) {
     // a foto vira um disco com VOLUME: até 30 camadas finas empilhadas. Cada pixel da foto espalha a luz na vertical
     // conforme o tipo de estrela: as jovens (azuis) num disco fino, as velhas (amarelas) num disco grosso, e no centro
     // o bojo, quase redondo. A soma das camadas dá exatamente a foto vista de cima; inclinada, aparece a espessura.
-    const NL = lowEnd ? 24 : 44, YM = 1.25, DY = 2 * YM / NL, uK = { value: 1 };
+    const NL = lowEnd ? 26 : 48, YM = 2.1, DY = 2 * YM / NL, uK = { value: 1 };
     photoDisk = new THREE.Group(); photoDisk.renderOrder = -0.5;
     const geo = new THREE.PlaneGeometry(SPAN, SPAN);
     for (let i = 0; i < NL; i++) {
@@ -489,21 +490,21 @@ function init(photo, pano) {
             float j = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + uY * 37.0) * 43758.5453) - 0.5;
             float dz = -j * ${DY.toFixed(4)};
             vec2 sh = vDir.xy * (dz / (abs(vDir.z) < 1e-4 ? 1e-4 : vDir.z));
-            float shl = length(sh); if (shl > ${(6 * DY).toFixed(4)}) sh *= ${(6 * DY).toFixed(4)} / shl;
+            float shl = length(sh); if (shl > ${(2.5 * DY).toFixed(4)}) sh *= ${(2.5 * DY).toFixed(4)} / shl;
             vec2 vUv = vUv + sh / ${SPAN.toFixed(1)};
             float yS = uY + j * ${DY.toFixed(4)};
             float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
             // longe do plano a luz é mais espalhada: as camadas de cima usam a foto mais borrada (sem "pente" de cópias)
             // e de lado (olhar rasante) as camadas também se borram, senão aparecem como listras
             float gk = smoothstep(0.4, 0.07, vG);
-            float bias = max(clamp(abs(uY) * 9.0, 0.0, 5.0), gk * 4.0);
+            float bias = max(clamp(abs(uY) * 6.0, 0.0, 5.0), gk * 5.0);
             vec3 c = mix(texture2D(tP, 1.0 - vUv, bias).rgb, texture2D(tP, vUv, bias).rgb, inP);
             vec3 c0 = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
             float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
             c = max(c - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             c0 = max(c0 - 0.025, 0.0) / 0.975 * smoothstep(14.0, 12.0, r);
             float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
-            float h = mix(0.17 + 0.95 * exp(-r / 1.1), 0.045, young);             // altura do disco (no centro, o bojo)
+            float h = mix(0.26 + 0.035 * r + 1.25 * exp(-r / 1.5), 0.08 + 0.006 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
             float w = (F(yS + ${(DY / 2).toFixed(4)}, h) - F(yS - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
             gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
           }`,
@@ -525,9 +526,27 @@ function init(photo, pano) {
      Nas fotos reais elas ficam do lado de fora do braço (depois da faixa de poeira), são
      pequenas e quase todas vermelho-rosadas; algumas têm o miolo verde-azulado (oxigênio). */
   {
-    const n = photo ? 0 : lowEnd ? 90 : 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);   // com a foto, as nebulosas já estão nela
+    const n = photo ? (lowEnd ? 170 : 340) : lowEnd ? 90 : 160, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n), seed = new Float32Array(n);
     const NC = [C('#ff5a7a'), C('#ff6f8c'), C('#ff8a7a'), C('#e86aa8'), C('#7fd8d0'), C('#a8b8ff')];
-    for (let i = 0; i < n; i++) {
+    // com a foto: cada nebulosa nasce num nó brilhante da própria foto (mais claro que a vizinhança) e ganha volume,
+    // um pouco acima ou abaixo do disco. De longe somem na foto; de perto viram nuvens em 3D entre as estrelas.
+    const lumAt = (x, z) => { const k = mapIdx(x, z); return 0.3 * mapPix[k] + 0.5 * mapPix[k + 1] + 0.2 * mapPix[k + 2]; };
+    let maxL = 1; if (photo) for (let i = 0; i < mapPix.length; i += 4) maxL = Math.max(maxL, 0.3 * mapPix[i] + 0.5 * mapPix[i + 1] + 0.2 * mapPix[i + 2]);
+    for (let i = 0; photo && i < n; i++) {
+      let x = 0, z = 0, k = 0;
+      for (let t = 0; t < 600; t++) {
+        const r = R0 * 0.9 + Math.sqrt(rand()) * 9.8, a = rand() * TAU;
+        x = Math.cos(a) * r; z = Math.sin(a) * r;
+        const l = lumAt(x, z), o = 0.32, m = (lumAt(x + o, z) + lumAt(x - o, z) + lumAt(x, z + o) + lumAt(x, z - o)) / 4;
+        k = mapIdx(x, z);
+        if (l > maxL * 0.12 && l > m * 1.25 && mapPix[k + 2] >= mapPix[k] * 0.9) break;
+      }
+      pos.set([x, gauss() * 0.09, z], i * 3);
+      const u = rand(), c = u < 0.55 ? NC[(rand() * 4) | 0] : u < 0.75 ? NC[4] : new THREE.Color(mapPix[k] / 255, mapPix[k + 1] / 255, mapPix[k + 2] / 255).multiplyScalar(1.6).lerp(NC[5], 0.3);
+      col.set([c.r * 0.8, c.g * 0.8, c.b * 0.8], i * 3);
+      size[i] = 0.14 + Math.pow(rand(), 2.5) * 0.5; seed[i] = rand() * 50;
+    }
+    for (let i = 0; !photo && i < n; i++) {
       const r = R0 * 1.25 + Math.pow(rand(), 0.85) * 9.2, k = rand() < 0.5 ? 0 : 1;
       const a = armAngle(r, k) - 0.03 * (1 + r / 6) + gauss() * 0.045;
       pos.set([Math.cos(a) * r, gauss() * 0.02, Math.sin(a) * r], i * 3);
@@ -2407,7 +2426,7 @@ function init(photo, pano) {
     const pk = photoDisk ? sstep(2.5, 7, camD) : 0;   // a foto fica até a câmera chegar ao braço; lá dentro, o céu é a foto da Via Láctea
     if (photoDisk) {
       photoDisk.visible = pk > 0.001 && !hidePhoto; photoDisk.material.uniforms.uK.value = pk;
-      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.5 * pk;
+      galMarch.uniforms.uMapK.value = 1 - pk; galMarch.uniforms.uBulge.value *= 1 - pk; starMat.uniforms.uAlpha.value = 1 - 0.62 * pk * sstep(16, 70, camD);   // de longe a foto manda; chegando perto, as estrelas soltas aparecem
     }
     composer.render(dt);
     galMarch.uniforms.uBulge.value = 1; galMarch.uniforms.uMapK.value = 1; starMat.uniforms.uAlpha.value = 1;
