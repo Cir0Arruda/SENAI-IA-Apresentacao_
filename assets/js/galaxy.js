@@ -470,7 +470,8 @@ function init(photo, pano) {
     // a foto vira um disco com VOLUME: até 30 camadas finas empilhadas. Cada pixel da foto espalha a luz na vertical
     // conforme o tipo de estrela: as jovens (azuis) num disco fino, as velhas (amarelas) num disco grosso, e no centro
     // o bojo, quase redondo. A soma das camadas dá exatamente a foto vista de cima; inclinada, aparece a espessura.
-    const NL = lowEnd ? 26 : 48, YM = 2.1, DY = 2 * YM / NL, uK = { value: 1 };
+    const NL = lowEnd ? 27 : 49, YM = 2.1,   // ímpar: uma camada fica exatamente no plano do disco
+    DY = 2 * YM / NL, uK = { value: 1 };
     photoDisk = new THREE.Group(); photoDisk.renderOrder = -0.5;
     const geo = new THREE.PlaneGeometry(SPAN, SPAN);
     for (let i = 0; i < NL; i++) {
@@ -491,13 +492,13 @@ function init(photo, pano) {
             float dz = -j * ${DY.toFixed(4)};
             vec2 sh = vDir.xy * (dz / (abs(vDir.z) < 1e-4 ? 1e-4 : vDir.z));
             float shl = length(sh); if (shl > ${(2.5 * DY).toFixed(4)}) sh *= ${(2.5 * DY).toFixed(4)} / shl;
-            vec2 vUv = vUv + sh / ${SPAN.toFixed(1)};
+            vec2 vUv = vUv + sh * (1.0 - 0.85 * smoothstep(0.4, 0.07, vG)) / ${SPAN.toFixed(1)};   // olhar rasante: quase sem deslocamento (o borrão já esconde as camadas) e sem "cortinas"
             float yS = uY + j * ${DY.toFixed(4)};
             float inP = smoothstep(0.867, 0.80, vUv.x) * smoothstep(0.023, 0.07, vUv.y);
             // longe do plano a luz é mais espalhada: as camadas de cima usam a foto mais borrada (sem "pente" de cópias)
             // e de lado (olhar rasante) as camadas também se borram, senão aparecem como listras
             float gk = smoothstep(0.4, 0.07, vG);
-            float bias = max(clamp(abs(uY) * 6.0, 0.0, 5.0), gk * 5.0);
+            float bias = max(clamp(2.5 + abs(uY) * 10.0, 0.0, 6.0), gk * 5.0);   // fora do plano, só a luz difusa
             vec3 c = mix(texture2D(tP, 1.0 - vUv, bias).rgb, texture2D(tP, vUv, bias).rgb, inP);
             vec3 c0 = mix(texture2D(tP, 1.0 - vUv).rgb, texture2D(tP, vUv).rgb, inP);
             float r = length(vUv - 0.5) * ${SPAN.toFixed(1)};
@@ -506,7 +507,8 @@ function init(photo, pano) {
             float young = clamp((c0.b - c0.r) * 5.0 + 0.25, 0.0, 1.0);             // azul = estrelas jovens
             float h = mix(0.10 + 0.016 * r + 1.3 * exp(-r / 1.5), 0.06 + 0.005 * r, young);   // altura do disco: o bojo é quase uma bola e a borda se abre
             float w = (F(yS + ${(DY / 2).toFixed(4)}, h) - F(yS - ${(DY / 2).toFixed(4)}, h)) / (2.0 * h * (1.0 - exp(-${YM.toFixed(2)} / h)));
-            gl_FragColor = vec4(mix(c0, c, max(smoothstep(0.03, 0.25, abs(uY)), gk * 0.9)) * w * uK, 1.0);
+            // só a camada do meio guarda os detalhes nítidos da foto (senão cada estrela forte se repete na vertical, em "cortinas")
+            gl_FragColor = vec4(mix(c0, c, max(step(${(DY / 2).toFixed(4)}, abs(uY)), gk * 0.9)) * w * uK, 1.0);
           }`,
         transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
       }));
